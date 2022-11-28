@@ -21,8 +21,8 @@ class Oasis3Mct(Package):
 
     version("5e57b1aa40840adb6d6747d475dabadab5d9d6fb", commit="5e57b1aa40840adb6d6747d475dabadab5d9d6fb")
 
-    depends_on("netcdf-fortran@4.5.2")
-    depends_on("openmpi@4.0.2")
+    depends_on("netcdf-fortran@4.5.2:")
+    depends_on("openmpi@4.0.2:")
 
     phases = ["build", "install"]
 
