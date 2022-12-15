@@ -146,7 +146,7 @@ class Oasis3Mct(Package):
         for k in self.__libs.keys():
             self.__libs[k]["filename"] = "lib" + k + ".a"
             self.__libs[k]["filerelpath"] = join_path("lib", self.__libs[k]["filename"])
-            self.__libs[k]["pcname"] = k + ".pc"
+            self.__libs[k]["pcname"] = "oasis3-" + k + ".pc"
             self.__libs[k]["pcrelpath"] = join_path("lib", "pkgconfig", self.__libs[k]["pcname"])
             self.__libs[k]["pcpath"] = join_path(self.__pkgdir, self.__libs[k]["pcname"])
 
@@ -168,7 +168,7 @@ Name: {k}
 Description: OASIS3-MCT 2.0 {k} Library for Fortran
 Version: 2.0
 Libs: -L${{libdir}} -l{k}
-Cflags: -I${{includedir}}
+Cflags: -I${{includedir}}/{k}
 """
 
             with open(self.__libs[k]["pcpath"], "w", encoding="utf-8") as pc:
