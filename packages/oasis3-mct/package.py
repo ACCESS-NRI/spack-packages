@@ -14,6 +14,9 @@ class Oasis3Mct(Package):
 
     homepage = "https://www.access-nri.org.au"
     git = "https://github.com/ACCESS-NRI/oasis3-mct.git"
+    # NOTE: URL definition required for CI
+    # Spack needs tarball URL to be defined to access github branches
+    url = "https://github.com/ACCESS-NRI/oasis3-mct/tarball/5e57b1aa40840adb6d6747d475dabadab5d9d6fb"
 
     maintainers = ["harshula"]
 
