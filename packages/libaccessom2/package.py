@@ -20,8 +20,10 @@ class Libaccessom2(CMakePackage):
 
     depends_on("cmake@3.6:")
     depends_on("pkgconf")
+    # TODO: Should we depend on virtual package "mpi" instead?
+    depends_on("openmpi@4.0.2:")
     depends_on("oasis3-mct")
     depends_on("datetime-fortran")
     depends_on("json-fortran")
-    depends_on("netcdf-fortran")
+    depends_on("netcdf-fortran@4.5.2:")
 
