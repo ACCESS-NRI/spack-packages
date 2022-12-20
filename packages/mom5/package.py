@@ -3,30 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install mom5-git
-#
-# You can edit this file again by typing:
-#
-#     spack edit mom5-git
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 from spack.package import *
 from spack.util.executable import which
 
-class Mom5Git(CMakePackage):
+class Mom5(CMakePackage):
     """FIXME: Put a proper description of your package here."""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://mom-ocean.github.io"
     git      = "https://github.com/ACCESS-NRI/MOM5.git"
 
@@ -36,7 +18,6 @@ class Mom5Git(CMakePackage):
 
     variant("netcdf", default=True, description="enable netcdf interface")
 
-    # FIXME: Add dependencies if required.
     depends_on("mpi")
     depends_on("netcdf-c", type="link", when="+netcdf")
     depends_on("netcdf-fortran", type="link", when="+netcdf")
