@@ -194,14 +194,12 @@ Cflags: -I${{includedir}}/{k}
 
     def install(self, spec, prefix):
 
-        mkdirp(prefix.include.mct)
-        # The directory name has a '.', so create the path manually:
-        mkdirp(join_path(prefix.include, "psmile.MPI1"))
-        mkdirp(prefix.include.scrip)
         mkdirp(prefix.lib.pkgconfig)
 
         src_dst = []
         for libname in self.__libs.keys():
+
+            mkdirp(join_path(prefix.include, libname))
 
             for f in [ self.__libs[libname]["filerelpath"],
                        self.__libs[libname]["pcrelpath"] ]:
