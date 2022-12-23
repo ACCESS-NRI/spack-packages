@@ -18,7 +18,7 @@ class Libaccessom2(CMakePackage):
 
     version("spack-build", branch="spack-build")
 
-    depends_on("cmake@3.6:")
+    depends_on("cmake@3.12:")
     depends_on("pkgconf")
     # TODO: Should we depend on virtual package "mpi" instead?
     depends_on("openmpi@4.0.2:")
