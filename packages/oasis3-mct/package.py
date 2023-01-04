@@ -7,6 +7,7 @@
 
 from spack.package import install, join_path, mkdirp
 from pprint import pprint
+import os
 import inspect
 
 class Oasis3Mct(Package):
@@ -183,10 +184,21 @@ Cflags: -I${{includedir}}/{k}
 
 
     def build(self, spec, prefix):
-        # TODO: Need to rethink the build process. Likely require modifying
-        #       oasis3-mct
-        build = Executable("./build.sh")
-        build()
+        # See doc/oasis3mct_UserGuide.pdf:
+        #
+        # compiles all OASIS3-MCT libraries mct, scrip and psmile:
+        # make -f TopMakefileOasis3
+        srcdir = os.getcwd()
+        print(f"cwd: {srcdir}")
+        makefile_dir = join_path(srcdir, "util", "make_dir")
+        with working_dir(makefile_dir):
+            with open("make.inc", 'w') as makeinc:
+                makespack = join_path(makefile_dir, "make.ubuntu")
+                makeinc.write(f"include {makespack}")
+
+            build = Executable("make")
+            build.add_default_env("OASIS_HOME", srcdir)
+            build("-f", "TopMakefileOasis3")
 
         # Upstream is missing a pkgconfig files, so we'll create them.
         self.__create_pkgconfig(spec, prefix)
