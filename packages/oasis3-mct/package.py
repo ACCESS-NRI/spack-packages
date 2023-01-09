@@ -10,18 +10,19 @@ from pprint import pprint
 import os
 import inspect
 
-class Oasis3Mct(Package):
+# https://spack.readthedocs.io/en/latest/build_systems/makefilepackage.html
+class Oasis3Mct(MakefilePackage):
     """ACCESS-NRI's fork of https://gitlab.com/cerfacs/oasis3-mct OASIS3-MCT 2.0."""
 
     homepage = "https://www.access-nri.org.au"
     git = "https://github.com/ACCESS-NRI/oasis3-mct.git"
     # NOTE: URL definition required for CI
     # Spack needs tarball URL to be defined to access github branches
-    url = "https://github.com/ACCESS-NRI/oasis3-mct/tarball/5e57b1aa40840adb6d6747d475dabadab5d9d6fb"
+    url = "https://github.com/ACCESS-NRI/oasis3-mct/tarball/spack-build"
 
     maintainers = ["harshula"]
 
-    version("5e57b1aa40840adb6d6747d475dabadab5d9d6fb", commit="5e57b1aa40840adb6d6747d475dabadab5d9d6fb")
+    version("spack-build", branch="spack-build")
 
     depends_on("netcdf-fortran@4.5.2:")
     # TODO: Should we depend on virtual package "mpi" instead?
@@ -193,12 +194,12 @@ Cflags: -I${{includedir}}/{k}
         makefile_dir = join_path(srcdir, "util", "make_dir")
         with working_dir(makefile_dir):
             with open("make.inc", 'w') as makeinc:
-                makespack = join_path(makefile_dir, "make.ubuntu")
+                makespack = join_path(makefile_dir, "make.spack")
                 makeinc.write(f"include {makespack}")
 
             build = Executable("make")
             build.add_default_env("OASIS_HOME", srcdir)
-            build("-f", "TopMakefileOasis3")
+            build("-f", "TopMakefileOasis3", "F90=mpif90", "CC=gcc")
 
         # Upstream is missing a pkgconfig files, so we'll create them.
         self.__create_pkgconfig(spec, prefix)
