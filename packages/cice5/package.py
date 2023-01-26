@@ -24,8 +24,10 @@ class Cice5(MakefilePackage):
     depends_on("datetime-fortran")
     depends_on("netcdf-fortran@4.5.2:")
     depends_on("netcdf-c@4.7.4:")
-    # cice5 builds parallelio with -DWITH_PNETCDF=OFF -DPIO_ENABLE_TIMING=OFF
-    depends_on("parallelio")
+    # TODO: For initial verification we are going to use static pio.
+    #       Eventually we plan to move to shared pio
+    # ~shared requires: https://github.com/spack/spack/pull/34837
+    depends_on("parallelio~pnetcdf~timing~shared")
     depends_on("libaccessom2")
 
     phases = ["build", "install"]
