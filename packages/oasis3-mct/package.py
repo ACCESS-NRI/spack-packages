@@ -183,6 +183,16 @@ Cflags: -I${{includedir}}/{k}
                 raise OSError
 
 
+    # https://spack-tutorial.readthedocs.io/en/ecp21/tutorial_advanced_packaging.html
+    @property
+    def libs(self):
+        # NOTE: The order matters during the linking step of the cice5 build!
+        # "-lpsmile.MPI1 -lmct -lmpeu -lscrip"
+        libraries = ["libpsmile.MPI1", "libmct", "libmpeu", "libscrip"]
+        return find_libraries(
+            libraries, root=self.prefix, shared=False, recursive=True
+        )
+
 
     def build(self, spec, prefix):
         # See doc/oasis3mct_UserGuide.pdf:
