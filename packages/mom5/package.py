@@ -12,6 +12,8 @@ class Mom5(CMakePackage):
     homepage = "https://mom-ocean.github.io"
     git      = "https://github.com/ACCESS-NRI/MOM5.git"
 
+    version("5.1", git=git)
+
     # FIXME: Add a list of GitHub accounts to
     # notify when the package is updated.
     # maintainers = ['github_user1', 'github_user2']
