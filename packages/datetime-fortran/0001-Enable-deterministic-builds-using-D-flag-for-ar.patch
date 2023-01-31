@@ -1,0 +1,31 @@
+--- a/src/Makefile.am	2020-05-10 07:38:37.000000000 +1000
++++ b/src/Makefile.am	2023-01-31 21:37:51.878673430 +1100
+@@ -15,7 +15,7 @@
+ 	$(FC) -c $(FCFLAGS) $<
+ 
+ libdatetime.a : datetime_module.o
+-	ar ruv libdatetime.a $(OBJS)
++	ar rvD libdatetime.a $(OBJS)
+ 
+ datetime_module.mod : datetime_module.o
+ 
+--- a/src/Makefile.in	2020-05-11 04:13:07.000000000 +1000
++++ b/src/Makefile.in	2023-01-31 21:39:39.773657801 +1100
+@@ -126,7 +126,7 @@
+ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"
+ LIBRARIES = $(lib_LIBRARIES)
+ AR = ar
+-ARFLAGS = cru
++ARFLAGS = rvD
+ AM_V_AR = $(am__v_AR_@AM_V@)
+ am__v_AR_ = $(am__v_AR_@AM_DEFAULT_V@)
+ am__v_AR_0 = @echo "  AR      " $@;
+@@ -588,7 +588,7 @@
+ 	$(FC) -c $(FCFLAGS) $<
+ 
+ libdatetime.a : datetime_module.o
+-	ar ruv libdatetime.a $(OBJS)
++	ar rvD libdatetime.a $(OBJS)
+ 
+ datetime_module.mod : datetime_module.o
+ 
