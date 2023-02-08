@@ -7,9 +7,8 @@
 
 from spack.package import *
 
-
 class Libaccessom2(CMakePackage):
-    """libaccessom2 is a library that is linked into all of the ACCESS-OM2 component models, including YATM, CICE and MOM. libaccessom2 provides functionality used by all models as well as providing a interface to inter-model communication and synchronisation tasks. Using a common library reduces code duplication and provides a uniform way for all models to be integrated into ACCESS-OM2."""
+    """libaccessom2 is a library that is linked into all of the ACCESS-OM2 component models, including YATM, CICE and MOM. libaccessom2 provides functionality used by all models as well as providing a interface to inter-model communication and synchronisation tasks."""
 
     homepage = "https://www.access-nri.org.au"
     git = "https://github.com/ACCESS-NRI/libaccessom2.git"
@@ -23,10 +22,9 @@ class Libaccessom2(CMakePackage):
 
     depends_on("cmake@3.20:", type="build")
     depends_on("pkgconf", type="build")
-    # TODO: Should we depend on virtual package "mpi" instead?
-    depends_on("openmpi@4.0.2:")
+    # Depend on virtual package "mpi".
+    depends_on("mpi")
     depends_on("oasis3-mct")
     depends_on("datetime-fortran")
     depends_on("json-fortran")
     depends_on("netcdf-fortran@4.5.2:")
-
