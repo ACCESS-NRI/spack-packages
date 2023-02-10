@@ -56,15 +56,16 @@ class Mom5(MakefilePackage):
         # set libs = "$executable:h:h/$type/lib_ocean/lib_ocean.a $executable:h:h/lib_FMS/lib_FMS.a"
         # bin/mkmf -f -m Makefile -a src -t bin/mkmfs.template.spack -p $executable:t" -o "$includes" -c "$cppDefs" -l "$libs"  $srcList
 
-        build = Executable("./build.sh")
-        build.add_default_env("MOMINCS", incs)
-        build.add_default_env("MOMLIBS", libs)
-        build.add_default_env("MOMFC", "mpifort")
-        build.add_default_env("MOMCC", "gcc")
-        # Intel: setenv mpirunCommand   "mpirun --mca orte_base_help_aggregate 0 -np"
-        # gfortran: setenv mpirunCommand   "mpirun -np"
-        build.add_default_env("mpirunCommand", "mpirun -np")
-        build()
+        with working_dir(join_path(self.stage.source_path, "exp")):
+            build = Executable("./MOM_compile.csh")
+            build.add_default_env("MOMINCS", incs)
+            build.add_default_env("MOMLIBS", libs)
+            build.add_default_env("MOMFC", "mpifort")
+            build.add_default_env("MOMCC", "gcc")
+            # Intel: setenv mpirunCommand   "mpirun --mca orte_base_help_aggregate 0 -np"
+            # gfortran: setenv mpirunCommand   "mpirun -np"
+            build.add_default_env("mpirunCommand", "mpirun -np")
+            build("--type", "ACCESS-OM", "--platform", "spack")
 
     def install(self, spec, prefix):
 
