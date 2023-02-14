@@ -18,8 +18,8 @@ class Cice5(MakefilePackage):
 
     version("spack-build", branch="spack-build")
 
-    # TODO: Should we depend on virtual package "mpi" instead?
-    depends_on("openmpi@4.0.2:")
+    # Depend on virtual package "mpi".
+    depends_on("mpi")
     depends_on("oasis3-mct")
     depends_on("datetime-fortran")
     depends_on("netcdf-fortran@4.5.2:")
@@ -30,17 +30,20 @@ class Cice5(MakefilePackage):
     depends_on("parallelio~pnetcdf~timing~shared")
     depends_on("libaccessom2")
 
-    phases = ["build", "install"]
+    phases = ["edit", "build", "install"]
+
+    _buildscript = "spack-build.sh"
+    _buildscript_path = join_path("bld", _buildscript)
 
     # The integr represents environment variable NTASK
     __targets = {24: {}, 480: {}, 722: {}, 1682: {}}
-    __targets[24]["RES"] = "360x300"
-    __targets[24]["BLCKX"] = 360 // 24
-    __targets[24]["BLCKY"] = 300 // 1
+    __targets[24]["driver"] = "auscom"
+    __targets[24]["grid"] = "360x300"
+    __targets[24]["blocks"] = "24x1"
 
-    __targets[480]["RES"] = "1440x1080"
-    __targets[480]["BLCKX"] = 1440 // 48
-    __targets[480]["BLCKY"] = 1080 // 40
+    __targets[480]["driver"] = "auscom"
+    __targets[480]["grid"] = "1440x1080"
+    __targets[480]["blocks"] = "48x40"
 
     # Comment from bld/config.nci.auscom.3600x2700:
     # Recommendations:
@@ -49,16 +52,23 @@ class Cice5(MakefilePackage):
     #   squarish blocks with distribution_type='rake'
     # If BLCKX (BLCKY) does not divide NXGLOB (NYGLOB) evenly, padding
     # will be used on the right (top) of the grid.
-    __targets[722]["RES"] = "3600x2700"
-    __targets[722]["BLCKX"] = 3600 // 90
-    __targets[722]["BLCKY"] = 2700 // 90
+    __targets[722]["driver"] = "auscom"
+    __targets[722]["grid"] = "3600x2700"
+    __targets[722]["blocks"] = "90x90"
 
-    __targets[1682]["RES"] = "18x15.3600x2700"
-    __targets[1682]["BLCKX"] = 3600 // 200
-    __targets[1682]["BLCKY"] = 2700 // 180
+    __targets[1682]["driver"] = "auscom"
+    __targets[1682]["grid"] = "3600x2700"
+    __targets[1682]["blocks"] = "200x180"
 
+    def edit(self, spec, prefix):
 
-    def build(self, spec, prefix):
+        srcdir = self.stage.source_path
+        buildscript_dest = join_path(srcdir, self._buildscript_path)
+        makeinc_path = join_path(srcdir, "bld", "Macros.spack")
+
+        copy(join_path(self.package_dir, self._buildscript), buildscript_dest)
+
+        config = {}
 
         incs = (spec["oasis3-mct"].headers).cpp_flags + "/psmile.MPI1" + " "
         for l in ["parallelio", "oasis3-mct", "libaccessom2", "netcdf-fortran"]:
@@ -70,21 +80,129 @@ class Cice5(MakefilePackage):
         for l in ["oasis3-mct", "libaccessom2", "netcdf-c", "netcdf-fortran", "datetime-fortran"]:
             libs += (spec[l].libs).ld_flags + " "
 
-        build = Executable("bld/build.sh")
-        build.add_default_env("CPL_INCS", incs)
-        build.add_default_env("CPLLIBS", libs)
+        # Copied from bld/Macros.nci
+        config["pre"] = f"""
+INCLDIR    := -I. {incs}
+SLIBS      := {libs}
+ULIBS      :=
+CPP        := cpp
+FC         := mpifort
+
+CPPFLAGS   := -P -traditional
+CPPDEFS    := -DLINUX -DPAROPT
+CFLAGS     := -c -O2
+FIXEDFLAGS := -132
+FREEFLAGS  :=
+"""
+
+        config["gcc"] = f"""
+# TODO: removed -std=f2008 due to compiler errors
+FFLAGS = -Wall -fdefault-real-8 -fdefault-double-8 -ffpe-trap=invalid,zero,overflow -fallow-argument-mismatch
+"""
+
+        # module load intel-compiler/2019.5.281
+        config["intel"] = f"""
+NCI_INTEL_FLAGS := -r8 -i4 -traceback -w -fpe0 -ftz -convert big_endian -assume byterecl -check noarg_temp_created
+NCI_REPRO_FLAGS := -fp-model precise -fp-model source -align all
+ifeq ($(DEBUG), 1)
+    NCI_DEBUG_FLAGS := -g3 -O0 -debug all -check all -no-vec -assume nobuffered_io
+    FFLAGS          := $(NCI_INTEL_FLAGS) $(NCI_REPRO_FLAGS) $(NCI_DEBUG_FLAGS)
+    CPPDEFS         := $(CPPDEFS) -DDEBUG=$(DEBUG)
+else
+    NCI_OPTIM_FLAGS := -g3 -O2 -axCORE-AVX2 -debug all -check none -qopt-report=5 -qopt-report-annotate -assume buffered_io
+    FFLAGS          := $(NCI_INTEL_FLAGS) $(NCI_REPRO_FLAGS) $(NCI_OPTIM_FLAGS)
+endif
+"""
+
+        # Copied from bld/Macros.nci
+        config["post"] = """
+MOD_SUFFIX := mod
+LD         := $(FC)
+LDFLAGS    := $(FFLAGS) -v
+
+CPPDEFS :=  $(CPPDEFS) -DNXGLOB=$(NXGLOB) -DNYGLOB=$(NYGLOB) \
+            -DNUMIN=$(NUMIN) -DNUMAX=$(NUMAX) \
+            -DTRAGE=$(TRAGE) -DTRFY=$(TRFY) -DTRLVL=$(TRLVL) \
+            -DTRPND=$(TRPND) -DNTRAERO=$(NTRAERO) -DTRBRI=$(TRBRI) \
+            -DNBGCLYR=$(NBGCLYR) -DTRBGCS=$(TRBGCS) \
+            -DNICECAT=$(NICECAT) -DNICELYR=$(NICELYR) \
+            -DNSNWLYR=$(NSNWLYR) \
+            -DBLCKX=$(BLCKX) -DBLCKY=$(BLCKY) -DMXBLCKS=$(MXBLCKS)
+
+ifeq ($(COMMDIR), mpi)
+   SLIBS   :=  $(SLIBS) -lmpi
+endif
+
+ifeq ($(DITTO), yes)
+   CPPDEFS :=  $(CPPDEFS) -DREPRODUCIBLE
+endif
+ifeq ($(BARRIERS), yes)
+   CPPDEFS :=  $(CPPDEFS) -Dgather_scatter_barrier
+endif
+
+ifeq ($(IO_TYPE), netcdf)
+   CPPDEFS :=  $(CPPDEFS) -Dncdf
+endif
+
+ifeq ($(IO_TYPE), pio)
+   CPPDEFS :=  $(CPPDEFS) -Dncdf -DPIO
+endif
+
+# TODO: Do we want to delete this conditional?
+#ifeq ($(USE_ESMF), yes)
+#   CPPDEFS :=  $(CPPDEFS) -Duse_esmf
+#   INCLDIR :=  $(INCLDIR) -I ???
+#   SLIBS   :=  $(SLIBS) -L ??? -lesmf -lcprts -lrt -ldl
+#endif
+
+ifeq ($(AusCOM), yes)
+   CPPDEFS := $(CPPDEFS) -DAusCOM -Dcoupled
+endif
+
+ifeq ($(UNIT_TESTING), yes)
+   CPPDEFS := $(CPPDEFS) -DUNIT_TESTING
+endif
+ifeq ($(ACCESS), yes)
+   CPPDEFS := $(CPPDEFS) -DACCESS
+endif
+# standalone CICE with AusCOM mods
+ifeq ($(ACCICE), yes)
+   CPPDEFS := $(CPPDEFS) -DACCICE
+endif
+# no MOM just CICE+UM
+ifeq ($(NOMOM), yes)
+   CPPDEFS := $(CPPDEFS) -DNOMOM
+endif
+ifeq ($(OASIS3_MCT), yes)
+   CPPDEFS := $(CPPDEFS) -DOASIS3_MCT
+endif
+"""
+        with open(makeinc_path, "w") as makeinc:
+            makeinc.write(
+                config["pre"]
+                + config[self.compiler.name]
+                + config["post"]
+            )
+
+    def build(self, spec, prefix):
+
+        build = Executable(
+                    join_path(self.stage.source_path, self._buildscript_path)
+                )
 
         for k in self.__targets:
-            build.add_default_env("NTASK", str(k))
-            build.add_default_env("RES", self.__targets[k]["RES"])
-            build.add_default_env("BLCKX", str(self.__targets[k]["BLCKX"]))
-            build.add_default_env("BLCKY", str(self.__targets[k]["BLCKY"]))
-            build("nci", "auscom", self.__targets[k]["RES"])
-
+            build(self.__targets[k]["driver"],
+                    self.__targets[k]["grid"],
+                    self.__targets[k]["blocks"],
+                    str(k))
 
     def install(self, spec, prefix):
 
         mkdirp(prefix.bin)
-        install(join_path("build_auscom_360x300_24p", "cice_auscom_360x300_24p.exe"), prefix.bin)
-        install(join_path("build_auscom_1440x1080_480p", "cice_auscom_1440x1080_480p.exe"), prefix.bin)
-        install(join_path("build_auscom_3600x2700_722p", "cice_auscom_3600x2700_722p.exe"), prefix.bin)
+        for k in self.__targets:
+            name = "_".join([self.__targets[k]["driver"],
+                                self.__targets[k]["grid"],
+                                self.__targets[k]["blocks"],
+                                str(k) + "p"])
+            install(join_path("build_" + name, "cice_" + name + ".exe"),
+                    prefix.bin)
