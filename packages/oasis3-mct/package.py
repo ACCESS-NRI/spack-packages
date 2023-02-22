@@ -19,6 +19,8 @@ class Oasis3Mct(MakefilePackage):
 
     version("master", branch="master")
 
+    variant("deterministic", default=False, description="Deterministic build.")
+
     depends_on("netcdf-fortran@4.5.2:")
     # Depend on virtual package "mpi".
     depends_on("mpi")
@@ -210,7 +212,12 @@ Cflags: -I${{includedir}}/{k}
         makeinc_path = join_path(SRCDIR, self.__makeinc)
         config = {}
 
+        # TODO: https://github.com/ACCESS-NRI/ACCESS-OM/issues/12
+        NCI_OPTIM_FLAGS = "-g3 -O2 -axCORE-AVX2 -debug all -check none -traceback -qopt-report=5 -qopt-report-annotate"
         CFLAGS = ""
+        if "+deterministic" in self.spec:
+            NCI_OPTIM_FLAGS = "-g0 -O0 -axCORE-AVX2 -debug none -check none -qopt-report=5 -qopt-report-annotate"
+            CFLAGS = "-g0"
 
         config["pre"] = f"""
 # CHAN	: communication technique used in OASIS3 (MPI1/MPI2/NONE)
@@ -256,15 +263,15 @@ LD          = $(F90)
 # For compiling in double precision, put -r8
 # For compiling in single precision, remove -r8 and add -Duse_realtype_single
 # Causes non-deterministic builds: -traceback -debug all
-NCI_INTEL_FLAGS = -r8 -i4 -traceback -fpe0 -convert big_endian -fno-alias -ip -check noarg_temp_created
+NCI_INTEL_FLAGS = -r8 -i4 -fpe0 -convert big_endian -fno-alias -ip -check noarg_temp_created
 NCI_REPRO_FLAGS = -fp-model precise -fp-model source -align all
 ifeq ($(DEBUG), yes)
-    NCI_DEBUG_FLAGS = -g3 -O0 -fpe0 -no-vec -debug all -check all -no-vec
+    NCI_DEBUG_FLAGS = -g3 -O0 -fpe0 -no-vec -debug all -check all -no-vec -traceback
     F90FLAGS_1      = $(NCI_INTEL_FLAGS) $(NCI_REPRO_FLAGS) $(NCI_DEBUG_FLAGS)
     CPPDEF          = -Duse_netCDF -Duse_comm_$(CHAN) -DTREAT_OVERLAY -DDEBUG -D__VERBOSE
     MCT_FCFLAGS     = $(NCI_REPRO_FLAGS) $(NCI_DEBUG_FLAGS) -ip
 else
-    NCI_OPTIM_FLAGS = -g3 -O2 -axCORE-AVX2 -debug all -check none -qopt-report=5 -qopt-report-annotate
+    NCI_OPTIM_FLAGS = {NCI_OPTIM_FLAGS}
     F90FLAGS_1      = $(NCI_INTEL_FLAGS) $(NCI_REPRO_FLAGS) $(NCI_OPTIM_FLAGS)
     CPPDEF          = -Duse_netCDF -Duse_comm_$(CHAN) -DTREAT_OVERLAY
     MCT_FCFLAGS     = $(NCI_REPRO_FLAGS) $(NCI_OPTIM_FLAGS) -ip
