@@ -13,6 +13,9 @@ class Libaccessom2(CMakePackage):
 
     homepage = "https://www.access-nri.org.au"
     git = "https://github.com/ACCESS-NRI/libaccessom2.git"
+    # NOTE: URL definition required for CI
+    # Spack needs tarball URL to be defined to access github branches
+    url = "https://github.com/ACCESS-NRI/libaccessom2/tarball/spack-build"
 
     maintainers = ["harshula"]
 
