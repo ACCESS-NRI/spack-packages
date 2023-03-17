@@ -18,11 +18,11 @@ class Oasis3Mct(MakefilePackage):
     git = "https://github.com/ACCESS-NRI/oasis3-mct.git"
     # NOTE: URL definition required for CI
     # Spack needs tarball URL to be defined to access github branches
-    url = "https://github.com/ACCESS-NRI/oasis3-mct/tarball/spack-build"
+    url = "https://github.com/ACCESS-NRI/oasis3-mct/tarball/master"
 
     maintainers = ["harshula"]
 
-    version("spack-build", branch="spack-build")
+    version("master", branch="master")
 
     depends_on("netcdf-fortran@4.5.2:")
     # Depend on virtual package "mpi".
