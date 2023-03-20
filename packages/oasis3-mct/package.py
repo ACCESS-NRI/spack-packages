@@ -7,8 +7,6 @@
 
 from spack.package import install, join_path, mkdirp
 from pprint import pprint
-import os
-import inspect
 
 # https://spack.readthedocs.io/en/latest/build_systems/makefilepackage.html
 class Oasis3Mct(MakefilePackage):
