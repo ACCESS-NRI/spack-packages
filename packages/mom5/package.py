@@ -33,6 +33,9 @@ class Mom5(MakefilePackage):
 
     phases = ["edit", "build", "install"]
 
+    _platform = "spack"
+    _mom_type = "ACCESS-OM"
+
     def edit(self, spec, prefix):
 
         srcdir = self.stage.source_path
@@ -302,16 +305,24 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
 
         with working_dir(join_path(self.stage.source_path, "exp")):
             build = Executable("./MOM_compile.csh")
-            build("--type", "ACCESS-OM", "--platform", "spack", "--no_environ")
+            build(
+                "--type",
+                self._mom_type,
+                "--platform",
+                self._platform,
+                "--no_environ"
+            )
 
     def install(self, spec, prefix):
 
-        platform = "spack"
-        mom_type = "ACCESS-OM"
-
         mkdirp(prefix.bin)
         install(
-            join_path("exec", platform, mom_type, "fms_" + mom_type + ".x"),
+            join_path(
+                "exec",
+                self._platform,
+                self._mom_type,
+                "fms_" + self._mom_type + ".x"
+            ),
             prefix.bin
         )
-        install(join_path("bin", "mppnccombine." + platform), prefix.bin)
+        install(join_path("bin", "mppnccombine." + self._platform), prefix.bin)
