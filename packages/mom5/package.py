@@ -49,7 +49,7 @@ class Mom5(MakefilePackage):
         incs = " ".join([istr] + [(spec[d].headers).cpp_flags for d in ideps])
 
         lstr = " ".join(
-                    ["".join(["-L", join_path(spec["parallelio"].prefix, "lib")]),
+                    ["-L" + join_path(spec["parallelio"].prefix, "lib"),
                     "-lpiof",
                     "-lpioc"]
                    )
