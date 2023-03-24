@@ -13,10 +13,13 @@ class Cice5(MakefilePackage):
 
     homepage = "https://www.access-nri.org.au"
     git = "https://github.com/ACCESS-NRI/cice5.git"
+    # NOTE: URL definition required for CI
+    # Spack needs tarball URL to be defined to access github branches
+    url = "https://github.com/ACCESS-NRI/cice5/tarball/master"
 
     maintainers = ["harshula"]
 
-    version("spack-build", branch="spack-build")
+    version("master", branch="master")
 
     # Depend on virtual package "mpi".
     depends_on("mpi")
@@ -35,7 +38,7 @@ class Cice5(MakefilePackage):
     _buildscript = "spack-build.sh"
     _buildscript_path = join_path("bld", _buildscript)
 
-    # The integr represents environment variable NTASK
+    # The integer represents environment variable NTASK
     __targets = {24: {}, 480: {}, 722: {}, 1682: {}}
     __targets[24]["driver"] = "auscom"
     __targets[24]["grid"] = "360x300"
@@ -70,15 +73,19 @@ class Cice5(MakefilePackage):
 
         config = {}
 
-        incs = (spec["oasis3-mct"].headers).cpp_flags + "/psmile.MPI1" + " "
-        for l in ["parallelio", "oasis3-mct", "libaccessom2", "netcdf-fortran"]:
-            incs += (spec[l].headers).cpp_flags + " "
+        istr = join_path((spec["oasis3-mct"].headers).cpp_flags, "psmile.MPI1")
+        ideps = ["parallelio", "oasis3-mct", "libaccessom2", "netcdf-fortran"]
+        incs = " ".join([istr] + [(spec[d].headers).cpp_flags for d in ideps])
 
+        lstr = " ".join(
+                    ["-L" + join_path(spec["parallelio"].prefix, "lib"),
+                    "-lpiof",
+                    "-lpioc"]
+                   )
         # NOTE: The order of the libraries matter during the linking step!
         # NOTE: datetime-fortran is a dependency of libaccessom2.
-        libs = "-L" + (spec["parallelio"].prefix) + "/lib -lpiof -lpioc "
-        for l in ["oasis3-mct", "libaccessom2", "netcdf-c", "netcdf-fortran", "datetime-fortran"]:
-            libs += (spec[l].libs).ld_flags + " "
+        ldeps = ["oasis3-mct", "libaccessom2", "netcdf-c", "netcdf-fortran", "datetime-fortran"]
+        libs = " ".join([lstr] + [(spec[d].libs).ld_flags for d in ldeps])
 
         # Copied from bld/Macros.nci
         config["pre"] = f"""
