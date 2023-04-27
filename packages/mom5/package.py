@@ -18,13 +18,17 @@ class Mom5(MakefilePackage):
 
     version("master", branch="master")
 
+    variant("deterministic", default=False, description="Deterministic build.")
+
     # Depend on virtual package "mpi".
     depends_on("mpi")
-    depends_on("oasis3-mct")
-    depends_on("datetime-fortran")
     depends_on("netcdf-fortran@4.5.2:")
     depends_on("netcdf-c@4.7.4:")
-    depends_on("libaccessom2")
+    depends_on("datetime-fortran")
+    depends_on("oasis3-mct+deterministic", when="+deterministic")
+    depends_on("oasis3-mct~deterministic", when="~deterministic")
+    depends_on("libaccessom2+deterministic", when="+deterministic")
+    depends_on("libaccessom2~deterministic", when="~deterministic")
 
     phases = ["edit", "build", "install"]
 
@@ -48,6 +52,13 @@ class Mom5(MakefilePackage):
         # NOTE: datetime-fortran is a dependency of libaccessom2.
         ldeps = ["oasis3-mct", "libaccessom2", "netcdf-c", "netcdf-fortran", "datetime-fortran"]
         libs = " ".join([(spec[d].libs).ld_flags for d in ldeps])
+
+        # TODO: https://github.com/ACCESS-NRI/ACCESS-OM/issues/12
+        FFLAGS_OPT = "-g3 -O2 -xCORE-AVX2 -debug all -check none -traceback"
+        CFLAGS_OPT = "-O2 -debug minimal -xCORE-AVX2"
+        if "+deterministic" in self.spec:
+            FFLAGS_OPT = "-g0 -O0 -xCORE-AVX2 -debug none -check none"
+            CFLAGS_OPT = "-O0 -debug none -xCORE-AVX2"
 
         # Copied from bin/mkmf.template.ubuntu
         config["gcc"] = f"""
@@ -150,15 +161,15 @@ MAKEFLAGS += -j
 INCLUDE   := {incs}
 
 FPPFLAGS := -fpp -Wp,-w $(INCLUDE)
-FFLAGS := -fno-alias -safe-cray-ptr -fpe0 -ftz -assume byterecl -i4 -r8 -traceback -nowarn -check noarg_temp_created -assume nobuffered_io -convert big_endian -grecord-gcc-switches -align all
-FFLAGS_OPT := -g3 -O2 -xCORE-AVX2 -debug all -check none
+FFLAGS := -fno-alias -safe-cray-ptr -fpe0 -ftz -assume byterecl -i4 -r8 -nowarn -check noarg_temp_created -assume nobuffered_io -convert big_endian -grecord-gcc-switches -align all
+FFLAGS_OPT := {FFLAGS_OPT}
 FFLAGS_REPORT := -qopt-report=5 -qopt-report-annotate
-FFLAGS_DEBUG := -g3 -O0 -debug all -check -check noarg_temp_created -check nopointer -warn -warn noerrors -ftrapuv
+FFLAGS_DEBUG := -g3 -O0 -debug all -check -check noarg_temp_created -check nopointer -warn -warn noerrors -ftrapuv -traceback
 FFLAGS_REPRO := -fp-model precise -fp-model source -align all
 FFLAGS_VERBOSE := -v -V -what
 
 CFLAGS := -D__IFC $(INCLUDE)
-CFLAGS_OPT := -O2 -debug minimal -xCORE-AVX2
+CFLAGS_OPT := {CFLAGS_OPT}
 CFLAGS_REPORT := -qopt-report=5 -qopt-report-annotate
 CFLAGS_DEBUG := -O0 -g -ftrapuv -traceback
 CFLAGS_REPRO := -fp-model precise -fp-model source
