@@ -18,17 +18,21 @@ class Cice5(MakefilePackage):
 
     version("master", branch="master")
 
+    variant("deterministic", default=False, description="Deterministic build.")
+
     # Depend on virtual package "mpi".
     depends_on("mpi")
-    depends_on("oasis3-mct")
-    depends_on("datetime-fortran")
     depends_on("netcdf-fortran@4.5.2:")
     depends_on("netcdf-c@4.7.4:")
     # TODO: For initial verification we are going to use static pio.
     #       Eventually we plan to move to shared pio
     # ~shared requires: https://github.com/spack/spack/pull/34837
     depends_on("parallelio~pnetcdf~timing~shared")
-    depends_on("libaccessom2")
+    depends_on("datetime-fortran")
+    depends_on("oasis3-mct+deterministic", when="+deterministic")
+    depends_on("oasis3-mct~deterministic", when="~deterministic")
+    depends_on("libaccessom2+deterministic", when="+deterministic")
+    depends_on("libaccessom2~deterministic", when="~deterministic")
 
     phases = ["edit", "build", "install"]
 
@@ -101,6 +105,13 @@ class Cice5(MakefilePackage):
         ldeps = ["oasis3-mct", "libaccessom2", "netcdf-c", "netcdf-fortran", "datetime-fortran"]
         libs = " ".join([lstr] + [self.get_linker_args(spec, d) for d in ldeps])
 
+        # TODO: https://github.com/ACCESS-NRI/ACCESS-OM/issues/12
+        NCI_OPTIM_FLAGS = "-g3 -O2 -axCORE-AVX2 -debug all -check none -traceback -qopt-report=5 -qopt-report-annotate -assume buffered_io"
+        CFLAGS = "-c -O2"
+        if "+deterministic" in self.spec:
+            NCI_OPTIM_FLAGS = "-g0 -O0 -axCORE-AVX2 -debug none -check none -qopt-report=5 -qopt-report-annotate -assume buffered_io"
+            CFLAGS = "-c -g0"
+
         # Copied from bld/Macros.nci
         config["pre"] = f"""
 INCLDIR    := -I. {incs}
@@ -111,7 +122,7 @@ FC         := mpifort
 
 CPPFLAGS   := -P -traditional
 CPPDEFS    := -DLINUX -DPAROPT
-CFLAGS     := -c -O2
+CFLAGS     := {CFLAGS}
 FIXEDFLAGS := -132
 FREEFLAGS  :=
 """
@@ -123,14 +134,14 @@ FFLAGS = -Wall -fdefault-real-8 -fdefault-double-8 -ffpe-trap=invalid,zero,overf
 
         # module load intel-compiler/2019.5.281
         config["intel"] = f"""
-NCI_INTEL_FLAGS := -r8 -i4 -traceback -w -fpe0 -ftz -convert big_endian -assume byterecl -check noarg_temp_created
+NCI_INTEL_FLAGS := -r8 -i4 -w -fpe0 -ftz -convert big_endian -assume byterecl -check noarg_temp_created
 NCI_REPRO_FLAGS := -fp-model precise -fp-model source -align all
 ifeq ($(DEBUG), 1)
-    NCI_DEBUG_FLAGS := -g3 -O0 -debug all -check all -no-vec -assume nobuffered_io
+    NCI_DEBUG_FLAGS := -g3 -O0 -debug all -check all -no-vec -traceback -assume nobuffered_io
     FFLAGS          := $(NCI_INTEL_FLAGS) $(NCI_REPRO_FLAGS) $(NCI_DEBUG_FLAGS)
     CPPDEFS         := $(CPPDEFS) -DDEBUG=$(DEBUG)
 else
-    NCI_OPTIM_FLAGS := -g3 -O2 -axCORE-AVX2 -debug all -check none -qopt-report=5 -qopt-report-annotate -assume buffered_io
+    NCI_OPTIM_FLAGS = {NCI_OPTIM_FLAGS}
     FFLAGS          := $(NCI_INTEL_FLAGS) $(NCI_REPRO_FLAGS) $(NCI_OPTIM_FLAGS)
 endif
 """
