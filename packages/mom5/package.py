@@ -27,10 +27,6 @@ class Mom5(MakefilePackage):
     depends_on("datetime-fortran")
     depends_on("netcdf-fortran@4.5.2:")
     depends_on("netcdf-c@4.7.4:")
-    # TODO: For initial verification we are going to use static pio.
-    #       Eventually we plan to move to shared pio
-    # ~shared requires: https://github.com/spack/spack/pull/34837
-    depends_on("parallelio~pnetcdf~timing~shared")
     depends_on("libaccessom2")
 
     phases = ["edit", "build", "install"]
@@ -45,18 +41,13 @@ class Mom5(MakefilePackage):
         config = {}
 
         istr = join_path((spec["oasis3-mct"].headers).cpp_flags, "psmile.MPI1")
-        ideps = ["parallelio", "oasis3-mct", "libaccessom2", "netcdf-fortran"]
+        ideps = ["oasis3-mct", "libaccessom2", "netcdf-fortran"]
         incs = " ".join([istr] + [(spec[d].headers).cpp_flags for d in ideps])
 
-        lstr = " ".join(
-                    ["-L" + join_path(spec["parallelio"].prefix, "lib"),
-                    "-lpiof",
-                    "-lpioc"]
-                   )
         # NOTE: The order of the libraries matter during the linking step!
         # NOTE: datetime-fortran is a dependency of libaccessom2.
         ldeps = ["oasis3-mct", "libaccessom2", "netcdf-c", "netcdf-fortran", "datetime-fortran"]
-        libs = " ".join([lstr] + [(spec[d].libs).ld_flags for d in ldeps])
+        libs = " ".join([(spec[d].libs).ld_flags for d in ldeps])
 
         # Copied from bin/mkmf.template.ubuntu
         config["gcc"] = f"""
