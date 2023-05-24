@@ -63,6 +63,24 @@ class Cice5(MakefilePackage):
     def url_for_version(self, version):
         return "https://github.com/ACCESS-NRI/cice5/tarball/{0}".format(version)
 
+    # The reason for the explicit -rpath is:
+    # https://github.com/ACCESS-NRI/spack_packages/issues/14#issuecomment-1653651447
+    def get_linker_args(self, spec, name):
+        return " ".join(
+                    [(spec[name].libs).ld_flags,
+                    "-Wl,-rpath=" + join_path(spec[name].prefix, "lib")]
+                   )
+
+    # The reason for the explicit -rpath is:
+    # https://github.com/ACCESS-NRI/spack_packages/issues/14#issuecomment-1653651447
+    def make_linker_args(self, spec, name, namespecs):
+        path = join_path(spec[name].prefix, "lib")
+        return " ".join(
+                    ["-L" + path,
+                    namespecs,
+                    "-Wl,-rpath=" + path]
+                   )
+
     def edit(self, spec, prefix):
 
         srcdir = self.stage.source_path
@@ -77,15 +95,11 @@ class Cice5(MakefilePackage):
         ideps = ["parallelio", "oasis3-mct", "libaccessom2", "netcdf-fortran"]
         incs = " ".join([istr] + [(spec[d].headers).cpp_flags for d in ideps])
 
-        lstr = " ".join(
-                    ["-L" + join_path(spec["parallelio"].prefix, "lib"),
-                    "-lpiof",
-                    "-lpioc"]
-                   )
+        lstr = self.make_linker_args(spec, "parallelio", "-lpiof -lpioc")
         # NOTE: The order of the libraries matter during the linking step!
         # NOTE: datetime-fortran is a dependency of libaccessom2.
         ldeps = ["oasis3-mct", "libaccessom2", "netcdf-c", "netcdf-fortran", "datetime-fortran"]
-        libs = " ".join([lstr] + [(spec[d].libs).ld_flags for d in ldeps])
+        libs = " ".join([lstr] + [self.get_linker_args(spec, d) for d in ldeps])
 
         # Copied from bld/Macros.nci
         config["pre"] = f"""
@@ -184,12 +198,10 @@ ifeq ($(OASIS3_MCT), yes)
    CPPDEFS := $(CPPDEFS) -DOASIS3_MCT
 endif
 """
+        fullconfig = config["pre"] + config[self.compiler.name] + config["post"]
+        print(fullconfig)
         with open(makeinc_path, "w") as makeinc:
-            makeinc.write(
-                config["pre"]
-                + config[self.compiler.name]
-                + config["post"]
-            )
+            makeinc.write(fullconfig)
 
     def build(self, spec, prefix):
 
