@@ -296,8 +296,10 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
 	hpm -r -o $*.hpm $*.x
 """
 
+        fullconfig = config[self.compiler.name] + config["post"]
+        print(fullconfig)
         with open(makeinc_path, "w") as makeinc:
-            makeinc.write(config[self.compiler.name] + config["post"])
+            makeinc.write(fullconfig)
 
     def build(self, spec, prefix):
 
