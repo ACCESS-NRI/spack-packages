@@ -16,8 +16,13 @@ class AccessOm2(BundlePackage):
 
     version("2023.01.001-1")
 
-    depends_on("libaccessom2")
-    depends_on("cice5")
-    depends_on("mom5")
+    variant("deterministic", default=False, description="Deterministic build.")
+
+    depends_on("libaccessom2+deterministic", when="+deterministic")
+    depends_on("libaccessom2~deterministic", when="~deterministic")
+    depends_on("cice5+deterministic", when="+deterministic")
+    depends_on("cice5~deterministic", when="~deterministic")
+    depends_on("mom5+deterministic", when="+deterministic")
+    depends_on("mom5~deterministic", when="~deterministic")
 
     # There is no need for install() since there is no code.
