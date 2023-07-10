@@ -1,6 +1,6 @@
 ## Adapted from https://github.com/spack/spack/blob/v0.20.0/var/spack/repos/builtin/packages/openmpi/package.py
-## Apache-2.0 Licence
 ## Scott Wales 2023
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 class NciOpenmpi(Package):
