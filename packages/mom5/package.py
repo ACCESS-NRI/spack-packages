@@ -13,8 +13,6 @@ class Mom5(MakefilePackage):
 
     homepage = "https://www.access-nri.org.au"
     git = "https://github.com/ACCESS-NRI/mom5.git"
-    # NOTE: URL definition required for CI
-    # Spack needs tarball URL to be defined to access github branches
     url = "https://github.com/ACCESS-NRI/mom5/tarball/master"
 
     maintainers = ["harshula"]
@@ -33,6 +31,9 @@ class Mom5(MakefilePackage):
 
     _platform = "spack"
     _mom_type = "ACCESS-OM"
+
+    def url_for_version(self, version):
+        return "https://github.com/ACCESS-NRI/mom5/tarball/{0}".format(version)
 
     def edit(self, spec, prefix):
 
