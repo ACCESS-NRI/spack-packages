@@ -27,7 +27,6 @@ class DatetimeFortran(AutotoolsPackage):
     """FIXME: Put a proper description of your package here."""
 
     homepage = "https://github.com/wavebitscientific/datetime-fortran/tree/main"
-    url      = "https://github.com/wavebitscientific/datetime-fortran/releases/download/v1.7.0/datetime-fortran-1.7.0.tar.gz"
 
     maintainers = ['aidanheerdegen', 'milancurcic']
 
@@ -41,6 +40,9 @@ class DatetimeFortran(AutotoolsPackage):
     version('1.4.1', sha256='4a178b63301f0016b7634625062278742a44026f4c37cafcb9e8ba9649db85e0')
 
     patch("0001-Enable-deterministic-builds-using-D-flag-for-ar.patch", when="@1.7.0")
+
+    def url_for_version(self, version):
+        return "https://github.com/wavebitscientific/datetime-fortran/releases/download/v{0}/datetime-fortran-{0}.tar.gz".format(version)
 
     # https://spack-tutorial.readthedocs.io/en/ecp21/tutorial_advanced_packaging.html
     @property

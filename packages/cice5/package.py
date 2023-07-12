@@ -13,9 +13,6 @@ class Cice5(MakefilePackage):
 
     homepage = "https://www.access-nri.org.au"
     git = "https://github.com/ACCESS-NRI/cice5.git"
-    # NOTE: URL definition required for CI
-    # Spack needs tarball URL to be defined to access github branches
-    url = "https://github.com/ACCESS-NRI/cice5/tarball/master"
 
     maintainers = ["harshula"]
 
@@ -62,6 +59,9 @@ class Cice5(MakefilePackage):
     __targets[1682]["driver"] = "auscom"
     __targets[1682]["grid"] = "3600x2700"
     __targets[1682]["blocks"] = "200x180"
+
+    def url_for_version(self, version):
+        return "https://github.com/ACCESS-NRI/cice5/tarball/{0}".format(version)
 
     def edit(self, spec, prefix):
 
