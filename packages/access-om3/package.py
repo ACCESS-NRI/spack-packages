@@ -16,7 +16,7 @@ class AccessOm3(BundlePackage):
 
     version("0.0.1")
 
-    depends_on("esmf@8.3.1+parallelio~pnetcdf")
+    depends_on("esmf@8.3.1+external-parallelio~pnetcdf")
     depends_on("fms@2022.04")
     depends_on("parallelio@2.5.9")
 
