@@ -1,0 +1,48 @@
+name: "Dispatch Event to Build CI"
+on:
+  push:
+    branches:
+      - main
+    tags: 
+      - '*.*.*'
+    paths:
+      - 'packages/**'
+
+jobs:
+  send-tag-update-to-build-ci:
+    name: Send Tag Update to Build CI repo
+    runs-on: ubuntu-latest
+    if: github.ref_type == 'tag'
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Get names of all package directories
+        id: directories
+        run: |
+          # list all the packages, turn it into a space-separated list!
+          echo "modified=$(ls packages | tr '\n' ' ')" >> $GITHUB_OUTPUT
+
+      - name: Send event and tag to build-ci repo
+        run: |
+          curl -XPOST -u "${{ secrets.RELEASE_BUILD_CI_PAT_USERNAME }}:${{ secrets.RELEASE_BUILD_CI_PAT }}" \
+            -H "Accept: application/vnd.github.everest-preview+json" \
+            -H "Content-Type: application/json" https://api.github.com/repos/ACCESS-NRI/build-ci/actions/workflows/notified-of-spack-packages-update.yml/dispatches \
+            --data '{"ref": "main", "inputs":{"spack-packages-version": "${{ github.ref_name }}", "packages": "${{ steps.directories.outputs.modified }}"}}'
+
+  send-branch-update-to-build-ci:
+    name: Send Branch Update to Build CI repo
+    runs-on: ubuntu-latest
+    if: github.ref_type == 'branch'
+    steps:
+      - name: Get names of directories modified in push/tag
+        id: directories
+        run: |
+          # get all the changed files in the push, only keep the parent directory (corresponds to the package name), and turn it into a space-separated list!
+          echo "modified=$(git diff --name-only ${{ github.event.after }} ${{ github.event.before }} | cut -d '/' -f 2 | tr '\n' ' ')" >> $GITHUB_OUTPUT
+          
+      - name: Send event and tag to build-ci repo
+        run: |
+          curl -XPOST -u "${{ secrets.RELEASE_BUILD_CI_PAT_USERNAME }}:${{ secrets.RELEASE_BUILD_CI_PAT }}" \
+            -H "Accept: application/vnd.github.everest-preview+json" \
+            -H "Content-Type: application/json" https://api.github.com/repos/ACCESS-NRI/build-ci/actions/workflows/notified-of-spack-packages-update.yml/dispatches \
+            --data '{"ref": "main", "inputs":{"spack-packages-version": "${{ github.ref_name }}", "packages": "${{ steps.directories.outputs.modified }}"}}'
