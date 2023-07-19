@@ -5,6 +5,8 @@ on:
       - main
     tags: 
       - '*.*.*'
+    paths:
+      - 'packages/**'
 
 jobs:
   send-tag-update-to-build-ci:
