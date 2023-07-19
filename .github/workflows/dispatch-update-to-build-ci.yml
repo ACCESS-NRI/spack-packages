@@ -15,10 +15,13 @@ jobs:
     if: github.ref_type == 'tag'
     steps:
       - uses: actions/checkout@v3
+      
       - name: Get names of all package directories
         id: directories
-        run: echo "modified=$(ls packages)" >> $GITHUB_OUTPUT
-        
+        run: |
+          # list all the packages, turn it into a space-separated list!
+          echo "modified=$(ls packages | tr '\n' ' ')" >> $GITHUB_OUTPUT
+
       - name: Send event and tag to build-ci repo
         run: |
           curl -XPOST -u "${{ secrets.RELEASE_BUILD_CI_PAT_USERNAME }}:${{ secrets.RELEASE_BUILD_CI_PAT }}" \
