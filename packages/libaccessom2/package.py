@@ -12,9 +12,6 @@ class Libaccessom2(CMakePackage):
 
     homepage = "https://www.access-nri.org.au"
     git = "https://github.com/ACCESS-NRI/libaccessom2.git"
-    # NOTE: URL definition required for CI
-    # Spack needs tarball URL to be defined to access github branches
-    url = "https://github.com/ACCESS-NRI/libaccessom2/tarball/master"
 
     maintainers = ["harshula"]
 
@@ -28,3 +25,6 @@ class Libaccessom2(CMakePackage):
     depends_on("datetime-fortran")
     depends_on("json-fortran")
     depends_on("netcdf-fortran@4.5.2:")
+
+    def url_for_version(self, version):
+        return "https://github.com/ACCESS-NRI/libaccessom2/tarball/{0}".format(version)

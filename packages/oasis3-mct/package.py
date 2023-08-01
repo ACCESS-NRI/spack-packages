@@ -14,9 +14,6 @@ class Oasis3Mct(MakefilePackage):
 
     homepage = "https://www.access-nri.org.au"
     git = "https://github.com/ACCESS-NRI/oasis3-mct.git"
-    # NOTE: URL definition required for CI
-    # Spack needs tarball URL to be defined to access github branches
-    url = "https://github.com/ACCESS-NRI/oasis3-mct/tarball/master"
 
     maintainers = ["harshula"]
 
@@ -169,6 +166,9 @@ class Oasis3Mct(MakefilePackage):
 
         # Uncomment to print package files and directories
         # pprint(self.__libs)
+
+    def url_for_version(self, version):
+        return "https://github.com/ACCESS-NRI/oasis3-mct/tarball/{0}".format(version)
 
     def __create_pkgconfig(self, spec, prefix):
 
