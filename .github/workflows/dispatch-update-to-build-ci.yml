@@ -26,8 +26,8 @@ jobs:
         run: |
           curl -XPOST -u "${{ secrets.RELEASE_BUILD_CI_PAT_USERNAME }}:${{ secrets.RELEASE_BUILD_CI_PAT }}" \
             -H "Accept: application/vnd.github.everest-preview+json" \
-            -H "Content-Type: application/json" https://api.github.com/repos/ACCESS-NRI/build-ci/actions/workflows/notified-of-spack-packages-update.yml/dispatches \
-            --data '{"ref": "main", "inputs":{"spack-packages-version": "${{ github.ref_name }}", "packages": "${{ steps.directories.outputs.modified }}"}}'
+            -H "Content-Type: application/json" https://api.github.com/repos/ACCESS-NRI/build-ci/actions/workflows/build-and-push-image-build.yml/dispatches \
+            --data '{"ref": "main", "inputs":{"spack-packages-version": "${{ github.ref_name }}"}}'
 
   send-branch-update-to-build-ci:
     name: Send Branch Update to Build CI repo
@@ -44,5 +44,5 @@ jobs:
         run: |
           curl -XPOST -u "${{ secrets.RELEASE_BUILD_CI_PAT_USERNAME }}:${{ secrets.RELEASE_BUILD_CI_PAT }}" \
             -H "Accept: application/vnd.github.everest-preview+json" \
-            -H "Content-Type: application/json" https://api.github.com/repos/ACCESS-NRI/build-ci/actions/workflows/notified-of-spack-packages-update.yml/dispatches \
-            --data '{"ref": "main", "inputs":{"spack-packages-version": "${{ github.ref_name }}", "packages": "${{ steps.directories.outputs.modified }}"}}'
+            -H "Content-Type: application/json" https://api.github.com/repos/ACCESS-NRI/build-ci/actions/workflows/build-and-push-image-build.yml/dispatches \
+            --data '{"ref": "main", "inputs":{"spack-packages-version": "${{ github.ref_name }}"}}'
