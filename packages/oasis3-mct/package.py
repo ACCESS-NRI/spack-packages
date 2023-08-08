@@ -20,6 +20,7 @@ class Oasis3Mct(MakefilePackage):
     version("master", branch="master")
 
     variant("deterministic", default=False, description="Deterministic build.")
+    variant("optimisation_report", default=False, description="Generate optimisation reports.")
 
     depends_on("netcdf-fortran@4.5.2:")
     # Depend on virtual package "mpi".
@@ -213,11 +214,14 @@ Cflags: -I${{includedir}}/{k}
         config = {}
 
         # TODO: https://github.com/ACCESS-NRI/ACCESS-OM/issues/12
-        NCI_OPTIM_FLAGS = "-g3 -O2 -axCORE-AVX2 -debug all -check none -traceback -qopt-report=5 -qopt-report-annotate"
+        NCI_OPTIM_FLAGS = "-g3 -O2 -axCORE-AVX2 -debug all -check none -traceback"
         CFLAGS = ""
         if "+deterministic" in self.spec:
-            NCI_OPTIM_FLAGS = "-g0 -O0 -axCORE-AVX2 -debug none -check none -qopt-report=5 -qopt-report-annotate"
+            NCI_OPTIM_FLAGS = "-g0 -O0 -axCORE-AVX2 -debug none -check none"
             CFLAGS = "-g0"
+
+        if "+optimisation_report" in self.spec:
+            NCI_OPTIM_FLAGS += " -qopt-report=5 -qopt-report-annotate"
 
         config["pre"] = f"""
 # CHAN	: communication technique used in OASIS3 (MPI1/MPI2/NONE)

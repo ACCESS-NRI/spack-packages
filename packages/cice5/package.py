@@ -19,6 +19,7 @@ class Cice5(MakefilePackage):
     version("master", branch="master")
 
     variant("deterministic", default=False, description="Deterministic build.")
+    variant("optimisation_report", default=False, description="Generate optimisation reports.")
 
     # Depend on virtual package "mpi".
     depends_on("mpi")
@@ -106,11 +107,14 @@ class Cice5(MakefilePackage):
         libs = " ".join([lstr] + [self.get_linker_args(spec, d) for d in ldeps])
 
         # TODO: https://github.com/ACCESS-NRI/ACCESS-OM/issues/12
-        NCI_OPTIM_FLAGS = "-g3 -O2 -axCORE-AVX2 -debug all -check none -traceback -qopt-report=5 -qopt-report-annotate -assume buffered_io"
+        NCI_OPTIM_FLAGS = "-g3 -O2 -axCORE-AVX2 -debug all -check none -traceback -assume buffered_io"
         CFLAGS = "-c -O2"
         if "+deterministic" in self.spec:
-            NCI_OPTIM_FLAGS = "-g0 -O0 -axCORE-AVX2 -debug none -check none -qopt-report=5 -qopt-report-annotate -assume buffered_io"
+            NCI_OPTIM_FLAGS = "-g0 -O0 -axCORE-AVX2 -debug none -check none -assume buffered_io"
             CFLAGS = "-c -g0"
+
+        if "+optimisation_report" in self.spec:
+            NCI_OPTIM_FLAGS += " -qopt-report=5 -qopt-report-annotate"
 
         # Copied from bld/Macros.nci
         config["pre"] = f"""
