@@ -19,6 +19,7 @@ class Mom5(MakefilePackage):
     version("master", branch="master")
 
     variant("deterministic", default=False, description="Deterministic build.")
+    variant("optimisation_report", default=False, description="Generate optimisation reports.")
 
     # Depend on virtual package "mpi".
     depends_on("mpi")
@@ -305,6 +306,10 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
         # ./MOM_compile.csh --type $mom_type --platform spack
         with working_dir(join_path(self.stage.source_path, "exp")):
             build = Executable("./MOM_compile.csh")
+
+            if "+optimisation_report" in self.spec:
+                build.add_default_env("REPORT", "true")
+
             build(
                 "--type",
                 self._mom_type,

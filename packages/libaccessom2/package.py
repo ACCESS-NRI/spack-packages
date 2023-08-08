@@ -18,6 +18,7 @@ class Libaccessom2(CMakePackage):
     version("master", branch="master")
 
     variant("deterministic", default=False, description="Deterministic build.")
+    variant("optimisation_report", default=False, description="Generate optimisation reports.")
     variant('build_type',
             default='Release',
             description='The build type to build',
@@ -38,4 +39,5 @@ class Libaccessom2(CMakePackage):
         return "https://github.com/ACCESS-NRI/libaccessom2/tarball/{0}".format(version)
 
     def cmake_args(self):
-        return [self.define_from_variant('DETERMINISTIC', "deterministic")]
+        return [self.define_from_variant('DETERMINISTIC', "deterministic"),
+                self.define_from_variant('OPTIMISATION_REPORT', "optimisation_report")]
