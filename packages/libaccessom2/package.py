@@ -38,6 +38,14 @@ class Libaccessom2(CMakePackage):
     def url_for_version(self, version):
         return "https://github.com/ACCESS-NRI/libaccessom2/tarball/{0}".format(version)
 
-    def cmake_args(self):
-        return [self.define_from_variant('DETERMINISTIC', "deterministic"),
-                self.define_from_variant('OPTIMISATION_REPORT', "optimisation_report")]
+    # https://spack.readthedocs.io/en/latest/packaging_guide.html
+    def patch(self):
+        if "+deterministic" in self.spec:
+            filter_file(r"-traceback", "", "CMakeLists.txt")
+            filter_file(r"-g3 -O2", "-g0 -O0", "CMakeLists.txt")
+
+        if "~optimisation_report" in self.spec:
+            filter_file(r"-qopt-report=5 -qopt-report-annotate",
+                        "",
+                        "CMakeLists.txt"
+            )
