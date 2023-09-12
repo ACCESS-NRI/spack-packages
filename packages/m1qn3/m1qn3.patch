@@ -1,3 +1,5 @@
+# Reproduced from externalpackages/m1qn3/patch/m1qn3.f.patch
+# in ISSM Subversion trunk.
 --- src/src/m1qn3.f     2009-10-20 06:39:35.000000000 -0400
 +++ m1qn3.f     2021-08-13 14:44:30.276019165 -0400
 @@ -802,7 +802,7 @@
