@@ -1,0 +1,21 @@
+name: Python Checks
+on:
+  pull_request:
+    paths:
+      - '**.py'
+  push:
+    branches:
+      - main
+    paths:
+      - '**.py'
+jobs:
+  format-syntax-check:
+    name: check formatting and syntax
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: chartboost/ruff-action@v1
+        with:
+          src: "./packages"
+          args: "check --format github --preview --config .ruff.toml"
+
