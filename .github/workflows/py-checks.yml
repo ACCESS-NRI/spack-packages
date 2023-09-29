@@ -1,0 +1,25 @@
+name: Python Checks
+on:
+  pull_request:
+    paths:
+      - '**.py'
+  push:
+    branches:
+      - main
+    paths:
+      - '**.py'
+jobs:  
+  ruff-check:
+    name: Check syntax
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Get py files changed
+        id: get-files
+        # In this step, we get the names of all the *.py files changed before the push/pull_request event
+        # and replaces the newlines with spaces so github actions understands the input in the next step
+        run: echo "files=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} -- '*.py' | tr '\n' ' ')" >> $GITHUB_OUTPUT
+      - uses: chartboost/ruff-action@v1
+        with:
+          src: "${{ steps.get-files.outputs.files }}"
+          args: "check --format github --preview --config .ruff.toml"
