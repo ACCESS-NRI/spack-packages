@@ -14,12 +14,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
       - name: Get py files changed
         id: get-files
-        # In this step, we get the names of all the *.py files changed before the push/pull_request event
-        # and replaces the newlines with spaces so github actions understands the input in the next step
-        run: echo "files=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} -- '*.py' | tr '\n' ' ')" >> $GITHUB_OUTPUT
+        uses: tj-actions/changed-files@v39
+        with:
+          files: '**.py'
       - uses: chartboost/ruff-action@v1
         with:
-          src: "${{ steps.get-files.outputs.files }}"
+          src: "${{ steps.get-files.outputs.all_changed_files }}"
           args: "check --format github --preview --config .ruff.toml"
