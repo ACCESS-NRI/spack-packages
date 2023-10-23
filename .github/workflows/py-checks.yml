@@ -26,4 +26,4 @@ jobs:
       - uses: chartboost/ruff-action@v1
         with:
           src: "${{ steps.get-files.outputs.all_changed_files }}"
-          args: "check --format github --preview --config .ruff.toml"
+          args: "check --preview --config .ruff.toml"
