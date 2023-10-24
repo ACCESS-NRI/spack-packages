@@ -60,13 +60,28 @@ class AccessOm3(CMakePackage):
         args = [
             self.define_from_variant("OM3_MOM_SYMMETRIC", "mom_symmetric"),
             self.define_from_variant("OM3_OPENMP", "openmp"),
-            self.define("OM3_ENABLE_MOM6", "configurations=MOM6" in self.spec),
-            self.define("OM3_ENABLE_CICE6", "configurations=CICE6" in self.spec),
-            self.define("OM3_ENABLE_WW3", "configurations=WW3" in self.spec),
-            self.define("OM3_ENABLE_MOM6-WW3", "configurations=MOM6-WW3" in self.spec),
-            self.define("OM3_ENABLE_MOM6-CICE6", "configurations=MOM6-CICE6" in self.spec),
-            self.define("OM3_ENABLE_CICE6-WW3", "configurations=CICE6-WW3" in self.spec),
-            self.define("OM3_ENABLE_MOM6-CICE6-WW3", "configurations=MOM6-CICE6-WW3" in self.spec),
+            self.define(
+                "OM3_ENABLE_MOM6", "configurations=MOM6" in self.spec
+            ),
+            self.define(
+                "OM3_ENABLE_CICE6", "configurations=CICE6" in self.spec
+            ),
+            self.define(
+                "OM3_ENABLE_WW3", "configurations=WW3" in self.spec
+            ),
+            self.define(
+                "OM3_ENABLE_MOM6-WW3", "configurations=MOM6-WW3" in self.spec
+            ),
+            self.define(
+                "OM3_ENABLE_MOM6-CICE6", "configurations=MOM6-CICE6" in self.spec
+            ),
+            self.define(
+                "OM3_ENABLE_CICE6-WW3", "configurations=CICE6-WW3" in self.spec
+            ),
+            self.define(
+                "OM3_ENABLE_MOM6-CICE6-WW3",
+                "configurations=MOM6-CICE6-WW3" in self.spec
+            ),
         ]
 
         args.append(self.define("CMAKE_C_COMPILER", self.spec["mpi"].mpicc))
