@@ -23,7 +23,9 @@ jobs:
         uses: tj-actions/changed-files@v39
         with:
           files: '**.py'
-      - uses: chartboost/ruff-action@v1
+      - if: ${{ fromJson(steps.get-files.outputs.all_changed_files_count) > 0 }}
+        uses: chartboost/ruff-action@v1
         with:
           src: "${{ steps.get-files.outputs.all_changed_files }}"
+          version: 0.1.1
           args: "check --preview --config .ruff.toml"
