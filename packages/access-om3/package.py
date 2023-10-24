@@ -17,19 +17,34 @@ class AccessOm3(CMakePackage):
     version("main", branch="main", submodules=True)
 
     variant(
-        "build_type", default="Release", description="The build type to build",
+        "build_type",
+        default="Release",
+        description="The build type to build",
         values=("Debug", "Release")
     )
     variant(
-        "configurations", default="MOM6-CICE6, CICE6-WW3, MOM6-CICE6-WW3",
-        values=("MOM6", "CICE6", "WW3", "MOM6-WW3", "MOM6-CICE6", "CICE6-WW3", "MOM6-CICE6-WW3"),
-        multi=True, description="ACCESS-OM3 configurations to build"
+        "configurations",
+        default="MOM6-CICE6, CICE6-WW3, MOM6-CICE6-WW3",
+        values=(
+            "MOM6",
+            "CICE6",
+            "WW3",
+            "MOM6-WW3",
+            "MOM6-CICE6",
+            "CICE6-WW3",
+            "MOM6-CICE6-WW3"
+        ),
+        multi=True,
+        description="ACCESS-OM3 configurations to build"
     )
     variant("openmp", default=False, description="Enable OpenMP")
     variant("mom_symmetric", default=False, description="Use symmetric memory in MOM6")
     variant(
-        "cice_io", default="PIO", description="CICE IO option",
-        values=("NectCDF", "PIO", "Binary"), multi=False
+        "cice_io",
+        default="PIO",
+        description="CICE IO option",
+        values=("NectCDF", "PIO", "Binary"),
+        multi=False
     )
 
     depends_on("cmake@3.18:", type="build")
