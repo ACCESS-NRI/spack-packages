@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack.package import CMakePackage, variant
 
 
 class AccessOm3(CMakePackage):
@@ -20,7 +20,7 @@ class AccessOm3(CMakePackage):
         "build_type",
         default="Release",
         description="The build type to build",
-        values=("Debug", "Release")
+        values=("Debug", "Release"),
     )
     variant(
         "configurations",
@@ -32,10 +32,10 @@ class AccessOm3(CMakePackage):
             "MOM6-WW3",
             "MOM6-CICE6",
             "CICE6-WW3",
-            "MOM6-CICE6-WW3"
+            "MOM6-CICE6-WW3",
         ),
         multi=True,
-        description="ACCESS-OM3 configurations to build"
+        description="ACCESS-OM3 configurations to build",
     )
     variant("openmp", default=False, description="Enable OpenMP")
     variant("mom_symmetric", default=False, description="Use symmetric memory in MOM6")
@@ -44,7 +44,7 @@ class AccessOm3(CMakePackage):
         default="PIO",
         description="CICE IO option",
         values=("NectCDF", "PIO", "Binary"),
-        multi=False
+        multi=False,
     )
 
     depends_on("cmake@3.18:", type="build")
@@ -66,7 +66,7 @@ class AccessOm3(CMakePackage):
             self.define("OM3_ENABLE_MOM6-WW3", "configurations=MOM6-WW3" in self.spec),
             self.define("OM3_ENABLE_MOM6-CICE6", "configurations=MOM6-CICE6" in self.spec),
             self.define("OM3_ENABLE_CICE6-WW3", "configurations=CICE6-WW3" in self.spec),
-            self.define("OM3_ENABLE_MOM6-CICE6-WW3", "configurations=MOM6-CICE6-WW3" in self.spec)
+            self.define("OM3_ENABLE_MOM6-CICE6-WW3", "configurations=MOM6-CICE6-WW3" in self.spec),
         ]
 
         args.append(self.define("CMAKE_C_COMPILER", self.spec["mpi"].mpicc))
