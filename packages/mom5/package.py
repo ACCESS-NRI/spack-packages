@@ -310,12 +310,16 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
             if "+optimisation_report" in self.spec:
                 build.add_default_env("REPORT", "true")
 
+            # The MOM5 commit d7ba13a3f364ce130b6ad0ba813f01832cada7a2
+            # requires the --no_version switch to avoid git hashes being
+            # embedded in the binary.
             build(
                 "--type",
                 self._mom_type,
                 "--platform",
                 self._platform,
-                "--no_environ"
+                "--no_environ",
+                "--no_version"
             )
 
     def install(self, spec, prefix):
