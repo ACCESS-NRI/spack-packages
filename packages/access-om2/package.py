@@ -12,9 +12,11 @@ class AccessOm2(BundlePackage):
 
     homepage = "https://www.access-nri.org.au"
 
+    git = "https://github.com/ACCESS-NRI/ACCESS-OM2.git"
+
     maintainers = ["harshula"]
 
-    version("2023.01.001-1")
+    version("latest")
 
     variant("deterministic", default=False, description="Deterministic build.")
 
