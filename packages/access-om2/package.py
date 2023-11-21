@@ -16,6 +16,8 @@ class AccessOm2(BundlePackage):
 
     maintainers = ["harshula"]
 
+    version("latest")
+
     variant("deterministic", default=False, description="Deterministic build.")
 
     depends_on("libaccessom2+deterministic", when="+deterministic")
