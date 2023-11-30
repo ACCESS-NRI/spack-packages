@@ -37,6 +37,11 @@ class AccessOm3(CMakePackage):
         multi=True,
         description="ACCESS-OM3 configurations to build",
     )
+    variant(
+        "install_libraries",
+        default=False,
+        description="Install component libraries"
+    )
     variant("openmp", default=False, description="Enable OpenMP")
     variant("mom_symmetric", default=False, description="Use symmetric memory in MOM6")
     variant(
@@ -53,12 +58,14 @@ class AccessOm3(CMakePackage):
     depends_on("esmf@8.3.0:")
     depends_on("fms@2021.03:")
     depends_on("parallelio@2.5.10:")
+    depends_on("fortranxml@4.1.2:")
 
     flag_handler = CMakePackage.build_system_flags
 
     def cmake_args(self):
         args = [
             self.define_from_variant("OM3_MOM_SYMMETRIC", "mom_symmetric"),
+            self.define_from_variant("OM3_LIB_INSTALL", "install_libraries"),
             self.define_from_variant("OM3_OPENMP", "openmp"),
             self.define(
                 "OM3_ENABLE_MOM6", "configurations=MOM6" in self.spec
