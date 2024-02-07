@@ -34,8 +34,10 @@ class NciOpenmpi(Package):
         elif self.spec.satisfies("%gcc"):
             finc_path = join_path(self.prefix.include, "GNU")
             flib_path = join_path(self.prefix.lib, "GNU")
-        env.append_path("OMPI_FCFLAGS", "-I" + finc_path)
-        env.append_path("OMPI_LDFLAGS", "-L" + self.prefix.lib + " -L" + flib_path)
+
+        env.append_flags("OMPI_FCFLAGS", "-I" + finc_path)
+        env.append_flags("OMPI_LDFLAGS", "-L" + self.prefix.lib)
+        env.append_flags("OMPI_LDFLAGS", "-L" + flib_path)
 
     # The following is reproduced from the builtin openmpi spack package
     def setup_dependent_build_environment(self, env, dependent_spec):
