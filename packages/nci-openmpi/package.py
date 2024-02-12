@@ -1,7 +1,8 @@
-## Adapted from https://github.com/spack/spack/blob/v0.20.0/var/spack/repos/builtin/packages/openmpi/package.py
-## Scott Wales 2023
+# Adapted from https://github.com/spack/spack/blob/v0.20.0/var/spack/repos/builtin/packages/openmpi/package.py
+# Scott Wales 2023
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.package import *
 
 class NciOpenmpi(Package):
     """
@@ -14,6 +15,8 @@ class NciOpenmpi(Package):
           externals:
             - spec: nci-openmpi@4.1.4
               prefix: /apps/openmpi/4.1.4
+              modules:
+              - openmpi/4.1.4
           buildable: False
     """
 
