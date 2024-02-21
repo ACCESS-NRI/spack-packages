@@ -49,3 +49,10 @@ class Libaccessom2(CMakePackage):
                         "",
                         "CMakeLists.txt"
             )
+
+    def cmake_args(self):
+        return [
+            self.define("CMAKE_C_COMPILER", self.spec["mpi"].mpicc),
+            self.define("CMAKE_CXX_COMPILER", self.spec["mpi"].mpicxx),
+            self.define("CMAKE_Fortran_COMPILER", self.spec["mpi"].mpifc),
+        ]
