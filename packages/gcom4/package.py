@@ -10,7 +10,6 @@
 from spack.package import *
 
 import llnl.util.filesystem as fs
-import llnl.util.tty as tty
 
 
 class Gcom4(Package):
