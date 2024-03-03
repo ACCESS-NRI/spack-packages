@@ -19,6 +19,7 @@ class Mom5(MakefilePackage):
     version("master", branch="master")
 
     variant("deterministic", default=False, description="Deterministic build.")
+    variant("type", default="ACCESS-OM", description="Build MOM5 to support a particular use case.", values=("ACCESS-CM", "ACCESS-ESM", "ACCESS-OM", "ACCESS-OM-BGC", "MOM_solo"), multi=False)
     variant("optimisation_report", default=False, description="Generate optimisation reports.")
 
     # Depend on virtual package "mpi".
@@ -34,7 +35,6 @@ class Mom5(MakefilePackage):
     phases = ["edit", "build", "install"]
 
     _platform = "spack"
-    _mom_type = "ACCESS-OM"
 
     def url_for_version(self, version):
         return "https://github.com/ACCESS-NRI/mom5/tarball/{0}".format(version)
@@ -317,7 +317,7 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
             # embedded in the binary.
             build(
                 "--type",
-                self._mom_type,
+                self.spec.variants["type"].value,
                 "--platform",
                 self._platform,
                 "--no_environ",
@@ -331,8 +331,8 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
             join_path(
                 "exec",
                 self._platform,
-                self._mom_type,
-                "fms_" + self._mom_type + ".x"
+                self.spec.variants["type"].value,
+                "fms_" + self.spec.variants["type"].value + ".x"
             ),
             prefix.bin
         )
