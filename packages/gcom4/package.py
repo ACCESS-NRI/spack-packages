@@ -27,7 +27,6 @@ class Gcom4(Package):
     build_directory = join_path("Share", "gcom4.5_access_config")
 
     variant("mpi", default=True, description="Build with MPI")
-
     depends_on("fcm", type="build")
     depends_on("mpi", when="+mpi")
 
@@ -47,8 +46,10 @@ class Gcom4(Package):
                 join_path("fcm-make", "machines", "nci_ifort_openmpi.cfg"))
 
             
-    def install(self, spec, prefix):
-
+    def build(self, spec, prefix):
+        """
+        Build the library.
+        """
         fcm = which("fcm")
         if fcm is None:
             raise FileNotFoundError("fcm not found in $PATH")
@@ -78,8 +79,16 @@ class Gcom4(Package):
     
             # Do the build with fcm
             fcm("make", "-f", join_path("fcm-make", "gcom.cfg"))
-    
-            # Install the library
+
+
+    def install(self, spec, prefix):
+        """
+        Install the library.
+        """
+        fcm = which("fcm")
+        if fcm is None:
+            raise FileNotFoundError("fcm not found in $PATH")
+        with fs.working_dir(self.build_directory):
             mkdirp(prefix.lib)
             install(
                 join_path("build", "lib", "libgcom.a"),
