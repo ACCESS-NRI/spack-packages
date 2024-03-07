@@ -83,11 +83,9 @@ class Gcom4(Package):
 
     def install(self, spec, prefix):
         """
-        Install the library.
+        Build and install the library.
         """
-        fcm = which("fcm")
-        if fcm is None:
-            raise FileNotFoundError("fcm not found in $PATH")
+        self.build(spec, prefix)
         with fs.working_dir(self.build_directory):
             mkdirp(prefix.lib)
             install(
