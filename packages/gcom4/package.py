@@ -21,7 +21,7 @@ class Gcom4(Package):
     homepage = "https://code.metoffice.gov.uk/trac/gcom"
     git = "git@github.com:ACCESS-NRI/GCOM.git"
 
-    maintainers = ["penguian"]
+    maintainers("penguian")
 
     version("4.5", branch="dev")
     build_directory = join_path("Share", "gcom4.5_access_config")
