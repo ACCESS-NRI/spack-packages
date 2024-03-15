@@ -31,6 +31,23 @@ class Gcom4(Package):
     depends_on("mpi", when="+mpi")
 
 
+    def gcom_machine(self, spec):
+        """
+        Determine the machine configuration name
+        """
+        if spec.satisfies("%intel"):
+            mach_c = "ifort"
+        elif spec.satisfies("%gcc"):
+            mach_c = "gfortran"
+        else:
+            raise NotImplementedError("Unknown compiler")
+        if "+mpi" in spec:
+            mach_m = "openmpi"
+        else:
+            mach_m = "serial"
+        return f"nci_{mach_c}_{mach_m}"
+
+
     def patch(self):
         """
         Perform the equivalent of the following sed commands:
@@ -42,10 +59,11 @@ class Gcom4(Package):
             filter_file(
                 r"build\.target\{ns\}.*", "#",
                 join_path("fcm-make", "gcom.cfg"))
-            for mach_m in ["openmpi", "serial"]:
+            if self.spec.satisfies("%intel"):
+                machine = self.gcom_machine(self.spec)
                 filter_file(
                     r"-openmp", "-qopenmp",
-                        join_path("fcm-make", "machines", f"nci_ifort_{mach_m}.cfg"))
+                        join_path("fcm-make", "machines", f"{machine}.cfg"))
 
             
     def build(self, spec, prefix):
@@ -66,18 +84,7 @@ class Gcom4(Package):
             env["ROSE_TASK_MIRROR_TARGET"] = "localhost"
     
             # Decide on the build variant
-            if spec.satisfies("%intel"):
-                mach_c = "ifort"
-            elif spec.satisfies("%gcc"):
-                mach_c = "gfortran"
-            else:
-                raise NotImplementedError("Unknown compiler")
-            if "+mpi" in spec:
-                mach_m = "openmpi"
-            else:
-                mach_m = "serial"
-    
-            env["GCOM_MACHINE"] = f"nci_{mach_c}_{mach_m}"
+            env["GCOM_MACHINE"] = self.gcom_machine(spec)
     
             # Do the build with fcm
             fcm("make", "-f", join_path("fcm-make", "gcom.cfg"))
