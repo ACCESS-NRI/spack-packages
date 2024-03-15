@@ -36,14 +36,16 @@ class Gcom4(Package):
         Perform the equivalent of the following sed commands:
         sed -i '/build.target{ns}/d' $@/fcm-make/gcom.cfg
         sed -i 's/-openmp/-qopenmp/g' $@/fcm-make/machines/nci_ifort_openmpi.cfg
+        sed -i 's/-openmp/-qopenmp/g' $@/fcm-make/machines/nci_ifort_serial.cfg
         """
         with fs.working_dir(self.build_directory):
             filter_file(
                 r"build\.target\{ns\}.*", "#",
                 join_path("fcm-make", "gcom.cfg"))
-            filter_file(
-                r"-openmp", "-qopenmp",
-                join_path("fcm-make", "machines", "nci_ifort_openmpi.cfg"))
+            for mach_m in ["openmpi", "serial"]:
+                filter_file(
+                    r"-openmp", "-qopenmp",
+                        join_path("fcm-make", "machines", f"nci_ifort_{mach_m}.cfg"))
 
             
     def build(self, spec, prefix):
