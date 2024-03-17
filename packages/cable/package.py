@@ -41,6 +41,5 @@ class Cable(CMakePackage):
 
     def cmake_args(self):
         args = []
-        if self.spec.satisfies("+mpi"):
-            args.append(self.define_from_variant("CABLE_MPI", "mpi"))
+        args.append(self.define_from_variant("CABLE_MPI", "mpi"))
         return args
