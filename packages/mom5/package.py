@@ -20,6 +20,7 @@ class Mom5(MakefilePackage):
 
     variant("deterministic", default=False, description="Deterministic build.")
     variant("type", default="ACCESS-OM", description="Build MOM5 to support a particular use case.", values=("ACCESS-CM", "ACCESS-ESM", "ACCESS-OM", "ACCESS-OM-BGC", "MOM_solo"), multi=False)
+    variant("restart_repro", default=False, description="Reproducible restart build.")
     variant("optimisation_report", default=False, description="Generate optimisation reports.")
 
     # Depend on virtual package "mpi".
@@ -311,6 +312,8 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
 
             if "+optimisation_report" in self.spec:
                 build.add_default_env("REPORT", "true")
+            if "+restart_repro" in self.spec:
+                build.add_default_env("REPRO", "true")
 
             # The MOM5 commit d7ba13a3f364ce130b6ad0ba813f01832cada7a2
             # requires the --no_version switch to avoid git hashes being
