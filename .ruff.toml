@@ -1,6 +1,5 @@
 select = ["E","F"]
-ignore = ["E221","E241","E272","E731", "F403","F405","F821"]
-line-length = 88
+ignore = ["E221","E241","E272","E501","E731", "F403","F405","F821"]
 output-format = "github"
 
 # "E129", "F999" aren't supported
