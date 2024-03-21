@@ -8,7 +8,7 @@
 from spack.package import *
 
 class AccessOm2Bgc(BundlePackage):
-    """ACCESS-OM2 bundle contains the coupled CICE5 and MOM5 (BGC variant) models."""
+    """ACCESS-OM2-BGC bundle contains the coupled CICE5 and MOM5 (BGC variant) models."""
 
     homepage = "https://www.access-nri.org.au"
 
