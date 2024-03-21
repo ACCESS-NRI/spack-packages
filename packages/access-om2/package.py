@@ -19,12 +19,17 @@ class AccessOm2(BundlePackage):
     version("latest")
 
     variant("deterministic", default=False, description="Deterministic build.")
+    variant("restart_repro", default=True, description="Reproducible across varying restart boundaries")
 
     depends_on("libaccessom2+deterministic", when="+deterministic")
     depends_on("libaccessom2~deterministic", when="~deterministic")
     depends_on("cice5+deterministic", when="+deterministic")
     depends_on("cice5~deterministic", when="~deterministic")
-    depends_on("mom5+deterministic", when="+deterministic")
-    depends_on("mom5~deterministic", when="~deterministic")
+    with when("+deterministic"):
+        depends_on("mom5+deterministic+restart_repro", when="+restart_repro")
+        depends_on("mom5+deterministic~restart_repro", when="~restart_repro")
+    with when("~deterministic"):
+        depends_on("mom5~deterministic+restart_repro", when="+restart_repro")
+        depends_on("mom5~deterministic~restart_repro", when="~restart_repro")
 
     # There is no need for install() since there is no code.
