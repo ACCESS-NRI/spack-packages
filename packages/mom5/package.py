@@ -20,7 +20,7 @@ class Mom5(MakefilePackage):
 
     variant("deterministic", default=False, description="Deterministic build.")
     variant("type", default="ACCESS-OM", description="Build MOM5 to support a particular use case.", values=("ACCESS-CM", "ACCESS-ESM", "ACCESS-OM", "ACCESS-OM-BGC", "MOM_solo"), multi=False)
-    variant("restart_repro", default=False, description="Reproducible restart build.")
+    variant("restart_repro", default=True, description="Reproducible restart build.")
     variant("optimisation_report", default=False, description="Generate optimisation reports.")
 
     # Depend on virtual package "mpi".
