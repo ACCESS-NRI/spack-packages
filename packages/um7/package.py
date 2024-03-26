@@ -28,6 +28,7 @@ class Um7(Package):
 
     maintainers("penguian")
 
+    depends_on("dummygrib", type=("build","link"))
     depends_on("fcm", type="build")
     depends_on("gcom4+mpi", type=("build","link"))
     depends_on("mpi", type=("build","run"))
@@ -55,27 +56,12 @@ class Um7(Package):
             if not include in oasis3_mct_includes:
                 oasis3_mct_includes.append(include)
                 env.prepend_path("CPATH", include)
+        env.prepend_path("LIBRARY_PATH", self.spec["dummygrib"].prefix.lib)
         env.prepend_path("LIBRARY_PATH", self.spec["gcom4"].prefix.lib)
         env.prepend_path("LIBRARY_PATH", self.spec["netcdf-c"].prefix.lib)
         env.prepend_path("LIBRARY_PATH", self.spec["netcdf-fortran"].prefix.lib)
         env.prepend_path("LIBRARY_PATH", self.spec["oasis3-mct"].prefix.lib)
 
-        '''
-        env.set("config_root_path","./")
-        env.set("config_type","atmos")
-        env.set("fcflags_overrides","")
-        env.set("gwd_ussp_precision","double")
-        env.set("land_surface_model","jules")
-        env.set("ldflags_overrides_prefix","")
-        env.set("ldflags_overrides_suffix","")
-        env.set("ls_precipitation_precision","double")
-        env.set("mirror","mirror")
-        env.set("mpp_version","1C")
-        env.set("platagnostic","false")
-        env.set("portio_version","2A")
-        env.set("stash_version","1A")
-        env.set("timer_version","3A")
-        '''
 
     def setup_run_environment(self, env):
         env.prepend_path("LD_LIBRARY_PATH", self.spec["netcdf-c"].prefix.lib)
@@ -84,7 +70,7 @@ class Um7(Package):
 
     def install(self, spec, prefix):
 
-        fcm=which("fcm")
+        fcm = which("fcm")
 
         env["platform_config_dir"]="nci-x86-ifort"
         platform = "nci-x86-ifort"
@@ -93,11 +79,11 @@ class Um7(Package):
             platform = "nci-x86-ifx"
 
         env["optimisation_level"]=spec.variants["opt"].value
-        opt_value=spec.variants["opt"].value
+        opt_value = spec.variants["opt"].value
 
-        env["openmp"]="true"
+        env["openmp"] = "true"
         if "~omp" in spec:
-            env["openmp"]="false"
+            env["openmp"] = "false"
 
         env["netcdf"] = "true"
         if "~netcdf" in spec:
@@ -107,7 +93,7 @@ class Um7(Package):
         
         # Whether to build debug --jhan: adjust path to configs
         bld_config = f"bld-hadgem{hg}-mct.cfg"
-        um_exe = f"um_hg${hg}.exe"
+        um_exe = f"um_hg{hg}.exe"
         if opt_value == "debug":
             bld_config = f"bld-dbg-hadgem{hg}-C2.cfg"
             um_exe = f"um_hg{hg}_dbg.exe-{opt_value}"
@@ -123,9 +109,3 @@ class Um7(Package):
             join_path(bld_dir, "bin", um_exe),
             join_path(prefix.bin, um_exe))
 
-        '''
-        install("build-atmos/bin/um-atmos.exe", prefix.bin + "/um-atmos.exe")
-        install("build-atmos/bin/um_script_functions", prefix.bin + "/um_script_functions")
-        install("build-recon/bin/um-recon", prefix.bin + "/um-recon")
-        install("build-recon/bin/um-recon.exe", prefix.bin + "/um-recon.exe")
-        '''
