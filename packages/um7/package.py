@@ -12,7 +12,6 @@ from spack.package import *
 
 import os
 import os.path
-import llnl.util.tty as tty
 
 class Um7(Package):
     """
