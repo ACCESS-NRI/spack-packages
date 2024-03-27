@@ -27,20 +27,20 @@ class Um7(Package):
 
     maintainers("penguian")
 
-    depends_on("dummygrib", type=("build","link"))
+    depends_on("dummygrib", type=("build", "link"))
     depends_on("fcm", type="build")
-    depends_on("gcom4+mpi", type=("build","link"))
-    depends_on("mpi", type=("build","run"))
-    depends_on("netcdf-fortran", type=("build","link"))
-    depends_on("oasis3-mct", type=("build","link"))
+    depends_on("gcom4+mpi", type=("build", "link"))
+    depends_on("mpi", type=("build", "run"))
+    depends_on("netcdf-fortran", type=("build", "link"))
+    depends_on("oasis3-mct", type=("build", "link"))
 
 
     variant("platform", default="intel", description="Compiler",
-            values=("oneapi","intel"), multi=False)
-    variant("omp",default=True,description="Use OpenMP")
-    variant("netcdf",default=True,description="NetCDF")
-    variant("opt",default="high",description="Optimization level",
-            values=("high","debug"), multi=False)
+            values=("oneapi", "intel"), multi=False)
+    variant("omp", default=True, description="Use OpenMP")
+    variant("netcdf", default=True, description="NetCDF")
+    variant("opt", default="high", description="Optimization level",
+            values=("high", "debug"), multi=False)
 
 
     def setup_build_environment(self, env):
@@ -89,7 +89,7 @@ class Um7(Package):
             env["netcdf"] = "false"
 
         hg = 3 # build HadGEM3 ONLY here
-        
+
         # Whether to build debug --jhan: adjust path to configs
         bld_config = f"bld-hadgem{hg}-mct.cfg"
         um_exe = f"um_hg{hg}.exe"
