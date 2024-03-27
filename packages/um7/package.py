@@ -52,7 +52,7 @@ class Um7(Package):
         oasis3_mct_includes = []
         for header in self.spec["oasis3-mct"].headers:
             include = os.path.dirname(header)
-            if not include in oasis3_mct_includes:
+            if include not in oasis3_mct_includes:
                 oasis3_mct_includes.append(include)
                 env.prepend_path("CPATH", include)
         env.prepend_path("LIBRARY_PATH", self.spec["dummygrib"].prefix.lib)
@@ -71,14 +71,12 @@ class Um7(Package):
 
         fcm = which("fcm")
 
-        env["platform_config_dir"]="nci-x86-ifort"
-        platform = "nci-x86-ifort"
+        env["platform_config_dir"] = "nci-x86-ifort"
         if "platform=oneapi" in spec:
-            env["platform_config_dir"]="nci-x86-ifx"
-            platform = "nci-x86-ifx"
+            env["platform_config_dir"] = "nci-x86-ifx"
 
-        env["optimisation_level"]=spec.variants["opt"].value
         opt_value = spec.variants["opt"].value
+        env["optimisation_level"] = opt_value
 
         env["openmp"] = "true"
         if "~omp" in spec:
@@ -88,7 +86,7 @@ class Um7(Package):
         if "~netcdf" in spec:
             env["netcdf"] = "false"
 
-        hg = 3 # build HadGEM3 ONLY here
+        hg = 3  # build HadGEM3 ONLY here
 
         # Whether to build debug --jhan: adjust path to configs
         bld_config = f"bld-hadgem{hg}-mct.cfg"
