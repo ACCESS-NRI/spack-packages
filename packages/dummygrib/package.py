@@ -15,7 +15,7 @@ class Dummygrib(MakefilePackage):
     """
 
     homepage = "https://github.com/coecms/dummygrib"
-    git = "git@github.com:coecms/dummygrib.git"
+    git = "https://github.com/coecms/dummygrib.git"
 
     maintainers("penguian")
 
