@@ -46,3 +46,31 @@ source $(ENVFILE) ; cd $</compile ; csh ./comp_access-cm_cice.RJ.nP-mct 12
 ```
 so that the script file https://github.com/ACCESS-NRI/cice4/blob/ESM_1.5/compile/comp_access-cm_cice.RJ.nP-mct is called with `$1 == 12`, which sets `nproc = 12`.
 
+### The script file `compile/comp_access-cm_cice.RJ.nP-mct`
+
+This script file sets the values of variables and then calls `gmake` as above.
+
+Notably:
+
+* The variables `GRID` and `RES` are set with opposite semantics to their use in the `solo_ice_comp` script and the `comp_ice` script in the `main` branch. Here:
+```
+#setenv GRID gx3 ; setenv RES 100x116
+#setenv GRID gx1 ; setenv RES 320x384
+#setenv GRID tx1 ; setenv RES 360x240
+setenv GRID tp1 ; setenv RES 360x300
+```
+In `solo_ice_comp` and in `comp_ice` in the `main` branch:
+```
+setenv RES gx3 ; setenv GRID 100x116
+#setenv RES gx1 ; setenv GRID 320x384
+#setenv RES tx1 ; setenv GRID 360x240
+#setenv RES col ; setenv GRID 5x5
+```
+
+* The variable `GRID` is set to `tp1` but never used. 
+In the `solo_ice_comp` script, the variable `RES` is used to select a subdirectory of `input_templates` in order to
+obtain the files `grid`, `kmt`, `ice_in`, `iced_$RES*` and `ice.restart_file`.
+In contrast, here the `input_templates` directory is never referenced.
+Instead, the equivalents of these files are defined via the Payu `config.yaml` file.
+In particular, the file used to define namelists is called `cice_in.nml`, not `ice_in`.
+
