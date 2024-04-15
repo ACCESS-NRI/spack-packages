@@ -32,7 +32,7 @@ class Um7(Package):
     depends_on("gcom4+mpi", type=("build", "link"))
     depends_on("mpi", type=("build", "run"))
     depends_on("netcdf-fortran", type=("build", "link"))
-    depends_on("oasis3-mct", type=("build", "link"))
+    depends_on("oasis3-mct@git.access-esm1.5-new-modules", type=("build", "link"))
 
 
     variant("platform", default="intel", description="Compiler",
@@ -69,31 +69,30 @@ class Um7(Package):
 
     def install(self, spec, prefix):
 
+        boolstr = lambda b: "true" if b else "false"
+
         fcm = which("fcm")
 
-        env["platform_config_dir"] = "nci-x86-ifort"
         if "platform=oneapi" in spec:
             env["platform_config_dir"] = "nci-x86-ifx"
+        else:
+            env["platform_config_dir"] = "nci-x86-ifort"
 
         opt_value = spec.variants["opt"].value
         env["optimisation_level"] = opt_value
 
-        env["openmp"] = "true"
-        if "~omp" in spec:
-            env["openmp"] = "false"
-
-        env["netcdf"] = "true"
-        if "~netcdf" in spec:
-            env["netcdf"] = "false"
+        env["openmp"] = boolstr("~omp" in spec)
+        env["netcdf"] = boolstr("~netcdf" in spec)
 
         hg = 3  # build HadGEM3 ONLY here
 
         # Whether to build debug --jhan: adjust path to configs
-        bld_config = f"bld-hadgem{hg}-mct.cfg"
-        um_exe = f"um_hg{hg}.exe"
         if opt_value == "debug":
             bld_config = f"bld-dbg-hadgem{hg}-C2.cfg"
             um_exe = f"um_hg{hg}_dbg.exe-{opt_value}"
+        else:
+            bld_config = f"bld-hadgem{hg}-mct.cfg"
+            um_exe = f"um_hg{hg}.exe"
 
         bld_dir = f"ummodel_hg{hg}"
         # Build with fcm
