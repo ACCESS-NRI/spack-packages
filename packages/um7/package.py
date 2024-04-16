@@ -34,9 +34,6 @@ class Um7(Package):
     depends_on("netcdf-fortran", type=("build", "link"))
     depends_on("oasis3-mct@git.access-esm1.5-new-modules", type=("build", "link"))
 
-
-    variant("platform", default="intel", description="Compiler",
-            values=("oneapi", "intel"), multi=False)
     variant("omp", default=True, description="Use OpenMP")
     variant("netcdf", default=True, description="NetCDF")
     variant("opt", default="high", description="Optimization level",
@@ -73,7 +70,7 @@ class Um7(Package):
 
         fcm = which("fcm")
 
-        if "platform=oneapi" in spec:
+        if self.compiler.name == "oneapi":
             env["platform_config_dir"] = "nci-x86-ifx"
         else:
             env["platform_config_dir"] = "nci-x86-ifort"
