@@ -6,7 +6,7 @@
 from spack.package import CMakePackage, variant, version
 
 
-class AccessOm3Cmake(CMakePackage):
+class AccessOm3Nuopc(CMakePackage):
     """ACCESS-OM3 global ocean-sea ice-wave coupled model."""
 
     homepage = "https://www.github.com/COSIMA/access-om3"
