@@ -15,7 +15,7 @@ class Fortranxml(AutotoolsPackage):
     homepage = "https://github.com/andreww/fox"
     git = "https://github.com/andreww/fox.git"
 
-    maintainers = ["andreww"]
+    maintainers = ["harshula"]
 
     version("4.1.2", sha256="dea0adc9cc035238fa9cdba42f2bf56481e3a64ac8aa0aece9119f127f71d4e7")
 
