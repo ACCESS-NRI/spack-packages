@@ -3,10 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import CMakePackage, variant
+from spack.package import CMakePackage, variant, version
 
 
-class AccessOm3(CMakePackage):
+class AccessOm3Nuopc(CMakePackage):
     """ACCESS-OM3 global ocean-sea ice-wave coupled model."""
 
     homepage = "https://www.github.com/COSIMA/access-om3"
