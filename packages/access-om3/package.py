@@ -25,4 +25,4 @@ class AccessOm3(BundlePackage):
 
     version("latest")
 
-    depends_on("access-om3-cmake")
+    depends_on("access-om3-nuopc")
