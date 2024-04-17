@@ -14,13 +14,15 @@ class Fortranxml(AutotoolsPackage):
 
     homepage = "https://github.com/andreww/fox"
     git = "https://github.com/andreww/fox.git"
-    url = "https://github.com/andreww/fox/archive/refs/tags/4.1.2.tar.gz"
-    
+
     maintainers = ["andreww"]
 
     version("4.1.2", sha256="dea0adc9cc035238fa9cdba42f2bf56481e3a64ac8aa0aece9119f127f71d4e7")
 
     flag_handler = AutotoolsPackage.build_system_flags
+
+    def url_for_version(self, version):
+        return "https://github.com/andreww/fox/tarball/{0}".format(version)
 
     def install(self, spec, prefix):
         super(AutotoolsPackage, self).install(spec, prefix)
