@@ -17,7 +17,7 @@ class Fortranxml(AutotoolsPackage):
 
     maintainers = ["harshula"]
 
-    version("4.1.2", sha256="dea0adc9cc035238fa9cdba42f2bf56481e3a64ac8aa0aece9119f127f71d4e7")
+    version("4.1.2", sha256="1938725be45b8be5387a51fa0b25ee78ffee87ca8a497b82545ab870f33f8b88")
 
     flag_handler = AutotoolsPackage.build_system_flags
 
