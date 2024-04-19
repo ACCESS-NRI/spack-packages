@@ -70,10 +70,10 @@ class Um7(Package):
 
         fcm = which("fcm")
 
-        if self.compiler.name == "oneapi":
-            env["platform_config_dir"] = "nci-x86-ifx"
-        else:
+        if self.compiler.name == "intel":
             env["platform_config_dir"] = "nci-x86-ifort"
+        else:
+            raise NotImplentedError("Unknown compiler")
 
         opt_value = spec.variants["opt"].value
         env["optimisation_level"] = opt_value
