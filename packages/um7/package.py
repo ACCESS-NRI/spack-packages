@@ -86,7 +86,7 @@ class Um7(Package):
         # Whether to build debug --jhan: adjust path to configs
         if opt_value == "debug":
             bld_config = f"bld-dbg-hadgem{hg}-C2.cfg"
-            um_exe = f"um_hg{hg}_dbg.exe-{opt_value}"
+            um_exe = f"um_hg{hg}_dbg.exe"
         else:
             bld_config = f"bld-hadgem{hg}-mct.cfg"
             um_exe = f"um_hg{hg}.exe"
