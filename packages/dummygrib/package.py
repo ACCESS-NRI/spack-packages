@@ -14,8 +14,8 @@ class Dummygrib(MakefilePackage):
     dummygrib is a Dummy GRIB library to use with the Met Office Unified Model.
     """
 
-    homepage = "https://github.com/coecms/dummygrib"
-    git = "https://github.com/coecms/dummygrib.git"
+    homepage = "https://github.com/ACCESS-NRI/dummygrib"
+    git = "https://github.com/ACCESS-NRI/dummygrib.git"
 
     maintainers("penguian")
 
