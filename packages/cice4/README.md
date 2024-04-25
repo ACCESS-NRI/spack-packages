@@ -1,7 +1,7 @@
 # Notes on building cice4 for ACCESS-ESM 1.5
 
 For ACCESS-ESM 1.5, the cice4 executable that we are interested in in the one built by 
-https://github.com/penguian/access-esm-build-gadi/blob/build-all-using-oasis3-new-modules-pbd562/Makefile
+https://github.com/penguian/access-esm-build-gadi/blob/master/Makefile
 
 ## Building `src/cice4.1`
 
@@ -23,7 +23,7 @@ to use `$OASIS_LIB_DIR` and `$OASIS_INCLUDE_DIR` instead. These resolve to
 export OASIS_INCLUDE_DIR=$${PWD}/lib/oasis/include
 export OASIS_LIB_DIR=$${PWD}/lib/oasis/lib
 ```
-respectively, with `lib/oasis` obtained and built from the `new_modules_pbd562` branch of https://github.com/penguian/oasis3-mct
+respectively, with `lib/oasis` obtained and built from the `access-esm1.5` branch of https://github.com/ACCESS-NRI/oasis3-mct
 
 The third line removes the environment setup script https://github.com/ACCESS-NRI/cice4/blob/ESM_1.5/compile/environs.raijin.nci.org.au so that 
 the `access-esm-build-gadi` `ENVFILE` script `./environment.sh` is used instead.
@@ -73,4 +73,3 @@ obtain the files `grid`, `kmt`, `ice_in`, `iced_$RES*` and `ice.restart_file`.
 In contrast, here the `input_templates` directory is never referenced.
 Instead, the equivalents of these files are defined via the Payu `config.yaml` file.
 In particular, the file used to define namelists is called `cice_in.nml`, not `ice_in`.
-
