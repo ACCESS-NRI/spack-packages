@@ -18,6 +18,7 @@ class Oasis3Mct(MakefilePackage):
     maintainers = ["harshula"]
 
     version("master", branch="master")
+    version("access-esm1.5", branch="access-esm1.5")
 
     variant("deterministic", default=False, description="Deterministic build.")
     variant("optimisation_report", default=False, description="Generate optimisation reports.")
