@@ -32,7 +32,7 @@ class Um7(Package):
     depends_on("gcom4+mpi", type=("build", "link"))
     depends_on("mpi", type=("build", "run"))
     depends_on("netcdf-fortran", type=("build", "link"))
-    depends_on("oasis3-mct@git.access-esm1.5-new-modules", type=("build", "link"))
+    depends_on("oasis3-mct@access-esm1.5", type=("build", "link"))
 
     variant("omp", default=True, description="Use OpenMP")
     variant("netcdf", default=True, description="NetCDF")
