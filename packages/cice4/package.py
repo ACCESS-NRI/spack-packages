@@ -5,6 +5,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+# Based on packages/cice5/package.py and other sources noted below.
+
 from spack.package import install, join_path, mkdirp
 
 # https://spack.readthedocs.io/en/latest/build_systems/makefilepackage.html
@@ -35,31 +37,12 @@ class Cice4(MakefilePackage):
     __targets[12]["grid"] = "360x300"
     __targets[12]["blocks"] = "12x1"
 
-    # Comment from cice4/compile/comp_access-cm_cice.RJ.nP-mct:
-    # Recommendations:
-    #   NTASK equals nprocs in ice_in
-    #   use processor_shape = slenderX1 or slenderX2 in ice_in
-    #   one per processor with distribution_type='cartesian' or
-    #   squarish blocks with distribution_type='rake'
-    # If BLCKX (BLCKY) does not divide NXGLOB (NYGLOB) evenly, padding
-    # will be used on the right (top) of the grid.
-
     # The reason for the explicit -rpath is:
     # https://github.com/ACCESS-NRI/spack_packages/issues/14#issuecomment-1653651447
     def get_linker_args(self, spec, name):
         return " ".join(
                     [(spec[name].libs).ld_flags,
                     "-Wl,-rpath=" + join_path(spec[name].prefix, "lib")]
-                   )
-
-    # The reason for the explicit -rpath is:
-    # https://github.com/ACCESS-NRI/spack_packages/issues/14#issuecomment-1653651447
-    def make_linker_args(self, spec, name, namespecs):
-        path = join_path(spec[name].prefix, "lib")
-        return " ".join(
-                    ["-L" + path,
-                    namespecs,
-                    "-Wl,-rpath=" + path]
                    )
 
     def edit(self, spec, prefix):
@@ -82,7 +65,7 @@ class Cice4(MakefilePackage):
 
         CFLAGS = "-c -O2"
 
-        # Copied from access-esm-build-gadi/patch/Macros.Linux.raijin.nci.org.au-mct
+        # Based on https://github.com/coecms/access-esm-build-gadi/blob/master/patch/Macros.Linux.raijin.nci.org.au-mct
         config["pre"] = f"""
 INCLDIR    := -I. {incs}
 SLIBS      := {libs}
@@ -102,6 +85,7 @@ FFLAGS = -Wall -fdefault-real-8 -fdefault-double-8 -ffpe-trap=invalid,zero,overf
 LDFLAGS    := $(FFLAGS)
 """
 
+        # Based on https://github.com/coecms/access-esm-build-gadi/blob/master/patch/Macros.Linux.raijin.nci.org.au-mct
         config["intel"] = f"""
 ifeq ($(DEBUG), yes)
     FFLAGS     := -r8 -i4 -O0 -g -align all -w -ftz -convert big_endian -assume byterecl -no-vec -xHost -fp-model precise
@@ -111,7 +95,7 @@ endif
 LDFLAGS    := $(FFLAGS) -v -static-intel 
 """
 
-        # Copied from bld/Macros.nci
+        # Based on https://github.com/ACCESS-NRI/cice4/blob/access-esm1.5/bld/Macros.nci
         config["post"] = """
 MOD_SUFFIX := mod
 LD         := $(FC)
@@ -133,6 +117,10 @@ endif
 
 ifeq ($(AusCOM), yes)
    CPPDEFS := $(CPPDEFS) -DAusCOM -Dcoupled
+endif
+
+ifeq ($(UNIT_TESTING), yes)
+   CPPDEFS := $(CPPDEFS) -DUNIT_TESTING
 endif
 
 ifeq ($(ACCESS), yes)
