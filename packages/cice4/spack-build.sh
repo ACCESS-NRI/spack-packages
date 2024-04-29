@@ -1,5 +1,9 @@
 #! /bin/csh -f
 
+# Script based on packages/cice5/spack-build.sh
+# and https://github.com/ACCESS-NRI/cice4/blob/access-esm1.5/bld/build.sh
+# and https://github.com/ACCESS-NRI/cice4/blob/access-esm1.5/compile/comp_access-cm_cice.RJ.nP-mct
+
 set echo on
 
 if ( $#argv < 4 ) then
