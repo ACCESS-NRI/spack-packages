@@ -22,7 +22,7 @@ class Cice4(MakefilePackage):
     depends_on("mpi")
     depends_on("netcdf-fortran@4.5.2:")
     depends_on("netcdf-c@4.7.1:")
-    depends_on("oasis3-mct")
+    depends_on("oasis3-mct@access-esm1.5")
 
     phases = ["edit", "build", "install"]
 
