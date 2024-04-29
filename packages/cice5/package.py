@@ -150,6 +150,9 @@ else
 endif
 """
 
+        # Add support for the ifx compiler
+        config["oneapi"] = config["intel"]
+
         # Copied from bld/Macros.nci
         config["post"] = """
 MOD_SUFFIX := mod
