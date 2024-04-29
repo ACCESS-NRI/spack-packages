@@ -216,6 +216,9 @@ endif
 LDFLAGS += $(LIBS)
 """
 
+        # Add support for the ifx compiler
+        config["oneapi"] = config["intel"]
+
         # Copied from bin/mkmf.template.t90
         config["post"] = """
 # you should never need to change any lines below.
