@@ -6,7 +6,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import install, join_path, mkdirp
-from pprint import pprint
+# from pprint import pprint
 
 # https://spack.readthedocs.io/en/latest/build_systems/makefilepackage.html
 class Oasis3Mct(MakefilePackage):
@@ -282,6 +282,9 @@ else
     MCT_FCFLAGS     = $(NCI_REPRO_FLAGS) $(NCI_OPTIM_FLAGS) -ip
 endif
 """
+
+        # Add support for the ifx compiler
+        config["oneapi"] = config["intel"]
 
         config["post"] = f"""
 f90FLAGS_1  = $(F90FLAGS_1)
