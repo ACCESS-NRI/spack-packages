@@ -18,7 +18,7 @@ class Cice4(MakefilePackage):
 
     maintainers("penguian")
 
-    version("master", branch="ESM_1.5")
+    version("access-esm1.5", branch="access-esm1.5")
 
     # Depend on virtual package "mpi".
     depends_on("mpi")
@@ -80,6 +80,8 @@ FIXEDFLAGS := -132
 FREEFLAGS  :=
 """
 
+        # based on packages/cice5/package.py (FFLAGS)
+        # and  https://github.com/coecms/access-esm-build-gadi/blob/master/patch/Macros.Linux.raijin.nci.org.au-mct (LDFLAGS)
         config["gcc"] = """
 FFLAGS = -Wall -fdefault-real-8 -fdefault-double-8 -ffpe-trap=invalid,zero,overflow -fallow-argument-mismatch
 LDFLAGS    := $(FFLAGS)
