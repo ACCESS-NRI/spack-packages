@@ -32,7 +32,7 @@ class Cice4(MakefilePackage):
     _buildscript_path = join_path("bld", _buildscript)
 
     # The integer represents environment variable NTASK
-    __targets = {12: {},}
+    __targets = {12: {}, }
     __targets[12]["driver"] = "access"
     __targets[12]["grid"] = "360x300"
     __targets[12]["blocks"] = "12x1"
@@ -80,13 +80,13 @@ FIXEDFLAGS := -132
 FREEFLAGS  :=
 """
 
-        config["gcc"] = f"""
+        config["gcc"] = """
 FFLAGS = -Wall -fdefault-real-8 -fdefault-double-8 -ffpe-trap=invalid,zero,overflow -fallow-argument-mismatch
 LDFLAGS    := $(FFLAGS)
 """
 
         # Based on https://github.com/coecms/access-esm-build-gadi/blob/master/patch/Macros.Linux.raijin.nci.org.au-mct
-        config["intel"] = f"""
+        config["intel"] = """
 ifeq ($(DEBUG), yes)
     FFLAGS     := -r8 -i4 -O0 -g -align all -w -ftz -convert big_endian -assume byterecl -no-vec -xHost -fp-model precise
 else
