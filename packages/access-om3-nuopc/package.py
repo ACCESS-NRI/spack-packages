@@ -55,7 +55,7 @@ class AccessOm3Nuopc(CMakePackage):
     depends_on("cmake@3.18:", type="build")
     depends_on("mpi")
     depends_on("netcdf-fortran@4.6.0:")
-    depends_on("esmf@8.3.0:")
+    depends_on("esmf@8.3.0: +debug")
     depends_on("fms@2021.03: build_type==RelWithDebInfo")
     depends_on("parallelio@2.5.10: build_type==RelWithDebInfo")
     depends_on("fortranxml@4.1.2:")
