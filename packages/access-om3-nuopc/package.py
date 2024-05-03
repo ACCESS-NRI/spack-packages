@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import CMakePackage, variant, version, depends_on
+from spack.compilers import supported_compilers
 
 
 class AccessOm3Nuopc(CMakePackage):
@@ -55,10 +56,17 @@ class AccessOm3Nuopc(CMakePackage):
     depends_on("cmake@3.18:", type="build")
     depends_on("mpi")
     depends_on("netcdf-fortran@4.6.0:")
-    depends_on("esmf@8.3.0: +debug")
-    depends_on("fms@2021.03: build_type==RelWithDebInfo precision=64 +large_file ~gfs_phys ~openmp ~quad_precision")
-    depends_on("parallelio@2.5.10: build_type==RelWithDebInfo fflags='-qno-opt-dynamic-align -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model source' cflags='-qno-opt-dynamic-align -fp-model precise -std=gnu99'")
+    depends_on("esmf@8.3.0:")
     depends_on("fortranxml@4.1.2:")
+
+    for compiler in supported_compilers():
+        if compiler == 'intel':
+            depends_on("fms@2021.03: build_type==RelWithDebInfo precision=64 +large_file ~gfs_phys ~quad_precision ~openmp", when="~openmp")
+            depends_on("fms@2021.03: build_type==RelWithDebInfo precision=64 +large_file ~gfs_phys ~quad_precision +openmp", when="+openmp")
+            depends_on("parallelio@2.5.10: build_type==RelWithDebInfo fflags='-qno-opt-dynamic-align -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model source' cflags='-qno-opt-dynamic-align -fp-model precise -std=gnu99'")
+        else:
+            depends_on("fms@2021.03:")
+            depends_on("parallelio@2.5.10:")
 
     flag_handler = CMakePackage.build_system_flags
 
