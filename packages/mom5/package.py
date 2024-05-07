@@ -14,24 +14,26 @@ class Mom5(MakefilePackage):
     homepage = "https://www.access-nri.org.au"
     git = "https://github.com/ACCESS-NRI/mom5.git"
 
-    maintainers = ["harshula"]
+    maintainers = ["harshula","penguian"]
 
     version("master", branch="master")
+    version("access-esm1.5", branch="access-esm1.5")
 
-    variant("deterministic", default=False, description="Deterministic build.")
-    variant("type", default="ACCESS-OM", description="Build MOM5 to support a particular use case.", values=("ACCESS-CM", "ACCESS-ESM", "ACCESS-OM", "ACCESS-OM-BGC", "MOM_solo"), multi=False)
+    variant("deterministic", default=False, when="@master", description="Deterministic build.")
+    variant("type", default="ACCESS-OM", when="@master", description="Build MOM5 to support a particular use case.", values=("ACCESS-CM", "ACCESS-ESM", "ACCESS-OM", "ACCESS-OM-BGC", "MOM_solo"), multi=False)
     variant("restart_repro", default=True, description="Reproducible restart build.")
-    variant("optimisation_report", default=False, description="Generate optimisation reports.")
+    variant("optimisation_report", default=False, when="@master", description="Generate optimisation reports.")
 
     # Depend on virtual package "mpi".
     depends_on("mpi")
     depends_on("netcdf-fortran@4.5.2:")
     depends_on("netcdf-c@4.7.4:")
     depends_on("datetime-fortran")
-    depends_on("oasis3-mct+deterministic", when="+deterministic")
-    depends_on("oasis3-mct~deterministic", when="~deterministic")
-    depends_on("libaccessom2+deterministic", when="+deterministic")
-    depends_on("libaccessom2~deterministic", when="~deterministic")
+    depends_on("oasis3-mct+deterministic", when="+deterministic@master")
+    depends_on("oasis3-mct~deterministic", when="~deterministic@master")
+    depends_on("oasis3-mct@access-esm1.5", when="@access-esm1.5")
+    depends_on("libaccessom2+deterministic", when="+deterministic@master")
+    depends_on("libaccessom2~deterministic", when="~deterministic@master")
 
     phases = ["edit", "build", "install"]
 
@@ -47,20 +49,30 @@ class Mom5(MakefilePackage):
         config = {}
 
         istr = join_path((spec["oasis3-mct"].headers).cpp_flags, "psmile.MPI1")
-        ideps = ["oasis3-mct", "libaccessom2", "netcdf-fortran"]
+        if "@access-esm1.5" in self.spec:
+            ideps = ["oasis3-mct"]
+
+            # NOTE: The order of the libraries matters during the linking step!
+            ldeps = ["oasis3-mct", "netcdf-c", "netcdf-fortran"]
+
+            FFLAGS_OPT = "-O3 -debug minimal -xHost"
+            CFLAGS_OPT = "-O2 -debug minimal -no-vec"
+        else:
+            ideps = ["oasis3-mct", "libaccessom2", "netcdf-fortran"]
+
+            # NOTE: The order of the libraries matters during the linking step!
+            # NOTE: datetime-fortran is a dependency of libaccessom2.
+            ldeps = ["oasis3-mct", "libaccessom2", "netcdf-c", "netcdf-fortran", "datetime-fortran"]
+
+            # TODO: https://github.com/ACCESS-NRI/ACCESS-OM/issues/12
+            FFLAGS_OPT = "-g3 -O2 -xCORE-AVX2 -debug all -check none -traceback"
+            CFLAGS_OPT = "-O2 -debug minimal -xCORE-AVX2"
+            if "+deterministic" in self.spec:
+                FFLAGS_OPT = "-g0 -O0 -xCORE-AVX2 -debug none -check none"
+                CFLAGS_OPT = "-O0 -debug none -xCORE-AVX2"
+
         incs = " ".join([istr] + [(spec[d].headers).cpp_flags for d in ideps])
-
-        # NOTE: The order of the libraries matter during the linking step!
-        # NOTE: datetime-fortran is a dependency of libaccessom2.
-        ldeps = ["oasis3-mct", "libaccessom2", "netcdf-c", "netcdf-fortran", "datetime-fortran"]
         libs = " ".join([(spec[d].libs).ld_flags for d in ldeps])
-
-        # TODO: https://github.com/ACCESS-NRI/ACCESS-OM/issues/12
-        FFLAGS_OPT = "-g3 -O2 -xCORE-AVX2 -debug all -check none -traceback"
-        CFLAGS_OPT = "-O2 -debug minimal -xCORE-AVX2"
-        if "+deterministic" in self.spec:
-            FFLAGS_OPT = "-g0 -O0 -xCORE-AVX2 -debug none -check none"
-            CFLAGS_OPT = "-O0 -debug none -xCORE-AVX2"
 
         # Copied from bin/mkmf.template.ubuntu
         config["gcc"] = f"""
@@ -77,7 +89,7 @@ OPENMP =
 
 MAKEFLAGS += --jobs=$(shell grep '^processor' /proc/cpuinfo | wc -l)
 
-FPPFLAGS := 
+FPPFLAGS :=
 
 FFLAGS := -fcray-pointer -fdefault-real-8 -ffree-line-length-none -fno-range-check -Waliasing -Wampersand -Warray-bounds -Wcharacter-truncation -Wconversion -Wline-truncation -Wintrinsics-std -Wsurprising -Wno-tabs -Wunderflow -Wunused-parameter -Wintrinsic-shadow -Wno-align-commons -fallow-argument-mismatch -fallow-invalid-boz
 FFLAGS += {incs}
@@ -85,16 +97,16 @@ FFLAGS += -DGFORTRAN
 
 #
 FFLAGS_OPT = -O2
-FFLAGS_REPRO = 
-FFLAGS_DEBUG = -O0 -g -W -fbounds-check 
+FFLAGS_REPRO =
+FFLAGS_DEBUG = -O0 -g -W -fbounds-check
 FFLAGS_OPENMP = -fopenmp
-FFLAGS_VERBOSE = 
+FFLAGS_VERBOSE =
 
 CFLAGS := -D__IFC {incs}
 CFLAGS += $(shell nc-config --cflags)
 CFLAGS_OPT = -O2
 CFLAGS_OPENMP = -fopenmp
-CFLAGS_DEBUG = -O0 -g 
+CFLAGS_DEBUG = -O0 -g
 
 # Optional Testing compile flags.  Mutually exclusive from DEBUG, REPRO, and OPT
 # *_TEST will match the production if no new option(s) is(are) to be tested.
@@ -103,7 +115,7 @@ CFLAGS_TEST = -O2
 
 LDFLAGS :=
 LDFLAGS_OPENMP := -fopenmp
-LDFLAGS_VERBOSE := 
+LDFLAGS_VERBOSE :=
 
 ifneq ($(REPRO),)
 CFLAGS += $(CFLAGS_REPRO)
@@ -144,7 +156,66 @@ LDFLAGS += $(LIBS)
 """
 
         # Copied from bin/mkmf.template.nci
-        config["intel"] = f"""
+        if "@access-esm1.5" in self.spec:
+            config["intel"] = f"""
+ifeq ($(VTRACE), yes)
+    FC = mpifort-vt
+    LD = mpifort-vt
+else
+    FC = mpifort
+    LD = mpifort
+endif
+
+CC = mpicc
+
+REPRO =
+VERBOSE =
+OPT = on
+
+MAKEFLAGS += --jobs=4
+
+INCLUDE = {incs}
+
+FPPFLAGS := -fpp -Wp,-w $(INCLUDE)
+FFLAGS := -fno-alias -safe-cray-ptr -fpe0 -ftz -assume byterecl -i4 -r8 -traceback -nowarn -check noarg_temp_created -assume buffered_io -convert big_endian
+FFLAGS_OPT = -O3 -debug minimal -xHost
+FFLAGS_DEBUG = -g -O0 -debug all -check -check noarg_temp_created -check nopointer -warn -warn noerrors -ftrapuv
+FFLAGS_REPRO = -O2 -debug minimal -no-vec -fp-model precise
+FFLAGS_VERBOSE = -v -V -what
+
+CFLAGS := -D__IFC $(INCLUDE)
+CFLAGS_OPT = -O2 -debug minimal -no-vec
+CFLAGS_DEBUG = -O0 -g -ftrapuv -traceback
+
+LDFLAGS :=
+LDFLAGS_VERBOSE := -Wl,-V,--verbose,-cref,-M
+
+ifneq ($(REPRO),)
+CFLAGS += $(CFLAGS_REPRO)
+FFLAGS += $(FFLAGS_REPRO)
+endif
+
+ifneq ($(DEBUG),)
+CFLAGS += $(CFLAGS_DEBUG)
+FFLAGS += $(FFLAGS_DEBUG)
+else
+CFLAGS += $(CFLAGS_OPT)
+FFLAGS += $(FFLAGS_OPT)
+endif
+
+ifneq ($(VERBOSE),)
+CFLAGS += $(CFLAGS_VERBOSE)
+FFLAGS += $(FFLAGS_VERBOSE)
+LDFLAGS += $(LDFLAGS_VERBOSE)
+endif
+
+LIBS := -L$(NETCDF_ROOT)/lib -lnetcdf -lnetcdff \
+		-L$(OASIS_ROOT)/lib -lpsmile.MPI1 -lmct -lmpeu -lscrip \
+
+LDFLAGS += $(LIBS)
+"""
+        else:
+            config["intel"] = f"""
 ifeq ($(VTRACE), yes)
     FC := mpifort-vt
     LD := mpifort-vt
@@ -220,7 +291,99 @@ LDFLAGS += $(LIBS)
         config["oneapi"] = config["intel"]
 
         # Copied from bin/mkmf.template.t90
-        config["post"] = """
+        if "@access-esm1.5" in self.spec:
+            config["post"] = """
+# you should never need to change any lines below.
+
+# see the MIPSPro F90 manual for more details on some of the file extensions
+# discussed here.
+# this makefile template recognizes fortran sourcefiles with extensions
+# .f, .f90, .F, .F90. Given a sourcefile <file>.<ext>, where <ext> is one of
+# the above, this provides a number of default actions:
+
+# make <file>.opt	create an optimization report
+# make <file>.o		create an object file
+# make <file>.s		create an assembly listing
+# make <file>.x		create an executable file, assuming standalone
+#			source
+# make <file>.i		create a preprocessed file (for .F)
+# make <file>.i90	create a preprocessed file (for .F90)
+
+# The macro TMPFILES is provided to slate files like the above for removal.
+
+RM = rm -f
+SHELL = /bin/csh -f
+TMPFILES = .*.m *.B *.L *.i *.i90 *.l *.s *.mod *.opt
+
+.SUFFIXES: .F .F90 .H .L .T .f .f90 .h .i .i90 .l .o .s .opt .x
+
+.f.L:
+	$(FC) $(FFLAGS) -c -listing $*.f
+.f.opt:
+	$(FC) $(FFLAGS) -c -opt_report_level max -opt_report_phase all -opt_report_file $*.opt $*.f
+.f.l:
+	$(FC) $(FFLAGS) -c $(LIST) $*.f
+.f.T:
+	$(FC) $(FFLAGS) -c -cif $*.f
+.f.o:
+	$(FC) $(FFLAGS) -c $*.f
+.f.s:
+	$(FC) $(FFLAGS) -S $*.f
+.f.x:
+	$(FC) $(FFLAGS) -o $*.x $*.f *.o $(LDFLAGS)
+.f90.L:
+	$(FC) $(FFLAGS) -c -listing $*.f90
+.f90.opt:
+	$(FC) $(FFLAGS) -c -opt_report_level max -opt_report_phase all -opt_report_file $*.opt $*.f90
+.f90.l:
+	$(FC) $(FFLAGS) -c $(LIST) $*.f90
+.f90.T:
+	$(FC) $(FFLAGS) -c -cif $*.f90
+.f90.o:
+	$(FC) $(FFLAGS) -c $*.f90
+.f90.s:
+	$(FC) $(FFLAGS) -c -S $*.f90
+.f90.x:
+	$(FC) $(FFLAGS) -o $*.x $*.f90 *.o $(LDFLAGS)
+.F.L:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -listing $*.F
+.F.opt:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -opt_report_level max -opt_report_phase all -opt_report_file $*.opt $*.F
+.F.l:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c $(LIST) $*.F
+.F.T:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -cif $*.F
+.F.f:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) -EP $*.F > $*.f
+.F.i:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) -P $*.F
+.F.o:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c $*.F
+.F.s:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -S $*.F
+.F.x:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -o $*.x $*.F *.o $(LDFLAGS)
+.F90.L:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -listing $*.F90
+.F90.opt:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -opt_report_level max -opt_report_phase all -opt_report_file $*.opt $*.F90
+.F90.l:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c $(LIST) $*.F90
+.F90.T:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -cif $*.F90
+.F90.f90:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) -EP $*.F90 > $*.f90
+.F90.i90:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) -P $*.F90
+.F90.o:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c $*.F90
+.F90.s:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -S $*.F90
+.F90.x:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -o $*.x $*.F90 *.o $(LDFLAGS)
+"""
+        else:
+            config["post"] = """
 # you should never need to change any lines below.
 
 # see the CF90 manual for more details on some of the file extensions
@@ -312,33 +475,48 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
         # ./MOM_compile.csh --type $mom_type --platform spack
         with working_dir(join_path(self.stage.source_path, "exp")):
             build = Executable("./MOM_compile.csh")
+            if "@access-esm1.5" in self.spec:
+                if "+restart_repro" in self.spec:
+                    build.add_default_env("REPRO", "true")
+                build(
+                    "--type",
+                    "ACCESS-CM",
+                    "--platform",
+                    self._platform,
+                    "--no_environ"
+                )
+            else:
+                if "+optimisation_report" in self.spec:
+                    build.add_default_env("REPORT", "true")
+                if "+restart_repro" in self.spec:
+                    build.add_default_env("REPRO", "true")
 
-            if "+optimisation_report" in self.spec:
-                build.add_default_env("REPORT", "true")
-            if "+restart_repro" in self.spec:
-                build.add_default_env("REPRO", "true")
-
-            # The MOM5 commit d7ba13a3f364ce130b6ad0ba813f01832cada7a2
-            # requires the --no_version switch to avoid git hashes being
-            # embedded in the binary.
-            build(
-                "--type",
-                self.spec.variants["type"].value,
-                "--platform",
-                self._platform,
-                "--no_environ",
-                "--no_version"
-            )
+                # The MOM5 commit d7ba13a3f364ce130b6ad0ba813f01832cada7a2
+                # requires the --no_version switch to avoid git hashes being
+                # embedded in the binary.
+                build(
+                    "--type",
+                    self.spec.variants["type"].value,
+                    "--platform",
+                    self._platform,
+                    "--no_environ",
+                    "--no_version"
+                )
 
     def install(self, spec, prefix):
 
         mkdirp(prefix.bin)
+        if "@access-esm1.5" in self.spec:
+            type_value = "ACCESS-CM"
+        else:
+            type_value = self.spec.variants["type"].value
+
         install(
             join_path(
                 "exec",
                 self._platform,
-                self.spec.variants["type"].value,
-                "fms_" + self.spec.variants["type"].value + ".x"
+                type_value,
+                "fms_" + type_value + ".x"
             ),
             prefix.bin
         )
