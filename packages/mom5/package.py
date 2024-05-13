@@ -16,8 +16,8 @@ class Mom5(MakefilePackage):
 
     maintainers("harshula", "penguian")
 
-    version("access-esm1.5", branch="access-esm1.5")
     version("master", branch="master")
+    version("access-esm1.5", branch="access-esm1.5")
 
     variant("deterministic", default=False, when="@master", description="Deterministic build.")
     variant("esm-type", default="ACCESS-CM", when="@access-esm1.5", description="Build MOM5 to support a particular ESM use case.", values=("ACCESS-CM", ), multi=False)
