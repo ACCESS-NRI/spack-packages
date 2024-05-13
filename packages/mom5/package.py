@@ -14,7 +14,7 @@ class Mom5(MakefilePackage):
     homepage = "https://www.access-nri.org.au"
     git = "https://github.com/ACCESS-NRI/mom5.git"
 
-    maintainers = ["harshula","penguian"]
+    maintainers = ["harshula", "penguian"]
 
     version("master", branch="master")
     version("access-esm1.5", branch="access-esm1.5")
