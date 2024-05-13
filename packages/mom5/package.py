@@ -14,12 +14,13 @@ class Mom5(MakefilePackage):
     homepage = "https://www.access-nri.org.au"
     git = "https://github.com/ACCESS-NRI/mom5.git"
 
-    maintainers = ["harshula", "penguian"]
+    maintainers("harshula", "penguian")
 
-    version("master", branch="master")
     version("access-esm1.5", branch="access-esm1.5")
+    version("master", branch="master")
 
     variant("deterministic", default=False, when="@master", description="Deterministic build.")
+    variant("esm-type", default="ACCESS-CM", when="@access-esm1.5", description="Build MOM5 to support a particular ESM use case.", values=("ACCESS-CM", ), multi=False)
     variant("type", default="ACCESS-OM", when="@master", description="Build MOM5 to support a particular use case.", values=("ACCESS-CM", "ACCESS-ESM", "ACCESS-OM", "ACCESS-OM-BGC", "MOM_solo"), multi=False)
     variant("restart_repro", default=True, description="Reproducible restart build.")
     variant("optimisation_report", default=False, when="@master", description="Generate optimisation reports.")
@@ -29,11 +30,11 @@ class Mom5(MakefilePackage):
     depends_on("netcdf-fortran@4.5.2:")
     depends_on("netcdf-c@4.7.4:")
     depends_on("datetime-fortran", when="@master")
-    depends_on("oasis3-mct+deterministic", when="+deterministic@master")
-    depends_on("oasis3-mct~deterministic", when="~deterministic@master")
     depends_on("oasis3-mct@access-esm1.5", when="@access-esm1.5")
-    depends_on("libaccessom2+deterministic", when="+deterministic@master")
-    depends_on("libaccessom2~deterministic", when="~deterministic@master")
+    depends_on("oasis3-mct+deterministic", when="+deterministic")
+    depends_on("oasis3-mct~deterministic", when="~deterministic")
+    depends_on("libaccessom2+deterministic", when="+deterministic")
+    depends_on("libaccessom2~deterministic", when="~deterministic")
 
     phases = ["edit", "build", "install"]
 
@@ -93,16 +94,16 @@ FFLAGS += -DGFORTRAN
 
 #
 FFLAGS_OPT = -O2
-FFLAGS_REPRO =
-FFLAGS_DEBUG = -O0 -g -W -fbounds-check
-FFLAGS_OPENMP = -fopenmp
+FFLAGS_REPRO = 
+FFLAGS_DEBUG = -O0 -g -W -fbounds-check 
+FFLAGS_OPENMP = -fopenmp 
 FFLAGS_VERBOSE =
 
 CFLAGS := -D__IFC {incs}
 CFLAGS += $(shell nc-config --cflags)
 CFLAGS_OPT = -O2
 CFLAGS_OPENMP = -fopenmp
-CFLAGS_DEBUG = -O0 -g
+CFLAGS_DEBUG = -O0 -g 
 
 # Optional Testing compile flags.  Mutually exclusive from DEBUG, REPRO, and OPT
 # *_TEST will match the production if no new option(s) is(are) to be tested.
@@ -111,7 +112,7 @@ CFLAGS_TEST = -O2
 
 LDFLAGS :=
 LDFLAGS_OPENMP := -fopenmp
-LDFLAGS_VERBOSE :=
+LDFLAGS_VERBOSE := 
 
 ifneq ($(REPRO),)
 CFLAGS += $(CFLAGS_REPRO)
@@ -475,7 +476,7 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
                     build.add_default_env("REPRO", "true")
                 build(
                     "--type",
-                    "ACCESS-CM",
+                    self.spec.variants["esm-type"].value,
                     "--platform",
                     self._platform,
                     "--no_environ"
@@ -501,10 +502,8 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
     def install(self, spec, prefix):
 
         mkdirp(prefix.bin)
-        if "@access-esm1.5" in self.spec:
-            type_value = "ACCESS-CM"
-        else:
-            type_value = self.spec.variants["type"].value
+        name = "esm-type" if "@access-esm1.5" in self.spec else "type"
+        type_value = self.spec.variants[name].value
 
         install(
             join_path(
