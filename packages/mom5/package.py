@@ -16,7 +16,7 @@ class Mom5(MakefilePackage):
 
     maintainers("harshula", "penguian")
 
-    version("master", branch="master")
+    version("master", branch="master", preferred=True)
     version("access-esm1.5", branch="access-esm1.5")
 
     variant("deterministic", default=False, when="@master", description="Deterministic build.")
