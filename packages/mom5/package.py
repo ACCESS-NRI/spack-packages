@@ -19,22 +19,26 @@ class Mom5(MakefilePackage):
     version("master", branch="master", preferred=True)
     version("access-esm1.5", branch="access-esm1.5")
 
-    variant("deterministic", default=False, when="@master", description="Deterministic build.")
-    variant("esm-type", default="ACCESS-CM", when="@access-esm1.5", description="Build MOM5 to support a particular ESM use case.", values=("ACCESS-CM", ), multi=False)
-    variant("type", default="ACCESS-OM", when="@master", description="Build MOM5 to support a particular use case.", values=("ACCESS-CM", "ACCESS-ESM", "ACCESS-OM", "ACCESS-OM-BGC", "MOM_solo"), multi=False)
+    variant("type", default="ACCESS-OM", description="Build MOM5 to support a particular use case.", values=("ACCESS-CM", "ACCESS-ESM", "ACCESS-OM", "ACCESS-OM-BGC", "MOM_solo"), multi=False)
     variant("restart_repro", default=True, description="Reproducible restart build.")
-    variant("optimisation_report", default=False, when="@master", description="Generate optimisation reports.")
+    with when("@master"):
+        variant("deterministic", default=False, description="Deterministic build.")
+        variant("optimisation_report", default=False, description="Generate optimisation reports.")
+    with when("@access-esm1.5"):
+        variant("type", default="ACCESS-CM", description="Build MOM5 to support a particular ESM use case.", values=("ACCESS-CM", ), multi=False)
 
     # Depend on virtual package "mpi".
     depends_on("mpi")
     depends_on("netcdf-fortran@4.5.2:")
     depends_on("netcdf-c@4.7.4:")
-    depends_on("datetime-fortran", when="@master")
-    depends_on("oasis3-mct@access-esm1.5", when="@access-esm1.5")
-    depends_on("oasis3-mct+deterministic", when="+deterministic")
-    depends_on("oasis3-mct~deterministic", when="~deterministic")
-    depends_on("libaccessom2+deterministic", when="+deterministic")
-    depends_on("libaccessom2~deterministic", when="~deterministic")
+    with when("@master"):
+        depends_on("datetime-fortran")
+        depends_on("oasis3-mct+deterministic", when="+deterministic")
+        depends_on("oasis3-mct~deterministic", when="~deterministic")
+        depends_on("libaccessom2+deterministic", when="+deterministic")
+        depends_on("libaccessom2~deterministic", when="~deterministic")
+    with when("@access-esm1.5"):
+        depends_on("oasis3-mct@access-esm1.5")
 
     phases = ["edit", "build", "install"]
 
@@ -476,7 +480,7 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
                     build.add_default_env("REPRO", "true")
                 build(
                     "--type",
-                    self.spec.variants["esm-type"].value,
+                    self.spec.variants["type"].value,
                     "--platform",
                     self._platform,
                     "--no_environ"
@@ -502,8 +506,7 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
     def install(self, spec, prefix):
 
         mkdirp(prefix.bin)
-        name = "esm-type" if "@access-esm1.5" in self.spec else "type"
-        type_value = self.spec.variants[name].value
+        type_value = self.spec.variants["type"].value
 
         install(
             join_path(
