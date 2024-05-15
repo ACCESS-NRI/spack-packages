@@ -21,9 +21,9 @@ class Mom5(MakefilePackage):
 
     variant("type", default="ACCESS-OM", description="Build MOM5 to support a particular use case.", values=("ACCESS-CM", "ACCESS-ESM", "ACCESS-OM", "ACCESS-OM-BGC", "MOM_solo"), multi=False)
     variant("restart_repro", default=True, description="Reproducible restart build.")
-    with when("@master"):
-        variant("deterministic", default=False, description="Deterministic build.")
-        variant("optimisation_report", default=False, description="Generate optimisation reports.")
+    # The following two variants are not applicable when version is "access-esm1.5":
+    variant("deterministic", default=False, description="Deterministic build.")
+    variant("optimisation_report", default=False, description="Generate optimisation reports.")
     with when("@access-esm1.5"):
         variant("type", default="ACCESS-CM", description="Build MOM5 to support a particular ESM use case.", values=("ACCESS-CM", ), multi=False)
 
@@ -31,7 +31,8 @@ class Mom5(MakefilePackage):
     depends_on("mpi")
     depends_on("netcdf-fortran@4.5.2:")
     depends_on("netcdf-c@4.7.4:")
-    with when("@master"):
+    # Spack does not have a spec syntax for NOT "@access-esm1.5", so use version ranges instead
+    with when("@:access-esm0,access-esm2:"):
         depends_on("datetime-fortran")
         depends_on("oasis3-mct+deterministic", when="+deterministic")
         depends_on("oasis3-mct~deterministic", when="~deterministic")
@@ -90,7 +91,7 @@ OPENMP =
 
 MAKEFLAGS += --jobs=$(shell grep '^processor' /proc/cpuinfo | wc -l)
 
-FPPFLAGS :=
+FPPFLAGS := 
 
 FFLAGS := -fcray-pointer -fdefault-real-8 -ffree-line-length-none -fno-range-check -Waliasing -Wampersand -Warray-bounds -Wcharacter-truncation -Wconversion -Wline-truncation -Wintrinsics-std -Wsurprising -Wno-tabs -Wunderflow -Wunused-parameter -Wintrinsic-shadow -Wno-align-commons -fallow-argument-mismatch -fallow-invalid-boz
 FFLAGS += {incs}
@@ -100,8 +101,8 @@ FFLAGS += -DGFORTRAN
 FFLAGS_OPT = -O2
 FFLAGS_REPRO = 
 FFLAGS_DEBUG = -O0 -g -W -fbounds-check 
-FFLAGS_OPENMP = -fopenmp 
-FFLAGS_VERBOSE =
+FFLAGS_OPENMP = -fopenmp
+FFLAGS_VERBOSE = 
 
 CFLAGS := -D__IFC {incs}
 CFLAGS += $(shell nc-config --cflags)
@@ -475,45 +476,32 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
         # ./MOM_compile.csh --type $mom_type --platform spack
         with working_dir(join_path(self.stage.source_path, "exp")):
             build = Executable("./MOM_compile.csh")
-            if "@access-esm1.5" in self.spec:
-                if "+restart_repro" in self.spec:
-                    build.add_default_env("REPRO", "true")
-                build(
-                    "--type",
-                    self.spec.variants["type"].value,
-                    "--platform",
-                    self._platform,
-                    "--no_environ"
-                )
-            else:
-                if "+optimisation_report" in self.spec:
-                    build.add_default_env("REPORT", "true")
-                if "+restart_repro" in self.spec:
-                    build.add_default_env("REPRO", "true")
-
+            if "+restart_repro" in self.spec:
+                build.add_default_env("REPRO", "true")
+            if "@access-esm1.5" not in self.spec:
                 # The MOM5 commit d7ba13a3f364ce130b6ad0ba813f01832cada7a2
                 # requires the --no_version switch to avoid git hashes being
                 # embedded in the binary.
-                build(
-                    "--type",
-                    self.spec.variants["type"].value,
-                    "--platform",
-                    self._platform,
-                    "--no_environ",
-                    "--no_version"
-                )
+                build.add_default_arg("--no_version")
+                if "+optimisation_report" in self.spec:
+                    build.add_default_env("REPORT", "true")
+            build(
+                "--type",
+                self.spec.variants["type"].value,
+                "--platform",
+                self._platform,
+                "--no_environ"
+            )
 
     def install(self, spec, prefix):
 
         mkdirp(prefix.bin)
-        type_value = self.spec.variants["type"].value
-
         install(
             join_path(
                 "exec",
                 self._platform,
-                type_value,
-                "fms_" + type_value + ".x"
+                self.spec.variants["type"].value,
+                "fms_" + self.spec.variants["type"].value + ".x"
             ),
             prefix.bin
         )
