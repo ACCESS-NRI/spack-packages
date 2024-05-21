@@ -31,7 +31,7 @@ class AccessEsm1p5(BundlePackage):
 
     depends_on("cice4")
     depends_on("mom5@access-esm1.5")
-    # TODO: Can be enabled when ready for testing
-    # depends_on("um7")
+    # um7 is in a private repository
+    depends_on("um7")
 
     # There is no need for install() since there is no code.
