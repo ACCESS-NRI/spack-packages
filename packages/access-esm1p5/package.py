@@ -29,9 +29,9 @@ class AccessEsm1p5(BundlePackage):
 
     version("latest")
 
-    depends_on("cice4")
+    depends_on("cice4@access-esm1.5")
     depends_on("mom5@access-esm1.5")
     # um7 is in a private repository
-    depends_on("um7")
+    depends_on("um7@7.3")
 
     # There is no need for install() since there is no code.
