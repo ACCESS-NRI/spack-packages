@@ -9,8 +9,6 @@
 
 from spack.package import *
 
-import llnl.util.filesystem as fs
-
 
 class Gcom4(Package):
     """
