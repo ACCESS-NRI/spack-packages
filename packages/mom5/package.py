@@ -19,19 +19,24 @@ class Mom5(MakefilePackage):
     version("master", branch="master", preferred=True)
     version("access-esm1.5", branch="access-esm1.5")
 
-    variant("type", default="ACCESS-OM", description="Build MOM5 to support a particular use case.", values=("ACCESS-CM", "ACCESS-ESM", "ACCESS-OM", "ACCESS-OM-BGC", "MOM_solo"), multi=False)
     variant("restart_repro", default=True, description="Reproducible restart build.")
     # The following two variants are not applicable when version is "access-esm1.5":
     variant("deterministic", default=False, description="Deterministic build.")
     variant("optimisation_report", default=False, description="Generate optimisation reports.")
-    with when("@access-esm1.5"):
-        variant("type", default="ACCESS-CM", description="Build MOM5 to support a particular ESM use case.", values=("ACCESS-CM", ), multi=False)
+    variant("type", default="ACCESS-OM",
+        # https://spack.readthedocs.io/en/latest/packaging_guide.html#conditional-possible-values
+        values=(
+            "ACCESS-CM",
+            # Spack does not have a spec syntax for NOT "@access-esm1.5", so use version ranges instead
+            conditional("ACCESS-ESM", "ACCESS-OM", "ACCESS-OM-BGC", "MOM_solo", when="@:access-esm0,access-esm2:")),
+        multi=False,
+        description="Build MOM5 to support a particular use case.")
 
     # Depend on virtual package "mpi".
     depends_on("mpi")
     depends_on("netcdf-fortran@4.5.2:")
     depends_on("netcdf-c@4.7.4:")
-    # Spack does not have a spec syntax for NOT "@access-esm1.5", so use version ranges instead
+
     with when("@:access-esm0,access-esm2:"):
         depends_on("datetime-fortran")
         depends_on("oasis3-mct+deterministic", when="+deterministic")
