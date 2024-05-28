@@ -9,8 +9,6 @@
 
 from spack.package import *
 
-import llnl.util.filesystem as fs
-
 
 class Gcom4(Package):
     """
@@ -19,12 +17,11 @@ class Gcom4(Package):
     """
 
     homepage = "https://code.metoffice.gov.uk/trac/gcom"
-    git = "git@github.com:ACCESS-NRI/GCOM.git"
+    git = "git@github.com:ACCESS-NRI/GCOM4.git"
 
     maintainers("penguian")
 
-    version("4.5", branch="dev")
-    build_directory = join_path("Share", "gcom4.5_access_config")
+    version("access-esm1.5", branch="access-esm1.5")
 
     variant("mpi", default=True, description="Build with MPI")
     depends_on("fcm", type="build")
@@ -55,15 +52,14 @@ class Gcom4(Package):
         sed -i 's/-openmp/-qopenmp/g' $@/fcm-make/machines/nci_ifort_openmpi.cfg
         sed -i 's/-openmp/-qopenmp/g' $@/fcm-make/machines/nci_ifort_serial.cfg
         """
-        with fs.working_dir(self.build_directory):
+        filter_file(
+            r"build\.target\{ns\}.*", "#",
+            join_path("fcm-make", "gcom.cfg"))
+        if self.spec.satisfies("%intel"):
+            machine = self.gcom_machine(self.spec)
             filter_file(
-                r"build\.target\{ns\}.*", "#",
-                join_path("fcm-make", "gcom.cfg"))
-            if self.spec.satisfies("%intel"):
-                machine = self.gcom_machine(self.spec)
-                filter_file(
-                    r"-openmp", "-qopenmp",
-                        join_path("fcm-make", "machines", f"{machine}.cfg"))
+                r"-openmp", "-qopenmp",
+                    join_path("fcm-make", "machines", f"{machine}.cfg"))
 
             
     def build(self, spec, prefix):
@@ -73,21 +69,20 @@ class Gcom4(Package):
         fcm = which("fcm")
         if fcm is None:
             raise FileNotFoundError("fcm not found in $PATH")
-        with fs.working_dir(self.build_directory):
-    
-            # Set up variables used by fcm-make/gcom.cfg
-            env["ACTION"] = "preprocess build"
-            env["DATE"] = ""
-            env["GCOM_SOURCE"] = "$HERE/.."
-            env["MIRROR"] = ""
-            env["REMOTE_ACTION"] = ""
-            env["ROSE_TASK_MIRROR_TARGET"] = "localhost"
-    
-            # Decide on the build variant
-            env["GCOM_MACHINE"] = self.gcom_machine(spec)
-    
-            # Do the build with fcm
-            fcm("make", "-f", join_path("fcm-make", "gcom.cfg"))
+
+        # Set up variables used by fcm-make/gcom.cfg
+        env["ACTION"] = "preprocess build"
+        env["DATE"] = ""
+        env["GCOM_SOURCE"] = "$HERE/.."
+        env["MIRROR"] = ""
+        env["REMOTE_ACTION"] = ""
+        env["ROSE_TASK_MIRROR_TARGET"] = "localhost"
+
+        # Decide on the build variant
+        env["GCOM_MACHINE"] = self.gcom_machine(spec)
+
+        # Do the build with fcm
+        fcm("make", "-f", join_path("fcm-make", "gcom.cfg"))
 
 
     def install(self, spec, prefix):
@@ -95,10 +90,9 @@ class Gcom4(Package):
         Build and install the library.
         """
         self.build(spec, prefix)
-        with fs.working_dir(self.build_directory):
-            mkdirp(prefix.lib)
-            install(
-                join_path("build", "lib", "libgcom.a"),
-                join_path(prefix.lib, "libgcom.a"))
-            install_tree(join_path("build", "include"), prefix.include)
+        mkdirp(prefix.lib)
+        install(
+            join_path("build", "lib", "libgcom.a"),
+            join_path(prefix.lib, "libgcom.a"))
+        install_tree(join_path("build", "include"), prefix.include)
 
