@@ -24,6 +24,7 @@ class Um7(Package):
 
     # https://code.metoffice.gov.uk/trac/um/wiki/PastReleases
     version("7.3")
+    version("access-esm1.5", branch="access-esm1.5")
 
     maintainers("penguian")
 
