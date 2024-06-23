@@ -31,8 +31,9 @@ class Um7(Package):
     depends_on("dummygrib", type=("build", "link"))
     depends_on("fcm", type="build")
     depends_on("gcom4@access-esm1.5+mpi", type=("build", "link"))
-    depends_on("mpi", type=("build", "run"))
-    depends_on("netcdf-fortran", type=("build", "link"))
+    depends_on("openmpi@4.0.2:4.1.0", type=("build", "run"))
+    depends_on("netcdf-fortran@4.5.2", type=("build", "link"))
+    depends_on("netcdf-c@4.7.1:4.7.4%gcc", type=("build", "link"))
     depends_on("oasis3-mct@access-esm1.5", type=("build", "link"))
 
     variant("omp", default=True, description="Use OpenMP")

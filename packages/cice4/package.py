@@ -20,10 +20,10 @@ class Cice4(MakefilePackage):
 
     version("access-esm1.5", branch="access-esm1.5")
 
-    # Depend on virtual package "mpi".
-    depends_on("mpi")
-    depends_on("netcdf-fortran@4.5.2:")
-    depends_on("netcdf-c@4.7.1:")
+    depends_on("netcdf-c@4.7.1:4.7.4%gcc")
+    depends_on("netcdf-fortran@4.5.2")
+    # Depend on "openmpi".
+    depends_on("openmpi@4.0.2:4.1.0")
     depends_on("oasis3-mct@access-esm1.5")
 
     phases = ["edit", "build", "install"]
@@ -55,8 +55,11 @@ class Cice4(MakefilePackage):
 
         config = {}
 
-        istr = join_path((spec["oasis3-mct"].headers).cpp_flags, "psmile.MPI1")
-        ideps = ["oasis3-mct", "netcdf-fortran"]
+        istr = " ".join([
+                join_path((spec["oasis3-mct"].headers).cpp_flags, "psmile.MPI1"),
+                join_path((spec["oasis3-mct"].headers).cpp_flags, "pio"),
+                join_path((spec["oasis3-mct"].headers).cpp_flags, "mct")])
+        ideps = ["netcdf-fortran"]
         incs = " ".join([istr] + [(spec[d].headers).cpp_flags for d in ideps])
 
         lstr = ""
@@ -90,9 +93,9 @@ LDFLAGS    := $(FFLAGS)
         # Based on https://github.com/coecms/access-esm-build-gadi/blob/master/patch/Macros.Linux.raijin.nci.org.au-mct
         config["intel"] = """
 ifeq ($(DEBUG), yes)
-    FFLAGS     := -r8 -i4 -O0 -g -align all -w -ftz -convert big_endian -assume byterecl -no-vec -xHost -fp-model precise
+    FFLAGS     := -r8 -i4 -O0 -g -align all -w -ftz -convert big_endian -assume byterecl -no-vec -xCORE-AVX2 -fp-model precise
 else
-    FFLAGS     := -r8 -i4 -O2 -align all -w -ftz -convert big_endian -assume byterecl -no-vec -xHost -fp-model precise
+    FFLAGS     := -r8 -i4 -O2 -align all -w -ftz -convert big_endian -assume byterecl -no-vec -march=cascadelake -xCORE-AVX512 -fp-model precise
 endif
 LDFLAGS    := $(FFLAGS) -v -static-intel 
 """
