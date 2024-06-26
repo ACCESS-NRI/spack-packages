@@ -222,12 +222,12 @@ Cflags: -I${{includedir}}/{k}
         makeinc_path = join_path(SRCDIR, self.__makeinc)
         config = {}
 
+        NCI_OPTIM_FLAGS = "-g3 -O2 -axCORE-AVX2 -debug all -check none -traceback"
+        CFLAGS = ""
         # TODO: https://github.com/ACCESS-NRI/ACCESS-OM/issues/12
         if "@access-esm1.5" in self.spec:
             NCI_OPTIM_FLAGS = "-g3 -O2 -xCORE-AVX512 -debug all -check none -traceback"
-        else:
-            NCI_OPTIM_FLAGS = "-g3 -O2 -axCORE-AVX2 -debug all -check none -traceback"
-        CFLAGS = ""
+            
         if "+deterministic" in self.spec:
             NCI_OPTIM_FLAGS = "-g0 -O0 -axCORE-AVX2 -debug none -check none"
             CFLAGS = "-g0"
