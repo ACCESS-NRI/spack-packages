@@ -32,11 +32,6 @@ class Mom5(MakefilePackage):
         multi=False,
         description="Build MOM5 to support a particular use case.")
 
-    # Depend on virtual package "mpi".
-    depends_on("mpi")
-    depends_on("netcdf-fortran@4.5.2:")
-    depends_on("netcdf-c@4.7.1:")
-
     with when("@:access-esm0,access-esm2:"):
         depends_on("netcdf-c@4.7.4:")
         depends_on("netcdf-fortran@4.5.2:")
@@ -48,8 +43,8 @@ class Mom5(MakefilePackage):
         depends_on("libaccessom2+deterministic", when="+deterministic")
         depends_on("libaccessom2~deterministic", when="~deterministic")
     with when("@access-esm1.5"):
-        depends_on("netcdf-c@4.7.1:4.7.4%gcc")
-        depends_on("netcdf-fortran@4.5.2")
+        depends_on("netcdf-c@4.7.1:4.7.4")
+        depends_on("netcdf-fortran@4.5.1:4.5.2")
         # Depend on "openmpi".
         depends_on("openmpi@4.0.2:4.1.0")
         depends_on("oasis3-mct@access-esm1.5")
@@ -71,11 +66,10 @@ class Mom5(MakefilePackage):
         if "@access-esm1.5" in self.spec:
             istr = " ".join([
                     join_path((spec["oasis3-mct"].headers).cpp_flags, "psmile.MPI1"),
-                    join_path((spec["oasis3-mct"].headers).cpp_flags, "pio"),
                     join_path((spec["oasis3-mct"].headers).cpp_flags, "mct")])
             ideps = ["netcdf-fortran"]
             ldeps = ["oasis3-mct", "netcdf-c", "netcdf-fortran"]
-            FFLAGS_OPT = "-O3 -debug minimal -march=cascadelake -xCORE-AVX512 -align array64byte"
+            FFLAGS_OPT = "-O3 -debug minimal -xCORE-AVX512 -align array64byte"
             CFLAGS_OPT = "-O2 -debug minimal -no-vec"
         else:
             istr = join_path((spec["oasis3-mct"].headers).cpp_flags, "psmile.MPI1")
