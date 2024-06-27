@@ -20,7 +20,6 @@ class Cice4(MakefilePackage):
 
     version("access-esm1.5", branch="access-esm1.5")
 
-    depends_on("netcdf-c@4.7.1:4.7.4")
     depends_on("netcdf-fortran@4.5.1:4.5.2")
     # Depend on "openmpi".
     depends_on("openmpi@4.0.2:4.1.0")
@@ -62,7 +61,7 @@ class Cice4(MakefilePackage):
         incs = " ".join([istr] + [(spec[d].headers).cpp_flags for d in ideps])
 
         lstr = ""
-        ldeps = ["oasis3-mct", "netcdf-c", "netcdf-fortran"]
+        ldeps = ["oasis3-mct", "netcdf-fortran"]
         libs = " ".join([lstr] + [self.get_linker_args(spec, d) for d in ldeps])
 
         CFLAGS = "-c -O2"
