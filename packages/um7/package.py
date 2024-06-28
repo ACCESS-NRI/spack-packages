@@ -33,7 +33,6 @@ class Um7(Package):
     depends_on("gcom4@access-esm1.5+mpi", type=("build", "link"))
     depends_on("openmpi@4.0.2:4.1.0", type=("build", "run"))
     depends_on("netcdf-fortran@4.5.1:4.5.2", type=("build", "link"))
-    depends_on("netcdf-c@4.7.1:4.7.4", type=("build", "link"))
     depends_on("oasis3-mct@access-esm1.5", type=("build", "link"))
 
     variant("omp", default=True, description="Use OpenMP")
@@ -45,7 +44,6 @@ class Um7(Package):
     def setup_build_environment(self, env):
         env.prepend_path("PATH", self.spec["fcm"].prefix.bin)
         env.prepend_path("CPATH", self.spec["gcom4"].prefix.include)
-        env.prepend_path("CPATH", self.spec["netcdf-c"].prefix.include)
         env.prepend_path("CPATH", self.spec["netcdf-fortran"].prefix.include)
         env.prepend_path("CPATH", self.spec["oasis3-mct"].prefix.include)
         oasis3_mct_includes = []
@@ -56,13 +54,11 @@ class Um7(Package):
                 env.prepend_path("CPATH", include)
         env.prepend_path("LIBRARY_PATH", self.spec["dummygrib"].prefix.lib)
         env.prepend_path("LIBRARY_PATH", self.spec["gcom4"].prefix.lib)
-        env.prepend_path("LIBRARY_PATH", self.spec["netcdf-c"].prefix.lib)
         env.prepend_path("LIBRARY_PATH", self.spec["netcdf-fortran"].prefix.lib)
         env.prepend_path("LIBRARY_PATH", self.spec["oasis3-mct"].prefix.lib)
 
 
     def setup_run_environment(self, env):
-        env.prepend_path("LD_LIBRARY_PATH", self.spec["netcdf-c"].prefix.lib)
         env.prepend_path("LD_LIBRARY_PATH", self.spec["netcdf-fortran"].prefix.lib)
 
 
