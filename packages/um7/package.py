@@ -13,6 +13,21 @@ from spack.package import *
 import os
 import os.path
 
+def _bld_cfg_path(opt_value, hg):
+    """
+    Return the path to the build configuration, depending on 
+    "opt" value (opt_value) and HadGEM number (hg).
+    """
+    if opt_value == "debug":
+        bld_config = f"bld-dbg-hadgem{hg}-C2.cfg"
+    else:
+        bld_config = f"bld-hadgem{hg}-mct.cfg"
+    return join_path(f"ummodel_hg{hg}", "cfg", bld_config)
+
+
+_hg = 3  # build HadGEM3 ONLY here
+
+
 class Um7(Package):
     """
     UM is a numerical weather prediction and climate modelling software package.
@@ -62,6 +77,24 @@ class Um7(Package):
         env.prepend_path("LD_LIBRARY_PATH", self.spec["netcdf-fortran"].prefix.lib)
 
 
+    def patch(self):
+        """
+        Perform the equivalent of the following Bash and Sed commands,
+        depending on the value of the "opt" variant:
+        if "opt=debug"; then
+            sed -i 's/-xHost //' $@/ummodel_hg3/cfg/bld-dbg-hadgem3-C2.cfg
+        else
+            sed -i 's/-xHost/-xCORE-AVX512/' $@/ummodel_hg3/cfg/bld-hadgem3-mct.cfg
+        fi
+        """
+        opt_value = self.spec.variants["opt"].value
+        bld_cfg_path = _bld_cfg_path(opt_value, _hg)
+        if opt_value == "debug":
+            filter_file(r"-xHost ", "", bld_cfg_path)
+        else:    
+            filter_file(r"-xHost", "-xCORE-AVX512", bld_cfg_path)
+
+
     def install(self, spec, prefix):
 
         boolstr = lambda b: "true" if b else "false"
@@ -79,24 +112,18 @@ class Um7(Package):
         env["openmp"] = boolstr("~omp" in spec)
         env["netcdf"] = boolstr("~netcdf" in spec)
 
-        hg = 3  # build HadGEM3 ONLY here
-
         # Whether to build debug --jhan: adjust path to configs
         if opt_value == "debug":
-            bld_config = f"bld-dbg-hadgem{hg}-C2.cfg"
-            um_exe = f"um_hg{hg}_dbg.exe"
+            um_exe = f"um_hg{_hg}_dbg.exe"
         else:
-            bld_config = f"bld-hadgem{hg}-mct.cfg"
-            um_exe = f"um_hg{hg}.exe"
+            um_exe = f"um_hg{_hg}.exe"
 
-        bld_dir = f"ummodel_hg{hg}"
         # Build with fcm
-        fcm("build", "-f", "-j", "4",
-            join_path(bld_dir, "cfg", bld_config))
+        fcm("build", "-f", "-j", "4", _bld_cfg_path(opt_value, _hg))
 
         # Install
         mkdirp(prefix.bin)
         install(
-            join_path(bld_dir, "bin", um_exe),
+            join_path(f"ummodel_hg{_hg}", "bin", um_exe),
             join_path(prefix.bin, um_exe))
 
