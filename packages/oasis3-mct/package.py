@@ -15,7 +15,7 @@ class Oasis3Mct(MakefilePackage):
     homepage = "https://www.access-nri.org.au"
     git = "https://github.com/ACCESS-NRI/oasis3-mct.git"
 
-    maintainers = ["harshula"]
+    maintainers("harshula", "penguian")
 
     version("master", branch="master", preferred=True)
     version("access-esm1.5", branch="access-esm1.5")
@@ -23,9 +23,15 @@ class Oasis3Mct(MakefilePackage):
     variant("deterministic", default=False, description="Deterministic build.")
     variant("optimisation_report", default=False, description="Generate optimisation reports.")
 
-    depends_on("netcdf-fortran@4.5.2:")
-    # Depend on virtual package "mpi".
-    depends_on("mpi")
+    with when("@:access-esm0,access-esm2:"):
+        depends_on("netcdf-fortran@4.5.2:")
+        # Depend on virtual package "mpi".
+        depends_on("mpi")
+    with when("@access-esm1.5"):
+        depends_on("hdf5@1.10.5:1.10.11")
+        depends_on("netcdf-fortran@4.5.1:4.5.2")
+        # Depend on "openmpi".
+        depends_on("openmpi@4.0.2:4.1.0")
 
     phases = ["edit", "build", "install"]
 
@@ -217,6 +223,9 @@ Cflags: -I${{includedir}}/{k}
         # TODO: https://github.com/ACCESS-NRI/ACCESS-OM/issues/12
         NCI_OPTIM_FLAGS = "-g3 -O2 -axCORE-AVX2 -debug all -check none -traceback"
         CFLAGS = ""
+        if "@access-esm1.5" in self.spec:
+            NCI_OPTIM_FLAGS = "-g3 -O2 -xCORE-AVX512 -debug all -check none -traceback"
+            
         if "+deterministic" in self.spec:
             NCI_OPTIM_FLAGS = "-g0 -O0 -axCORE-AVX2 -debug none -check none"
             CFLAGS = "-g0"

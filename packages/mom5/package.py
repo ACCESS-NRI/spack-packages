@@ -32,18 +32,21 @@ class Mom5(MakefilePackage):
         multi=False,
         description="Build MOM5 to support a particular use case.")
 
-    # Depend on virtual package "mpi".
-    depends_on("mpi")
-    depends_on("netcdf-fortran@4.5.2:")
-    depends_on("netcdf-c@4.7.4:")
-
     with when("@:access-esm0,access-esm2:"):
+        depends_on("netcdf-c@4.7.4:")
+        depends_on("netcdf-fortran@4.5.2:")
+        # Depend on virtual package "mpi".
+        depends_on("mpi")
         depends_on("datetime-fortran")
         depends_on("oasis3-mct+deterministic", when="+deterministic")
         depends_on("oasis3-mct~deterministic", when="~deterministic")
         depends_on("libaccessom2+deterministic", when="+deterministic")
         depends_on("libaccessom2~deterministic", when="~deterministic")
     with when("@access-esm1.5"):
+        depends_on("netcdf-c@4.7.1:4.7.4")
+        depends_on("netcdf-fortran@4.5.1:4.5.2")
+        # Depend on "openmpi".
+        depends_on("openmpi@4.0.2:4.1.0")
         depends_on("oasis3-mct@access-esm1.5")
 
     phases = ["edit", "build", "install"]
@@ -59,14 +62,17 @@ class Mom5(MakefilePackage):
         makeinc_path = join_path(srcdir, "bin", "mkmf.template.spack")
         config = {}
 
-        istr = join_path((spec["oasis3-mct"].headers).cpp_flags, "psmile.MPI1")
         # NOTE: The order of the libraries matters during the linking step!
         if "@access-esm1.5" in self.spec:
-            ideps = ["oasis3-mct"]
+            istr = " ".join([
+                    join_path((spec["oasis3-mct"].headers).cpp_flags, "psmile.MPI1"),
+                    join_path((spec["oasis3-mct"].headers).cpp_flags, "mct")])
+            ideps = ["netcdf-fortran"]
             ldeps = ["oasis3-mct", "netcdf-c", "netcdf-fortran"]
-            FFLAGS_OPT = "-O3 -debug minimal -xCORE-AVX2"
+            FFLAGS_OPT = "-O3 -debug minimal -xCORE-AVX512 -align array64byte"
             CFLAGS_OPT = "-O2 -debug minimal -no-vec"
         else:
+            istr = join_path((spec["oasis3-mct"].headers).cpp_flags, "psmile.MPI1")
             ideps = ["oasis3-mct", "libaccessom2", "netcdf-fortran"]
             # NOTE: datetime-fortran is a dependency of libaccessom2.
             ldeps = ["oasis3-mct", "libaccessom2", "netcdf-c", "netcdf-fortran", "datetime-fortran"]
