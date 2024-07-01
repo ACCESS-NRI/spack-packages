@@ -13,21 +13,6 @@ from spack.package import *
 import os
 import os.path
 
-def _bld_cfg_path(opt_value, hg):
-    """
-    Return the path to the build configuration, depending on 
-    "opt" value (opt_value) and HadGEM number (hg).
-    """
-    if opt_value == "debug":
-        bld_config = f"bld-dbg-hadgem{hg}-C2.cfg"
-    else:
-        bld_config = f"bld-hadgem{hg}-mct.cfg"
-    return join_path(f"ummodel_hg{hg}", "cfg", bld_config)
-
-
-_hg = 3  # build HadGEM3 ONLY here
-
-
 class Um7(Package):
     """
     UM is a numerical weather prediction and climate modelling software package.
@@ -77,6 +62,34 @@ class Um7(Package):
         env.prepend_path("LD_LIBRARY_PATH", self.spec["netcdf-fortran"].prefix.lib)
 
 
+    def _bld_path(self):
+        """
+        Return the path to the build directory.
+        """
+        return "ummodel_hg3"
+
+
+    def _bld_cfg_path(self, opt_value):
+        """
+        Return the path to the build configuration, depending on opt_value.
+        """
+        if opt_value == "debug":
+            bld_config = "bld-dbg-hadgem3-C2.cfg"
+        else:
+            bld_config = "bld-hadgem3-mct.cfg"
+        return join_path(self._bld_path(), "cfg", bld_config)
+
+
+    def _exe_name(self, opt_value):
+        """
+        Return the executable name, depending on opt_value.
+        """
+        if opt_value == "debug":
+            return "um_hg3_dbg.exe"
+        else:
+            return "um_hg3.exe"
+
+
     def patch(self):
         """
         Perform the equivalent of the following Bash and Sed commands,
@@ -88,7 +101,7 @@ class Um7(Package):
         fi
         """
         opt_value = self.spec.variants["opt"].value
-        bld_cfg_path = _bld_cfg_path(opt_value, _hg)
+        bld_cfg_path = self._bld_cfg_path(opt_value)
         if opt_value == "debug":
             filter_file(r"-xHost ", "", bld_cfg_path)
         else:    
@@ -112,18 +125,15 @@ class Um7(Package):
         env["openmp"] = boolstr("~omp" in spec)
         env["netcdf"] = boolstr("~netcdf" in spec)
 
-        # Whether to build debug --jhan: adjust path to configs
-        if opt_value == "debug":
-            um_exe = f"um_hg{_hg}_dbg.exe"
-        else:
-            um_exe = f"um_hg{_hg}.exe"
-
         # Build with fcm
-        fcm("build", "-f", "-j", "4", _bld_cfg_path(opt_value, _hg))
+        fcm("build", "-f", "-j", "4", self._bld_cfg_path(opt_value))
+
+        # Executable name depends on opt_value.
+        um_exe = self._exe_name(opt_value)
 
         # Install
         mkdirp(prefix.bin)
         install(
-            join_path(f"ummodel_hg{_hg}", "bin", um_exe),
+            join_path(self._bld_path(), "bin", um_exe),
             join_path(prefix.bin, um_exe))
 
