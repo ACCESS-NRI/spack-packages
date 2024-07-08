@@ -10,9 +10,6 @@
 
 from spack.package import *
 
-import os
-import os.path
-
 class Um7(Package):
     """
     UM is a numerical weather prediction and climate modelling software package.
