@@ -10,9 +10,6 @@
 
 from spack.package import *
 
-import os
-import os.path
-
 class Um7(Package):
     """
     UM is a numerical weather prediction and climate modelling software package.
@@ -28,112 +25,189 @@ class Um7(Package):
 
     maintainers("penguian")
 
-    depends_on("dummygrib", type=("build", "link"))
     depends_on("fcm", type="build")
+    depends_on("dummygrib", type=("build", "link"))
     depends_on("gcom4@access-esm1.5+mpi", type=("build", "link"))
     depends_on("openmpi@4.0.2:4.1.0", type=("build", "run"))
-    depends_on("netcdf-fortran@4.5.1:4.5.2", type=("build", "link"))
+    depends_on("netcdf-fortran@4.5.2", type=("build", "link"))
     depends_on("oasis3-mct@access-esm1.5", type=("build", "link"))
 
-    variant("omp", default=True, description="Use OpenMP")
-    variant("netcdf", default=True, description="NetCDF")
-    variant("opt", default="high", description="Optimization level",
+    variant("optim", default="high", description="Optimization level",
             values=("high", "debug"), multi=False)
+
+    phases = ["edit", "build", "install"]
 
 
     def setup_build_environment(self, env):
+        """
+        Set environment variables to their required values.
+        """
         env.prepend_path("PATH", self.spec["fcm"].prefix.bin)
-        env.prepend_path("CPATH", self.spec["gcom4"].prefix.include)
-        env.prepend_path("CPATH", self.spec["netcdf-fortran"].prefix.include)
-        env.prepend_path("CPATH", self.spec["oasis3-mct"].prefix.include)
-        oasis3_mct_includes = []
-        for header in self.spec["oasis3-mct"].headers:
-            include = os.path.dirname(header)
-            if include not in oasis3_mct_includes:
-                oasis3_mct_includes.append(include)
-                env.prepend_path("CPATH", include)
-        env.prepend_path("LIBRARY_PATH", self.spec["dummygrib"].prefix.lib)
+        oasis3_incs = [
+                join_path(self.spec["oasis3-mct"].prefix.include, subdir)
+                for subdir in ["psmile.MPI1", "mct"]]
+        ideps = ["gcom4", "netcdf-fortran"]
+        incs = [self.spec[d].prefix.include for d in ideps] + oasis3_incs
+        for ipath in incs:
+            env.prepend_path("CPATH", ipath)
+        # The gcom4 library does not contain shared objects and
+        # therefore must be statically linked.
         env.prepend_path("LIBRARY_PATH", self.spec["gcom4"].prefix.lib)
-        env.prepend_path("LIBRARY_PATH", self.spec["netcdf-fortran"].prefix.lib)
-        env.prepend_path("LIBRARY_PATH", self.spec["oasis3-mct"].prefix.lib)
 
 
-    def setup_run_environment(self, env):
-        env.prepend_path("LD_LIBRARY_PATH", self.spec["netcdf-fortran"].prefix.lib)
+    # The path to the build directory.
+    _bld_path = "ummodel_hg3"
+
+    # The path to the build configuration.
+    _bld_cfg_path = join_path(_bld_path, "cfg", "bld-hadgem3-spack.cfg")
 
 
-    def _bld_path(self):
+    def _exe_name(self, optim_value):
         """
-        Return the path to the build directory.
+        Return the executable name, depending on optim_value.
         """
-        return "ummodel_hg3"
-
-
-    def _bld_cfg_path(self, opt_value):
-        """
-        Return the path to the build configuration, depending on opt_value.
-        """
-        if opt_value == "debug":
-            bld_config = "bld-dbg-hadgem3-C2.cfg"
-        else:
-            bld_config = "bld-hadgem3-mct.cfg"
-        return join_path(self._bld_path(), "cfg", bld_config)
-
-
-    def _exe_name(self, opt_value):
-        """
-        Return the executable name, depending on opt_value.
-        """
-        if opt_value == "debug":
+        if optim_value == "debug":
             return "um_hg3_dbg.exe"
         else:
             return "um_hg3.exe"
 
 
-    def patch(self):
+    def _get_linker_args(self, spec, name):
         """
-        Perform the equivalent of the following Bash and Sed commands,
-        depending on the value of the "opt" variant:
-        if "opt=debug"; then
-            sed -i 's/-xHost //' $@/ummodel_hg3/cfg/bld-dbg-hadgem3-C2.cfg
-        else
-            sed -i 's/-xHost/-xCORE-AVX512/' $@/ummodel_hg3/cfg/bld-hadgem3-mct.cfg
-        fi
+        The reason for the explicit -rpath is:
+        https://github.com/ACCESS-NRI/spack_packages/issues/14#issuecomment-1653651447
         """
-        opt_value = self.spec.variants["opt"].value
-        bld_cfg_path = self._bld_cfg_path(opt_value)
+        return " ".join(
+                    [(spec[name].libs).ld_flags,
+                    "-Wl,-rpath=" + join_path(spec[name].prefix, "lib")]
+                   )
+
+
+    def edit(self, spec, prefix):
+        """
+        Create an FCM configuration file based on
+        ummodel_hg3/cfg/bld-dbg-hadgem3-C2.cfg and
+        ummodel_hg3/cfg/bld-hadgem3-mct.cfg
+        """
+
+        ldeps = ["oasis3-mct", "netcdf-fortran", "dummygrib"]
+        libs = " ".join([self._get_linker_args(spec, d) for d in ldeps] + ["-lgcom"])
+
+        opt_value = spec.variants["optim"].value
+        EXE_NAME = self._exe_name(opt_value)
+        CPPKEYS = (
+            "C_LONG_LONG_INT=c_long_long_int MPP=mpp C_LOW_U=c_low_u "
+            "FRL8=frl8 LINUX=linux BUFRD_IO=bufrd_io LITTLE_END=little_end "
+            "LINUX_INTEL_COMPILER=linux_intel_compiler "
+            "ACCESS=access OASIS3=oasis3 CONTROL=control REPROD=reprod "
+            "MPP=mpp ATMOS=atmos GLOBAL=global A04_ALL=a04_all "
+            "A01_3A=a01_3a A02_3A=a02_3a A03_8C=a03_8c A04_3D=a04_3d "
+            "A05_4A=a05_4a A06_4A=a06_4a A08_7A=a08_7a A09_2A=a09_2a "
+            "A10_2A=a10_2a A11_2A=a11_2a A12_2A=a12_2a A13_2A=a13_2a "
+            "A14_1B=a14_1b A15_1A=a15_1a A16_1A=a16_1a A17_2B=a17_2b "
+            "A18_0A=a18_0a A19_1A=a19_1a A25_0A=a25_0a A26_1A=a26_1a "
+            "A30_1A=a30_1a A31_0A=a31_0a A32_1A=a32_1a A33_0A=a33_0a "
+            "A34_0A=a34_0a A35_0A=a35_0a A38_0A=a38_0a A70_1B=a70_1b "
+            "A71_1A=a71_1a C70_1A=c70_1a C72_0A=c72_0a C80_1A=c80_1a "
+            "C82_1A=c82_1a C84_1A=c84_1a C92_2A=c92_2a C94_1A=c94_1a "
+            "C95_2A=c95_2a C96_1C=c96_1c C97_3A=c97_3a "
+            "CABLE_17TILES=cable_17tiles "
+            "CABLE_SOIL_LAYERS=cable_soil_layers "
+            "TIMER=timer")
+        FFLAGS = "-ftz -what -fno-alias -stack-temps -safe-cray-ptr"
         if opt_value == "debug":
-            filter_file(r"-xHost ", "", bld_cfg_path)
-        else:    
-            filter_file(r"-xHost", "-xCORE-AVX512", bld_cfg_path)
+            FO = "-O0"
+            FTRACEBACK = "-traceback"
+            FDEBUG = "-debug all"
+            FG = "-g"
+            FARCH = ""
+            FOBLANK = "-O0"
+        else:
+            FO = "-O2"
+            FTRACEBACK = ""
+            FDEBUG = ""
+            FG = ""
+            FARCH = "-xCORE-AVX512"
+            FOBLANK = ""
+
+        config = f"""
+# ------------------------------------------------------------------------------
+# File header
+# ------------------------------------------------------------------------------
+
+CFG::TYPE                                          bld
+CFG::REVISION                                      1.0
+
+USE                                                $HERE/../../umbase_hg3
+
+# ------------------------------------------------------------------------------
+# Destination
+# ------------------------------------------------------------------------------
+
+DEST                                               $HERE/..
+
+# ------------------------------------------------------------------------------
+# Build declarations
+# ------------------------------------------------------------------------------
+
+blockdata                                          blkdata.o
+excl_dep                                           USE::NetCDF
+excl_dep                                           INC::netcdf.inc
+excl_dep                                           INC::mpif.h
+excl_dep                                           USE::mpl
+excl_dep                                           USE::mod_prism
+excl_dep                                           USE::mod_prism_proto
+excl_dep                                           USE::mod_prism_grids_writing
+excl_dep                                           USE::mod_prism_def_partition_proto
+excl_dep                                           USE::mod_prism_put_proto
+excl_dep                                           USE::mod_prism_get_proto
+excl_dep::script                                   EXE
+exe_dep                                            portio2a.o pio_data_conv.o pio_io_timer.o
+exe_name::flumeMain                                {EXE_NAME}
+pp                                                 1
+target                                             {EXE_NAME}
+tool::ar                                           ar
+tool::cc                                           mpicc
+tool::cflags                                       {FO} -g {FTRACEBACK} {FDEBUG} {FARCH} -fp-model precise
+tool::cpp                                          cpp
+tool::cppflags
+tool::cppkeys                                      {CPPKEYS}
+tool::fc                                           mpif90
+tool::fflags                                       {FO}  -g   -traceback  {FDEBUG} -V -i8 -r8      -fp-model precise {FFLAGS}
+tool::fflags::control::coupling::dump_received     {FO} {FG} {FTRACEBACK} {FDEBUG}            -mp1 -fp-model strict  {FFLAGS}
+tool::fflags::control::coupling::dump_sent         {FO} {FG} {FTRACEBACK} {FDEBUG}            -mp1 -fp-model strict  {FFLAGS}
+tool::fflags::control::coupling::oasis3_atmos_init {FO} {FG} {FTRACEBACK} {FDEBUG}    -i4 -r8 -mp1 -fp-model strict  {FFLAGS}
+tool::fflags::control::top_level::atm_step         -O0   -g  {FTRACEBACK} {FDEBUG} -V -i8 -r8 -mp1 -fp-model strict  {FFLAGS}
+tool::fflags::control::top_level::set_atm_pointers -O0   -g   -traceback  {FDEBUG}    -i8 -r8      -fp-model strict -ftz -std95
+tool::fflags::control::top_level::u_model          -O0   -g  {FTRACEBACK} {FDEBUG} -V -i8 -r8 -mp1 -fp-model strict  {FFLAGS}
+tool::fpp                                          cpp
+tool::fppflags                                     -P -traditional
+tool::fppkeys                                      {CPPKEYS}
+
+tool::geninterface                                 none
+tool::ld                                           mpif90
+tool::ldflags                                      {FOBLANK} -g -traceback {FDEBUG} -static-intel {libs}
+        """
+        with open(self._bld_cfg_path, "w") as bld_cfg_file:
+            bld_cfg_file.write(config)
+
+
+    def build(self, spec, prefix):
+        """
+        Use FCM to build the executable.
+        """
+        fcm = which("fcm")
+        fcm("build", "-f", "-j", "4", self._bld_cfg_path)
 
 
     def install(self, spec, prefix):
-
-        boolstr = lambda b: "true" if b else "false"
-
-        fcm = which("fcm")
-
-        if self.compiler.name == "intel":
-            env["platform_config_dir"] = "nci-x86-ifort"
-        else:
-            raise NotImplentedError("Unknown compiler")
-
-        opt_value = spec.variants["opt"].value
-        env["optimisation_level"] = opt_value
-
-        env["openmp"] = boolstr("~omp" in spec)
-        env["netcdf"] = boolstr("~netcdf" in spec)
-
-        # Build with fcm
-        fcm("build", "-f", "-j", "4", self._bld_cfg_path(opt_value))
-
-        # Executable name depends on opt_value.
-        um_exe = self._exe_name(opt_value)
-
-        # Install
+        """
+        Install the executable into the prefix.bin directory.
+        The executable name depends on the "optim" value.
+        """
+        um_exe = self._exe_name(spec.variants["optim"].value)
         mkdirp(prefix.bin)
         install(
-            join_path(self._bld_path(), "bin", um_exe),
+            join_path(self._bld_path, "bin", um_exe),
             join_path(prefix.bin, um_exe))
 
