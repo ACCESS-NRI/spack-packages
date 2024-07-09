@@ -32,7 +32,7 @@ class Um7(Package):
     depends_on("netcdf-fortran@4.5.2", type=("build", "link"))
     depends_on("oasis3-mct@access-esm1.5", type=("build", "link"))
 
-    variant("opt", default="high", description="Optimization level",
+    variant("optim", default="high", description="Optimization level",
             values=("high", "debug"), multi=False)
 
     phases = ["edit", "build", "install"]
@@ -55,24 +55,18 @@ class Um7(Package):
         env.prepend_path("LIBRARY_PATH", self.spec["gcom4"].prefix.lib)
 
 
-    def _bld_path(self):
-        """
-        Return the path to the build directory.
-        """
-        return "ummodel_hg3"
+    # The path to the build directory.
+    _bld_path = "ummodel_hg3"
 
-    def _bld_cfg_path(self):
-        """
-        Return the path to the build configuration.
-        """
-        return join_path(self._bld_path(), "cfg", "bld-hadgem3-spack.cfg")
+    # The path to the build configuration.
+    _bld_cfg_path = join_path(_bld_path, "cfg", "bld-hadgem3-spack.cfg")
 
 
-    def _exe_name(self, opt_value):
+    def _exe_name(self, optim_value):
         """
-        Return the executable name, depending on opt_value.
+        Return the executable name, depending on optim_value.
         """
-        if opt_value == "debug":
+        if optim_value == "debug":
             return "um_hg3_dbg.exe"
         else:
             return "um_hg3.exe"
@@ -99,7 +93,7 @@ class Um7(Package):
         ldeps = ["oasis3-mct", "netcdf-fortran", "dummygrib"]
         libs = " ".join([self._get_linker_args(spec, d) for d in ldeps] + ["-lgcom"])
 
-        opt_value = spec.variants["opt"].value
+        opt_value = spec.variants["optim"].value
         EXE_NAME = self._exe_name(opt_value)
         CPPKEYS = (
             "C_LONG_LONG_INT=c_long_long_int MPP=mpp C_LOW_U=c_low_u "
@@ -194,33 +188,26 @@ tool::geninterface                                 none
 tool::ld                                           mpif90
 tool::ldflags                                      {FOBLANK} -g -traceback {FDEBUG} -static-intel {libs}
         """
-        bld_cfg_path = self._bld_cfg_path()
-        with open(bld_cfg_path, "w") as bld_cfg_file:
+        with open(self._bld_cfg_path, "w") as bld_cfg_file:
             bld_cfg_file.write(config)
 
 
     def build(self, spec, prefix):
         """
-        Use FCM and the Intel compiler to build the executable.
+        Use FCM to build the executable.
         """
-        if self.compiler.name == "intel":
-            env["platform_config_dir"] = "nci-x86-ifort"
-        else:
-            raise NotImplentedError("Unknown compiler")
-
         fcm = which("fcm")
-        fcm("build", "-f", "-j", "4", self._bld_cfg_path())
+        fcm("build", "-f", "-j", "4", self._bld_cfg_path)
 
 
     def install(self, spec, prefix):
         """
         Install the executable into the prefix.bin directory.
-        The executable name depends on opt_value.
+        The executable name depends on the "optim" value.
         """
-        opt_value = spec.variants["opt"].value
-        um_exe = self._exe_name(opt_value)
+        um_exe = self._exe_name(spec.variants["optim"].value)
         mkdirp(prefix.bin)
         install(
-            join_path(self._bld_path(), "bin", um_exe),
+            join_path(self._bld_path, "bin", um_exe),
             join_path(prefix.bin, um_exe))
 
