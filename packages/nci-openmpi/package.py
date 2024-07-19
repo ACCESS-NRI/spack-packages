@@ -44,7 +44,6 @@ class NciOpenmpi(Package):
 
     # The following is reproduced from the builtin openmpi spack package
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
 
         # Use the spack compiler wrappers under MPI
         env.set("OMPI_CC", spack_cc)
