@@ -63,7 +63,9 @@ class AccessOm3Nuopc(CMakePackage):
     depends_on("fms ~openmp", when="~openmp")
 
     depends_on("parallelio@2.5.10: build_type==RelWithDebInfo")
+
     if 'intel' in supported_compilers():
+        depends_on("esmf cflags='-fp-model precise' fflags='-fp-model precise'")
         depends_on("parallelio fflags='-qno-opt-dynamic-align -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model source' cflags='-qno-opt-dynamic-align -fp-model precise -std=gnu99'")
 
     flag_handler = CMakePackage.build_system_flags
