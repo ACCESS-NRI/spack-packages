@@ -8,7 +8,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import configparser
-import llnl.util.tty as tty
 from spack.package import *
 
 class Um(Package):
@@ -34,7 +33,7 @@ class Um(Package):
         values=("debug", "high", "rigourous", "safe"), multi=False)
     variant("platform", default="nci-x86-ifort", description="Site platform",
         values=("nci-x86-ifort", "vm-x86-gnu"), multi=False)
-        
+
 
     depends_on("fcm", type="build")
     depends_on("openmpi@4.0.2:4.1.0", type=("build", "run"))
@@ -71,12 +70,12 @@ class Um(Package):
         """
         env.prepend_path("LIBRARY_PATH", spec["gcom"].prefix.lib)
 
-        #Set configuration options
+        # Set configuration options
         config = configparser.ConfigParser()
         config.read(join_path(self.package_dir, "rose-app.conf"))
         for key in config["env"]:
             if len(key) > 0 and key[0] != '!':
-                value = config["env"][key].replace("\n=","\n") 
+                value = config["env"][key].replace("\n=", "\n")
                 env.set(key, value)
 
         # Override some specific environment variables
@@ -132,8 +131,8 @@ class Um(Package):
         mkdirp(prefix.bin)
         for component in ["atmos", "recon"]:
             bin_dir = join_path(
-                    self._build_dir(), 
-                    f"build-{component}", 
+                    self._build_dir(),
+                    f"build-{component}",
                     "bin")
             install_tree(bin_dir, prefix.bin)
 
