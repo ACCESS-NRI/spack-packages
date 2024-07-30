@@ -30,7 +30,7 @@ class Um(Package):
     maintainers("penguian")
 
     variant("optim", default="safe", description="Optimization level",
-        values=("debug", "high", "rigourous", "safe"), multi=False)
+        values=("debug", "high", "rigorous", "safe"), multi=False)
     variant("platform", default="nci-x86-ifort", description="Site platform",
         values=("nci-x86-ifort", "vm-x86-gnu"), multi=False)
 
