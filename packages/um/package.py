@@ -3,7 +3,6 @@
 #
 # Copyright 2024 ACCESS-NRI
 # Based on https://github.com/nci/spack-repo/blob/main/packages/um/package.py
-# and https://github.com/coecms/access-esm-build-gadi
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -36,22 +35,37 @@ class Um(Package):
 
 
     depends_on("fcm", type="build")
-    depends_on("openmpi@4.0.2:4.1.0", type=("build", "run"))
     depends_on("gcom", type=("build", "link"))
-    depends_on("eccodes +fortran +netcdf", type=("build", "link"))
-    depends_on("netcdf-fortran@4.5.2", type=("build", "link"))
+    depends_on("openmpi@4.0.2:", type=("build", "link", "run"))
+    depends_on("eccodes +fortran +netcdf", type=("build", "link", "run"))
+    depends_on("netcdf-fortran@4.5.2", type=("build", "link", "run"))
 
     phases = ["build", "install"]
 
+    # The dependency name and the ld_flags from
+    # the FCM config for each library configured via FCM.
+    _lib_cfg = {
+        "DR_HOOK": {
+            "dep_name": "drhook",
+            "fcm_ld_flags": "-ldrhook"},
+        "eccodes": {
+            "dep_name": "eccodes",
+            "fcm_ld_flags": "-leccodes_f90 -leccodes"},
+        "netcdf": {
+            "dep_name": "netcdf-fortran",
+            "fcm_ld_flags": "-lnetcdff -lnetcdf"}}
 
-    def _get_linker_args(self, spec, libname):
+
+    def _get_linker_args(self, spec, fcm_libname):
         """
         The reason for the explicit -rpath is:
         https://github.com/ACCESS-NRI/spack_packages/issues/14#issuecomment-1653651447
         """
-        ld_flags = spec[libname].libs.ld_flags
-        rpaths = ["-Wl,-rpath=" + d for d in spec[libname].libs.directories]
-        return " ".join([ld_flags] + rpaths)
+        dep_name = self._lib_cfg[fcm_libname]["dep_name"]
+        ld_flags = spec[dep_name].libs.ld_flags
+        fcm_ld_flags =  self._lib_cfg[fcm_libname]["fcm_ld_flags"]
+        rpaths = ["-Wl,-rpath=" + d for d in spec[dep_name].libs.directories]
+        return " ".join([ld_flags, fcm_ld_flags] + rpaths)
 
 
     def setup_build_environment(self, env):
@@ -64,15 +78,15 @@ class Um(Package):
         incs = [spec[d].prefix.include for d in ideps]
         for ipath in incs:
             env.prepend_path("CPATH", ipath)
-        """
-        The gcom library does not contain shared objects and
-        therefore must be statically linked.
-        """
+        # The gcom library does not contain shared objects and
+        # therefore must be statically linked.
         env.prepend_path("LIBRARY_PATH", spec["gcom"].prefix.lib)
 
-        # Set configuration options
+        # Use rose-app.conf to set config options.
         config = configparser.ConfigParser()
         config.read(join_path(self.package_dir, "rose-app.conf"))
+        # Modify the config as per points 8 and 9 of
+        # https://metomi.github.io/rose/2019.01.8/html/api/configuration/rose-configuration-format.html
         for key in config["env"]:
             if len(key) > 0 and key[0] != '!':
                 value = config["env"][key].replace("\n=", "\n")
@@ -84,22 +98,10 @@ class Um(Package):
         env.set("um_rev", f"vn{spec.version}")
         components = ["casim", "jules", "shumlib", "socrates", "ukca"]
         for comp in components:
-            key = f"{comp}_rev"
-            value = f"um{spec.version}"
-            env.set(key, value)
-        dep = {
-                "drhook": "drhook",
-                "eccodes": "eccodes",
-                "netcdf": "netcdf-fortran"}
-        extra_ld_flags = {
-                "drhook": "-ldrhook",
-                "eccodes": "-leccodes_f90 -leccodes",
-                "netcdf": "-lnetcdff -lnetcdf"}
-        for libname in ["eccodes", "netcdf"]:
-            linker_args = " ".join([
-                    extra_ld_flags[libname],
-                    self._get_linker_args(spec, dep[libname])])
-            env.set(f"ldflags_{libname}_on", linker_args)
+            env.set(f"{comp}_rev", f"um{spec.version}")
+        for fcm_libname in ["eccodes", "netcdf"]:
+            linker_args = self._get_linker_args(spec, fcm_libname)
+            env.set(f"ldflags_{fcm_libname}_on", linker_args)
 
 
     def _build_dir(self):
@@ -111,7 +113,7 @@ class Um(Package):
 
     def build(self, spec, prefix):
         """
-        Use FCM to build the executable.
+        Use FCM to build the executables.
         """
         config_file = join_path(self.package_dir, "fcm-make.cfg")
         build_dir = self._build_dir()
@@ -126,13 +128,12 @@ class Um(Package):
 
     def install(self, spec, prefix):
         """
-        Install the executable into the prefix.bin directory.
+        Install the executables and accompanying files into the prefix.bin directory.
         """
         mkdirp(prefix.bin)
-        for component in ["atmos", "recon"]:
+        for um_exe in ["atmos", "recon"]:
             bin_dir = join_path(
                     self._build_dir(),
-                    f"build-{component}",
+                    f"build-{um_exe}",
                     "bin")
             install_tree(bin_dir, prefix.bin)
-

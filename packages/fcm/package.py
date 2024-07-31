@@ -25,7 +25,6 @@ class Fcm(Package):
         install_tree(".", prefix)
         site = spec.variants["site"].value
         if site != "none":
-            site
             mkdirp(prefix.etc)
             install(
                 join_path(self.package_dir, "etc", site, "keyword.cfg"),
