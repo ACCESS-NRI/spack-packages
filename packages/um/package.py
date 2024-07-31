@@ -63,7 +63,7 @@ class Um(Package):
         """
         dep_name = self._lib_cfg[fcm_libname]["dep_name"]
         ld_flags = spec[dep_name].libs.ld_flags
-        fcm_ld_flags =  self._lib_cfg[fcm_libname]["fcm_ld_flags"]
+        fcm_ld_flags = self._lib_cfg[fcm_libname]["fcm_ld_flags"]
         rpaths = ["-Wl,-rpath=" + d for d in spec[dep_name].libs.directories]
         return " ".join([ld_flags, fcm_ld_flags] + rpaths)
 
