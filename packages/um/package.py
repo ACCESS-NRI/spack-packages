@@ -35,8 +35,14 @@ class Um(Package):
 
 
     depends_on("fcm", type="build")
-    depends_on("gcom", type=("build", "link"))
-    depends_on("openmpi@4.0.2:", type=("build", "link", "run"))
+    # For GCOM versions, see
+    # https://code.metoffice.gov.uk/trac/gcom/wiki/Gcom_meto_installed_versions
+    depends_on("gcom@7.8", when="@:13.0", type=("build", "link"))
+    depends_on("gcom@7.9", when="@13.1", type=("build", "link"))
+    depends_on("gcom@8.0", when="@13.2", type=("build", "link"))
+    depends_on("gcom@8.1", when="@13.3", type=("build", "link"))
+    depends_on("gcom@8.2", when="@13.4", type=("build", "link"))
+    depends_on("gcom@8.3:", when="@13.5:", type=("build", "link"))
     depends_on("eccodes +fortran +netcdf", type=("build", "link", "run"))
     depends_on("netcdf-fortran@4.5.2", type=("build", "link", "run"))
 
@@ -128,12 +134,19 @@ class Um(Package):
 
     def install(self, spec, prefix):
         """
-        Install the executables and accompanying files into the prefix.bin directory.
+        Install executables and accompanying files into the prefix directory,
+        according to the directory structure of EXEC_DIR, as described in (e.g.)
+        https://code.metoffice.gov.uk/trac/roses-u/browser/b/y/3/9/5/trunk/meta/rose-meta.conf
         """
-        mkdirp(prefix.bin)
         for um_exe in ["atmos", "recon"]:
-            bin_dir = join_path(
-                    self._build_dir(),
-                    f"build-{um_exe}",
-                    "bin")
-            install_tree(bin_dir, prefix.bin)
+            build_name = f"build-{um_exe}"
+            build_bin_dir = join_path(
+                self._build_dir(),
+                build_name,
+                "bin")
+            install_bin_dir = join_path(
+                prefix,
+                build_name,
+                "bin")
+            mkdirp(install_bin_dir)
+            install_tree(build_bin_dir, install_bin_dir)
