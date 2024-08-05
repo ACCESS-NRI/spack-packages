@@ -71,7 +71,7 @@ class Um(Package):
         ld_flags = [
             spec[dep_name].libs.ld_flags,
             self._lib_cfg[fcm_libname]["fcm_ld_flags"]]
-        #The reason for the explicit -rpath is:
+        # The reason for the explicit -rpath is:
         # https://github.com/ACCESS-NRI/spack_packages/issues/14#issuecomment-1653651447
         rpaths = ["-Wl,-rpath=" + d for d in spec[dep_name].libs.directories]
 
