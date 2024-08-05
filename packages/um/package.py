@@ -64,14 +64,19 @@ class Um(Package):
 
     def _get_linker_args(self, spec, fcm_libname):
         """
-        The reason for the explicit -rpath is:
-        https://github.com/ACCESS-NRI/spack_packages/issues/14#issuecomment-1653651447
+        Return the linker flags corresponding to fcm_libname,
+        a library name configured via FCM.
         """
         dep_name = self._lib_cfg[fcm_libname]["dep_name"]
-        ld_flags = spec[dep_name].libs.ld_flags
-        fcm_ld_flags = self._lib_cfg[fcm_libname]["fcm_ld_flags"]
+        ld_flags = [
+            spec[dep_name].libs.ld_flags,
+            self._lib_cfg[fcm_libname]["fcm_ld_flags"]]
+        #The reason for the explicit -rpath is:
+        # https://github.com/ACCESS-NRI/spack_packages/issues/14#issuecomment-1653651447
         rpaths = ["-Wl,-rpath=" + d for d in spec[dep_name].libs.directories]
-        return " ".join([ld_flags, fcm_ld_flags] + rpaths)
+
+        # Both ld_flags and rpaths are lists of strings.
+        return " ".join(ld_flags + rpaths)
 
 
     def setup_build_environment(self, env):
@@ -139,14 +144,8 @@ class Um(Package):
         https://code.metoffice.gov.uk/trac/roses-u/browser/b/y/3/9/5/trunk/meta/rose-meta.conf
         """
         for um_exe in ["atmos", "recon"]:
-            build_name = f"build-{um_exe}"
-            build_bin_dir = join_path(
-                self._build_dir(),
-                build_name,
-                "bin")
-            install_bin_dir = join_path(
-                prefix,
-                build_name,
-                "bin")
+            bin_dir = join_path(f"build-{um_exe}", "bin")
+            build_bin_dir = join_path(self._build_dir(), bin_dir)
+            install_bin_dir = join_path(prefix, bin_dir)
             mkdirp(install_bin_dir)
             install_tree(build_bin_dir, install_bin_dir)
