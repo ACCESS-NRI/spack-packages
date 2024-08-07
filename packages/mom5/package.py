@@ -13,6 +13,7 @@ class Mom5(MakefilePackage):
 
     homepage = "https://www.access-nri.org.au"
     git = "https://github.com/ACCESS-NRI/mom5.git"
+    submodules = True
 
     maintainers("harshula", "penguian")
 
