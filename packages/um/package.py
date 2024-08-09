@@ -8,6 +8,7 @@
 
 import configparser
 from spack.package import *
+import llnl.util.tty as tty
 
 class Um(Package):
     """
@@ -28,13 +29,64 @@ class Um(Package):
 
     maintainers("penguian")
 
-    variant("optim", default="safe", description="Optimization level",
-        values=("debug", "high", "rigorous", "safe"), multi=False)
-    variant("platform", default="nci-x86-ifort", description="Site platform",
-        values=("nci-x86-ifort", "vm-x86-gnu"), multi=False)
+    variant("model", default="atmos", description="Model configuration.",
+        values=("atmos", "access-ram3"), multi=False)
+    variant("optim", default="none", description="Optimization level",
+        values=("none", "debug", "high", "rigorous", "safe"), multi=False)
+    variant("platform", default="none", description="Site platform",
+        values="*", multi=False)
 
+    _bool_variants = (
+        "DR_HOOK",
+        "eccodes",
+        "netcdf",
+        "openmp",
+        "platagnostic",
+        "thread_utils",
+        "COUPLER")
+    for bv in _bool_variants:
+        variant(bv, default="none", description=bv, 
+            values=("none", "true", "false"), multi=False)
 
-    depends_on("fcm", type="build")
+    _str_variants = (
+        "casim_sources",
+        "compile_atmos",
+        "compile_createbc",
+        "compile_crmstyle_coarse_grid",
+        "compile_pptoanc",
+        "compile_recon",
+        "compile_scm",
+        "compile_sstpert_lib",
+        "compile_wafccb_lib",
+        "config_revision",
+        "config_root_path",
+        "config_type",
+        "extract",
+        "fcflags_overrides",
+        "gwd_ussp_precision",
+        "jules_sources",
+        "land_surface_model",
+        "ldflags_overrides_prefix",
+        "ldflags_overrides_suffix",
+        "ls_precipitation_precision",
+        "mirror",
+        "mpp_version",
+        "optimisation_level",
+        "platform_config_dir",
+        "portio_version",
+        "prebuild",
+        "recon_mpi",
+        "shumlib_sources",
+        "socrates_sources",
+        "stash_version",
+        "timer_version",
+        "ukca_sources",
+        "um_sources")
+    for sv in _str_variants:
+        variant(sv, default="none", description=sv, values="*", multi=False)
+    _variants = _bool_variants + _str_variants   
+    
+    depends_on("fcm site=nci-gadi", type="build")
     # For GCOM versions, see
     # https://code.metoffice.gov.uk/trac/gcom/wiki/Gcom_meto_installed_versions
     depends_on("gcom@7.8", when="@:13.0", type=("build", "link"))
@@ -95,24 +147,41 @@ class Um(Package):
 
         # Use rose-app.conf to set config options.
         config = configparser.ConfigParser()
-        config.read(join_path(self.package_dir, "rose-app.conf"))
+        config_file = join_path(
+            self.package_dir,
+            "model",
+            spec.variants["model"].value, 
+            "rose-app.conf")
+        config.read(config_file)
+
         # Modify the config as per points 8 and 9 of
         # https://metomi.github.io/rose/2019.01.8/html/api/configuration/rose-configuration-format.html
+        config_env = dict()
         for key in config["env"]:
             if len(key) > 0 and key[0] != '!':
-                value = config["env"][key].replace("\n=", "\n")
-                env.set(key, value)
+                config_env[key] = config["env"][key].replace("\n=", "\n")
 
-        # Override some specific environment variables
-        env.set("optimisation_level", spec.variants["optim"].value)
-        env.set("platform_config_dir", spec.variants["platform"].value)
-        env.set("um_rev", f"vn{spec.version}")
+        # Override the environment variables corresponding to variants.
+        optim = spec.variants["optim"].value
+        if optim != "none":
+            config_env["optimisation_level"] = optim
+        platform = spec.variants["platform"].value
+        if platform != "none":
+            config_env["platform_config_dir"] = platform
+        config_env["um_rev"] = f"vn{spec.version}"
         components = ["casim", "jules", "shumlib", "socrates", "ukca"]
         for comp in components:
-            env.set(f"{comp}_rev", f"um{spec.version}")
+            config_env[f"{comp}_rev"] = f"um{spec.version}"
         for fcm_libname in ["eccodes", "netcdf"]:
             linker_args = self._get_linker_args(spec, fcm_libname)
-            env.set(f"ldflags_{fcm_libname}_on", linker_args)
+            config_env[f"ldflags_{fcm_libname}_on"] = linker_args
+        for v in self._variants:
+            v_value = spec.variants[v].value
+            if v_value != "none":
+                config_env[v] = v_value
+
+        for key in config_env:
+            env.set(key, config_env[key])
 
 
     def _build_dir(self):
@@ -149,3 +218,4 @@ class Um(Package):
             install_bin_dir = join_path(prefix, bin_dir)
             mkdirp(install_bin_dir)
             install_tree(build_bin_dir, install_bin_dir)
+
