@@ -208,7 +208,7 @@ class Um(Package):
             b_value = spec.variants[b].value
             if b_value:
                 b_off = f"{b}_off"
-                b_off_value =  spec.variants[b_off].value
+                b_off_value = spec.variants[b_off].value
                 if b_off_value:
                     raise SpecError(
                         f"Variants +{b} and +{b_off} contradict each other.")
