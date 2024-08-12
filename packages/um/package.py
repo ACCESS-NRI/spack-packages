@@ -7,6 +7,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import configparser
+from spack.error import SpecError
 from spack.package import *
 import llnl.util.tty as tty
 
@@ -29,26 +30,30 @@ class Um(Package):
 
     maintainers("penguian")
 
-    variant("model", default="atmos", description="Model configuration.",
-        values=("atmos", "access-ram3"), multi=False)
+    variant("model", default="default", description="Model configuration.",
+        values=("default", "access-ram3"), multi=False)
     variant("optim", default="none", description="Optimization level",
         values=("none", "debug", "high", "rigorous", "safe"), multi=False)
-    variant("platform", default="none", description="Site platform",
+    variant("site_platform", default="none", description="Site platform",
         values="*", multi=False)
 
     _bool_variants = (
+        "COUPLER",
         "DR_HOOK",
         "eccodes",
         "netcdf",
         "openmp",
         "platagnostic",
-        "thread_utils",
-        "COUPLER")
-    for bv in _bool_variants:
-        variant(bv, default="none", description=bv, 
-            values=("none", "true", "false"), multi=False)
+        "thread_utils")
+    for b in _bool_variants:
+        variant(b, default=False, description=b, multi=False)
+
+    _bool_off_variants = (f"{v}_off" for v in _bool_variants)
+    for b in _bool_off_variants:
+        variant(b, default=False, description=b, multi=False)
 
     _str_variants = (
+        "casim_rev",
         "casim_sources",
         "compile_atmos",
         "compile_createbc",
@@ -64,6 +69,7 @@ class Um(Package):
         "extract",
         "fcflags_overrides",
         "gwd_ussp_precision",
+        "jules_rev",
         "jules_sources",
         "land_surface_model",
         "ldflags_overrides_prefix",
@@ -71,21 +77,21 @@ class Um(Package):
         "ls_precipitation_precision",
         "mirror",
         "mpp_version",
-        "optimisation_level",
-        "platform_config_dir",
         "portio_version",
         "prebuild",
         "recon_mpi",
+        "shumlib_rev",
         "shumlib_sources",
+        "socrates_rev",
         "socrates_sources",
         "stash_version",
         "timer_version",
         "ukca_sources",
+        "ukca_rev",
         "um_sources")
-    for sv in _str_variants:
-        variant(sv, default="none", description=sv, values="*", multi=False)
-    _variants = _bool_variants + _str_variants   
-    
+    for v in _str_variants:
+        variant(v, default="none", description=v, values="*", multi=False)
+
     depends_on("fcm site=nci-gadi", type="build")
     # For GCOM versions, see
     # https://code.metoffice.gov.uk/trac/gcom/wiki/Gcom_meto_installed_versions
@@ -147,10 +153,11 @@ class Um(Package):
 
         # Use rose-app.conf to set config options.
         config = configparser.ConfigParser()
+        model = spec.variants["model"].value
         config_file = join_path(
             self.package_dir,
             "model",
-            spec.variants["model"].value, 
+            model,
             "rose-app.conf")
         config.read(config_file)
 
@@ -161,25 +168,68 @@ class Um(Package):
             if len(key) > 0 and key[0] != '!':
                 config_env[key] = config["env"][key].replace("\n=", "\n")
 
-        # Override the environment variables corresponding to variants.
+        # Override the environment variables corresponding to
+        # the optim and site_platform variants.
         optim = spec.variants["optim"].value
         if optim != "none":
             config_env["optimisation_level"] = optim
-        platform = spec.variants["platform"].value
-        if platform != "none":
-            config_env["platform_config_dir"] = platform
-        config_env["um_rev"] = f"vn{spec.version}"
+        site_platform = spec.variants["site_platform"].value
+        if site_platform != "none":
+            config_env["platform_config_dir"] = site_platform
+
+        # Override the model UM revision based on the spec UM version.
+        model_um_rev = config_env["um_rev"]
+        spec_um_rev = f"vn{spec.version}"
+        if model_um_rev != spec_um_rev:
+            if model_um_rev != "":
+                tty.warn(
+                    f"The {model} model uses um_rev={um_rev} but"
+                    f"the spec calls for um_rev={spec_um_rev}.\n"
+                    f"Revision {spec_um_rev} will be used.")
+            # Always use the UM revision based on the spec UM version.
+            config_env["um_rev"] = spec_um_rev
+
+        # Overide the model component revisions only when
+        # the model leaves the revision unspecified.
         components = ["casim", "jules", "shumlib", "socrates", "ukca"]
         for comp in components:
-            config_env[f"{comp}_rev"] = f"um{spec.version}"
-        for fcm_libname in ["eccodes", "netcdf"]:
-            linker_args = self._get_linker_args(spec, fcm_libname)
-            config_env[f"ldflags_{fcm_libname}_on"] = linker_args
-        for v in self._variants:
+            model_comp_rev = config_env[f"{comp}_rev"]
+            spec_comp_rev = f"um{spec.version}"
+            if model_comp_rev != spec_comp_rev:
+                if model_comp_rev == "":
+                    config_env[f"{comp}_rev"] = spec_comp_rev
+                else:
+                    tty.warn(
+                        f"The {model} model uses {comp}_rev={comp_rev} but"
+                        f"the spec implies {comp}_rev={spec_um_rev}.")
+
+        # Override those environment variables where a boolean variant is True.
+        for b in self._bool_variants:
+            b_value = spec.variants[b].value
+            if b_value:
+                b_off = f"{b}_off"
+                b_off_value =  spec.variants[b_off].value
+                if b_off_value:
+                    raise SpecError(
+                        f"Variants +{b} and +{b_off} contradict each other.")
+                config_env[b] = "true"
+        for b in self._bool_off_variants:
+            b_value = spec.variants[b].value
+            if b_value:
+                config_env[b] = "false"
+
+        # Override those environment variables where a variant is specified.
+        for v in self._str_variants:
             v_value = spec.variants[v].value
             if v_value != "none":
                 config_env[v] = v_value
 
+        # Get the linker arguments for some dependencies.
+        for fcm_libname in ["eccodes", "netcdf"]:
+            linker_args = self._get_linker_args(spec, fcm_libname)
+            config_env[f"ldflags_{fcm_libname}_on"] = linker_args
+
+        # Set environment variables based on config_env.
         for key in config_env:
             env.set(key, config_env[key])
 
