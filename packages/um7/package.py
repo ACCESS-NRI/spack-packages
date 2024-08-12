@@ -17,7 +17,7 @@ class Um7(Package):
     """
 
     homepage = "https://code.metoffice.gov.uk/trac/um"
-    git = "git@github.com:ACCESS-NRI/UM_v7.git"
+    git = "git@github.com:ACCESS-NRI/UM7.git"
 
     # https://code.metoffice.gov.uk/trac/um/wiki/PastReleases
     version("7.3", branch="main", preferred=True)
