@@ -37,20 +37,21 @@ class Um(Package):
     variant("site_platform", default="none", description="Site platform",
         values="*", multi=False)
 
-    _bool_variants = (
-        "COUPLER",
+    _bool_off_variants = (
         "DR_HOOK",
-        "eccodes",
-        "netcdf",
-        "openmp",
         "platagnostic",
         "thread_utils")
-    for b in _bool_variants:
-        variant(b, default=False, description=b, multi=False)
-
-    _bool_off_variants = (f"{v}_off" for v in _bool_variants)
     for b in _bool_off_variants:
         variant(b, default=False, description=b, multi=False)
+
+    _bool_on_variants = (
+        "eccodes",
+        "netcdf",
+        "openmp")
+    for b in _bool_on_variants:
+        variant(b, default=True, description=b, multi=False)
+
+    _bool_variants = _bool_off_variants + _bool_on_variants
 
     _str_variants = (
         "casim_rev",
@@ -66,6 +67,7 @@ class Um(Package):
         "config_revision",
         "config_root_path",
         "config_type",
+        "COUPLER",
         "extract",
         "fcflags_overrides",
         "gwd_ussp_precision",
@@ -203,22 +205,12 @@ class Um(Package):
                         f"The {model} model uses {comp}_rev={comp_rev} but"
                         f"the spec implies {comp}_rev={spec_um_rev}.")
 
-        # Override those environment variables where a boolean variant is True.
+        # Override those environment variables corresponding to a bool variant.
+        _bool_to_str = lambda b: "true" if b else "false"
         for b in self._bool_variants:
-            b_value = spec.variants[b].value
-            if b_value:
-                b_off = f"{b}_off"
-                b_off_value = spec.variants[b_off].value
-                if b_off_value:
-                    raise SpecError(
-                        f"Variants +{b} and +{b_off} contradict each other.")
-                config_env[b] = "true"
-        for b in self._bool_off_variants:
-            b_value = spec.variants[b].value
-            if b_value:
-                config_env[b] = "false"
+            config_env[b] = _bool_to_str(spec.variants[b].value)
 
-        # Override those environment variables where a variant is specified.
+        # Override those environment variables where a string variant is specified.
         for v in self._str_variants:
             v_value = spec.variants[v].value
             if v_value != "none":
