@@ -184,7 +184,7 @@ class Um(Package):
         if model_um_rev != spec_um_rev:
             if model_um_rev != "":
                 tty.warn(
-                    f"The {model} model uses um_rev={model_um_rev} but"
+                    f"The {model} model uses um_rev={model_um_rev} but "
                     f"the spec calls for um_rev={spec_um_rev}.\n"
                     f"Revision {spec_um_rev} will be used.")
             # Always use the UM revision based on the spec UM version.
@@ -201,7 +201,7 @@ class Um(Package):
                     config_env[f"{comp}_rev"] = spec_comp_rev
                 else:
                     tty.warn(
-                        f"The {model} model uses {comp}_rev={model_comp_rev} but"
+                        f"The {model} model uses {comp}_rev={model_comp_rev} but "
                         f"the spec implies that {comp}_rev={spec_comp_rev}.")
 
         # Override those environment variables corresponding to a bool variant.
