@@ -154,6 +154,9 @@ class Um(Package):
 
         # Use rose-app.conf to set config options.
         config = configparser.ConfigParser()
+        # Ensure that keys are case sensitive.
+        # https://docs.python.org/3/library/configparser.html#customizing-parser-behaviour
+        config.optionxform = lambda option: option
         model = spec.variants["model"].value
         config_file = join_path(
             self.package_dir,
@@ -185,7 +188,7 @@ class Um(Package):
             if model_um_rev != "":
                 tty.warn(
                     f"The {model} model uses um_rev={model_um_rev} but "
-                    f"the spec calls for um_rev={spec_um_rev}.\n"
+                    f"the spec implies that um_rev={spec_um_rev}. "
                     f"Revision {spec_um_rev} will be used.")
             # Always use the UM revision based on the spec UM version.
             config_env["um_rev"] = spec_um_rev
@@ -202,18 +205,42 @@ class Um(Package):
                 else:
                     tty.warn(
                         f"The {model} model uses {comp}_rev={model_comp_rev} but "
-                        f"the spec implies that {comp}_rev={spec_comp_rev}.")
+                        f"the spec implies that {comp}_rev={spec_comp_rev}. "
+                        f"Revision {model_comp_rev} will be used.")
 
         # Override those environment variables corresponding to a bool variant.
-        _bool_to_str = lambda b: "true" if b else "false"
+        bool_to_str = lambda b: "true" if b else "false"
         for b in self._bool_variants:
-            config_env[b] = _bool_to_str(spec.variants[b].value)
+            if b not in config_env:
+                tty.warn(
+                    f"The {model} model does not specify {b}. "
+                    f"The value {spec_b_value} will be used.")
+            else:
+                model_b_value = config_env[b]
+                spec_b_value = bool_to_str(spec.variants[b].value)
+                if model_b_value != spec_b_value:
+                    tty.info(
+                        f"The {model} model uses {b}={model_b_value} but "
+                        f"the spec uses {b}={spec_b_value}. "
+                        f"The value {spec_b_value} will be used.")
+            config_env[b] = spec_b_value
 
         # Override those environment variables where a string variant is specified.
         for v in self._str_variants:
-            v_value = spec.variants[v].value
-            if v_value != "none":
-                config_env[v] = v_value
+            spec_v_value = spec.variants[v].value
+            if spec_v_value != "none":
+                if v not in config_env:
+                    tty.warn(
+                        f"The {model} model does not specify {v}. "
+                        f"The value {spec_v_value} will be used.")
+                else:
+                    model_v_value = config_env[v]
+                    if model_v_value != "" and model_v_value != spec_v_value:
+                        tty.info(
+                            f"The {model} model uses {v}={model_v_value} but "
+                            f"the spec uses {v}={spec_v_value}. "
+                            f"The value {spec_v_value} will be used.")
+                config_env[v] = spec_v_value
 
         # Get the linker arguments for some dependencies.
         for fcm_libname in ["eccodes", "netcdf"]:
@@ -222,6 +249,7 @@ class Um(Package):
 
         # Set environment variables based on config_env.
         for key in config_env:
+            tty.debug(f"{key}={config_env[key]}")
             env.set(key, config_env[key])
 
 
