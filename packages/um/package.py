@@ -33,7 +33,7 @@ class Um(Package):
         values=("vn13", "vn13p0-rns"), multi=False)
     variant("optim", default="none", description="Optimization level",
         values=("none", "debug", "high", "rigorous", "safe"), multi=False)
-    variant("site_platform", default="none", description="Site platform",
+    variant("site_platform", default="nci-x86-ifort", description="Site platform",
         values="*", multi=False)
 
     _bool_off_variants = (
@@ -179,6 +179,17 @@ class Um(Package):
             config_env["optimisation_level"] = optim
         site_platform = spec.variants["site_platform"].value
         if site_platform != "none":
+            if "platform_config_dir" in config_env:
+                platform_config_dir = config_env["platform_config_dir"]
+                if (platform_config_dir != "" and 
+                    platform_config_dir != site_platform):
+                    tty.info(
+                        f"The {model} model uses "
+                        f"platform_config_dir={platform_config_dir} but "
+                        f"the spec calls for "
+                        f"platform_config_dir={site_platform}. "
+                        f"The value {site_platform} will be used.")
+            # Always use platform_config_dir based on site_platform
             config_env["platform_config_dir"] = site_platform
 
         # Override the model UM revision based on the spec UM version.
@@ -188,7 +199,7 @@ class Um(Package):
             if model_um_rev != "":
                 tty.warn(
                     f"The {model} model uses um_rev={model_um_rev} but "
-                    f"the spec implies that um_rev={spec_um_rev}. "
+                    f"the spec calls for um_rev={spec_um_rev}. "
                     f"Revision {spec_um_rev} will be used.")
             # Always use the UM revision based on the spec UM version.
             config_env["um_rev"] = spec_um_rev
@@ -205,7 +216,7 @@ class Um(Package):
                 else:
                     tty.warn(
                         f"The {model} model uses {comp}_rev={model_comp_rev} but "
-                        f"the spec implies that {comp}_rev={spec_comp_rev}. "
+                        f"the spec calls for {comp}_rev={spec_comp_rev}. "
                         f"Revision {model_comp_rev} will be used.")
 
         # Override those environment variables corresponding to a bool variant.
@@ -221,7 +232,7 @@ class Um(Package):
                 if model_b_value != spec_b_value:
                     tty.info(
                         f"The {model} model uses {b}={model_b_value} but "
-                        f"the spec uses {b}={spec_b_value}. "
+                        f"the spec calls for {b}={spec_b_value}. "
                         f"The value {spec_b_value} will be used.")
             config_env[b] = spec_b_value
 
@@ -238,7 +249,7 @@ class Um(Package):
                     if model_v_value != "" and model_v_value != spec_v_value:
                         tty.info(
                             f"The {model} model uses {v}={model_v_value} but "
-                            f"the spec uses {v}={spec_v_value}. "
+                            f"the spec calls for {v}={spec_v_value}. "
                             f"The value {spec_v_value} will be used.")
                 config_env[v] = spec_v_value
 
