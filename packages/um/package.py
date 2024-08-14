@@ -29,8 +29,8 @@ class Um(Package):
 
     maintainers("penguian")
 
-    variant("model", default="default", description="Model configuration.",
-        values=("default", "access-ram3"), multi=False)
+    variant("model", default="vn13", description="Model configuration.",
+        values=("vn13", "vn13p0-rns"), multi=False)
     variant("optim", default="none", description="Optimization level",
         values=("none", "debug", "high", "rigorous", "safe"), multi=False)
     variant("site_platform", default="none", description="Site platform",
