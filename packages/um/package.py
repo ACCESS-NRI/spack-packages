@@ -181,7 +181,7 @@ class Um(Package):
         if site_platform != "none":
             if "platform_config_dir" in config_env:
                 platform_config_dir = config_env["platform_config_dir"]
-                if (platform_config_dir != "" and 
+                if (platform_config_dir != "" and
                     platform_config_dir != site_platform):
                     tty.info(
                         f"The {model} model uses "
