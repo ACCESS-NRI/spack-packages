@@ -18,24 +18,33 @@ class Um(Package):
     homepage = "https://code.metoffice.gov.uk/trac/um"
     svn = "file:///g/data/ki32/mosrs/um/main/trunk"
 
-    # See 'fcm kp fcm:um.xm' for release versions
-    version("13.0", revision=111272, preferred=True)
-    version("13.1", revision=114076)
-    version("13.2", revision=116723)
-    version("13.3", revision=118802)
-    version("13.4", revision=120750)
-    version("13.5", revision=123226)
-    version("13.6", revision=124981)
+    # See 'fcm kp fcm:um.xm' for release versions.
+    _revision = {
+        "13.0": 111272,
+        "13.1": 114076,
+        "13.2": 116723,
+        "13.3": 118802,
+        "13.4": 120750,
+        "13.5": 123226,
+        "13.6": 124981}
+
+    version("13.0", revision=_revision["13.0"], preferred=True)
+    for v in range(1, 7):
+        _version = f"13.{str(v)}"
+        version(_version, revision=_revision[_version])
 
     maintainers("penguian")
 
     variant("model", default="vn13", description="Model configuration.",
-        values=("vn13", "vn13p0-rns"), multi=False)
+        values=("vn13", "vn13p0-rns", "vn13p5-rns"), multi=False)
+
     variant("optim", default="none", description="Optimization level",
         values=("none", "debug", "high", "rigorous", "safe"), multi=False)
     variant("site_platform", default="nci-x86-ifort", description="Site platform",
         values="*", multi=False)
 
+    # Boolean variants have their default values set here because
+    # Spack does not have 3-value True, False, None logic.
     _bool_off_variants = (
         "DR_HOOK",
         "platagnostic",
@@ -52,6 +61,8 @@ class Um(Package):
 
     _bool_variants = _bool_off_variants + _bool_on_variants
 
+    # String variants have their default values set to "none" here.
+    # The real default is set by the model.
     _str_variants = (
         "casim_rev",
         "casim_sources",
@@ -93,7 +104,10 @@ class Um(Package):
     for v in _str_variants:
         variant(v, default="none", description=v, values="*", multi=False)
 
+    # The 'site=nci-gadi' variant of fcm defines the keywords
+    # used by the FCM configuration of UM.
     depends_on("fcm site=nci-gadi", type="build")
+
     # For GCOM versions, see
     # https://code.metoffice.gov.uk/trac/gcom/wiki/Gcom_meto_installed_versions
     depends_on("gcom@7.8", when="@:13.0", type=("build", "link"))
@@ -102,8 +116,10 @@ class Um(Package):
     depends_on("gcom@8.1", when="@13.3", type=("build", "link"))
     depends_on("gcom@8.2", when="@13.4", type=("build", "link"))
     depends_on("gcom@8.3:", when="@13.5:", type=("build", "link"))
-    depends_on("eccodes +fortran +netcdf", type=("build", "link", "run"))
-    depends_on("netcdf-fortran@4.5.2", type=("build", "link", "run"))
+    depends_on("eccodes +fortran +netcdf", type=("build", "link", "run"),
+        when="+eccodes")
+    depends_on("netcdf-fortran@4.5.2", type=("build", "link", "run"),
+        when="+netcdf")
 
     phases = ["build", "install"]
 
