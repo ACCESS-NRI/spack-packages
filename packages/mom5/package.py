@@ -487,7 +487,7 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
             build = Executable("./MOM_compile.csh")
             if "+restart_repro" in self.spec:
                 build.add_default_env("REPRO", "true")
-            if self.spec.satisfies("@access-esm1.5"):
+            if not self.spec.satisfies("@access-esm1.5"):
                 # The MOM5 commit d7ba13a3f364ce130b6ad0ba813f01832cada7a2
                 # requires the --no_version switch to avoid git hashes being
                 # embedded in the binary.
