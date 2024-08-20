@@ -30,7 +30,7 @@ class AccessEsm1p5(BundlePackage):
     version("latest")
 
     depends_on("cice4@access-esm1.5", type="run")
-    depends_on("mom5@access-esm1.5", type="run")
+    depends_on("mom5@access-esm1.5 type=ACCESS-CM", type="run")
     # um7 is in a private repository
     depends_on("um7@access-esm1.5", type="run")
 

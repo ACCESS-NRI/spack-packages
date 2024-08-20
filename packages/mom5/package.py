@@ -25,11 +25,7 @@ class Mom5(MakefilePackage):
     variant("deterministic", default=False, description="Deterministic build.")
     variant("optimisation_report", default=False, description="Generate optimisation reports.")
     variant("type", default="ACCESS-OM",
-        # https://spack.readthedocs.io/en/latest/packaging_guide.html#conditional-possible-values
-        values=(
-            "ACCESS-CM",
-            # Spack does not have a spec syntax for NOT "@access-esm1.5", so use version ranges instead
-            conditional("ACCESS-ESM", "ACCESS-OM", "ACCESS-OM-BGC", "MOM_solo", when="@:access-esm0,access-esm2:")),
+        values=("ACCESS-CM", "ACCESS-ESM", "ACCESS-OM", "ACCESS-OM-BGC", "MOM_solo"),
         multi=False,
         description="Build MOM5 to support a particular use case.")
 
