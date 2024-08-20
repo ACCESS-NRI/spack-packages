@@ -19,6 +19,7 @@ class Mom5(MakefilePackage):
 
     version("master", branch="master", preferred=True)
     version("access-esm1.5", branch="access-esm1.5")
+    version("access-esm1.6", branch="master")
 
     variant("restart_repro", default=True, description="Reproducible restart build.")
     # The following two variants are not applicable when version is "access-esm1.5":
@@ -39,7 +40,7 @@ class Mom5(MakefilePackage):
         depends_on("oasis3-mct~deterministic", when="~deterministic")
         depends_on("libaccessom2+deterministic", when="+deterministic")
         depends_on("libaccessom2~deterministic", when="~deterministic")
-    with when("@access-esm1.5"):
+    with when("@access-esm1:access-esm1.6"):
         depends_on("netcdf-c@4.7.1:4.7.4")
         depends_on("netcdf-fortran@4.5.1:4.5.2")
         # Depend on "openmpi".
@@ -60,7 +61,7 @@ class Mom5(MakefilePackage):
         config = {}
 
         # NOTE: The order of the libraries matters during the linking step!
-        if "@access-esm1.5" in self.spec:
+        if ("@access-esm1.5" in self.spec) or ("@access-esm1.6" in self.spec):
             istr = " ".join([
                     join_path((spec["oasis3-mct"].headers).cpp_flags, "psmile.MPI1"),
                     join_path((spec["oasis3-mct"].headers).cpp_flags, "mct")])
@@ -166,7 +167,7 @@ LDFLAGS += $(LIBS)
 """
 
         # Copied from bin/mkmf.template.nci
-        if "@access-esm1.5" in self.spec:
+        if ("@access-esm1.5" in self.spec) or ("@access-esm1.6" in self.spec):
             config["intel"] = f"""
 ifeq ($(VTRACE), yes)
     FC = mpifort-vt
@@ -300,7 +301,7 @@ LDFLAGS += $(LIBS)
         config["oneapi"] = config["intel"]
 
         # Copied from bin/mkmf.template.t90
-        if "@access-esm1.5" in self.spec:
+        if ("@access-esm1.5" in self.spec) or ("@access-esm1.6" in self.spec):
             config["post"] = """
 # you should never need to change any lines below.
 
