@@ -27,10 +27,10 @@ class Um(Package):
         "13.4": 120750,
         "13.5": 123226,
         "13.6": 124981}
-
+    _max_minor = 6
     version("13.0", revision=_revision["13.0"], preferred=True)
-    for v in range(1, 7):
-        _version = f"13.{str(v)}"
+    for v in range(1, 1 + _max_minor):
+        _version = f"13.{v}"
         version(_version, revision=_revision[_version])
 
     maintainers("penguian")
@@ -38,33 +38,32 @@ class Um(Package):
     variant("model", default="vn13", description="Model configuration.",
         values=("vn13", "vn13p0-rns", "vn13p5-rns"), multi=False)
 
-    variant("optim", default="none", description="Optimization level",
-        values=("none", "debug", "high", "rigorous", "safe"), multi=False)
-    variant("site_platform", default="nci-x86-ifort", description="Site platform",
-        values="*", multi=False)
+    # Bool variants have their default value set to True here.
+    _bool_variants = (
+        "eccodes",
+        "netcdf")
+    for var in _bool_variants:
+        variant(var, default=True, description=var)
 
-    # Boolean variants have their default values set here because
-    # Spack does not have 3-value True, False, None logic.
-    _bool_off_variants = (
-        "DR_HOOK",
+    # Off/on variants have 3-value "none" "off", "on" logic.
+    _off_on_variants = (
+        "openmp",
         "platagnostic",
         "thread_utils")
-    for b in _bool_off_variants:
-        variant(b, default=False, description=b, multi=False)
-
-    _bool_on_variants = (
-        "eccodes",
-        "netcdf",
-        "openmp")
-    for b in _bool_on_variants:
-        variant(b, default=True, description=b, multi=False)
-
-    _bool_variants = _bool_off_variants + _bool_on_variants
+    for var in _off_on_variants:
+        variant(var, default="none", description=var,
+            values=("none", "off", "on"), multi=False)
 
     # String variants have their default values set to "none" here.
     # The real default is set by the model.
-    _str_variants = (
+    _rev_variants = (
         "casim_rev",
+        "jules_rev",
+        "shumlib_rev",
+        "socrates_rev",
+        "ukca_rev")
+
+    _other_str_variants = (
         "casim_sources",
         "compile_atmos",
         "compile_createbc",
@@ -81,7 +80,6 @@ class Um(Package):
         "extract",
         "fcflags_overrides",
         "gwd_ussp_precision",
-        "jules_rev",
         "jules_sources",
         "land_surface_model",
         "ldflags_overrides_prefix",
@@ -89,20 +87,21 @@ class Um(Package):
         "ls_precipitation_precision",
         "mirror",
         "mpp_version",
+        "optimisation_level",
+        "platform_config_dir",
         "portio_version",
         "prebuild",
         "recon_mpi",
-        "shumlib_rev",
         "shumlib_sources",
-        "socrates_rev",
         "socrates_sources",
         "stash_version",
         "timer_version",
         "ukca_sources",
-        "ukca_rev",
         "um_sources")
-    for v in _str_variants:
-        variant(v, default="none", description=v, values="*", multi=False)
+    _str_variants = _rev_variants + _other_str_variants
+
+    for var in _str_variants:
+        variant(var, default="none", description=var, values="*", multi=False)
 
     # The 'site=nci-gadi' variant of fcm defines the keywords
     # used by the FCM configuration of UM.
@@ -126,15 +125,21 @@ class Um(Package):
     # The dependency name and the ld_flags from
     # the FCM config for each library configured via FCM.
     _lib_cfg = {
-        "DR_HOOK": {
-            "dep_name": "drhook",
-            "fcm_ld_flags": "-ldrhook"},
         "eccodes": {
             "dep_name": "eccodes",
             "fcm_ld_flags": "-leccodes_f90 -leccodes"},
         "netcdf": {
             "dep_name": "netcdf-fortran",
             "fcm_ld_flags": "-lnetcdff -lnetcdf"}}
+
+
+    def _config_file_path(self, model):
+        """
+        Return the pathname of the Rose app config file
+        corresponding to model.
+        """
+        return join_path(
+            self.package_dir, "model", model, "rose-app.conf")
 
 
     def _get_linker_args(self, spec, fcm_libname):
@@ -158,12 +163,34 @@ class Um(Package):
         """
         Set environment variables to their required values.
         """
+
+        def check_model_vs_spec(model, config_env, var, spec_value):
+            """
+            Check whether the value spec_value for the variant var
+            agrees with the model's configured value config_env[var],
+            and produce an appropriate warning or debug message.
+            """
+            if var not in config_env:
+                tty.warn(
+                    f"The {model} model does not specify {var}. "
+                    f"The value {spec_value} will be used.")
+            else:
+                model_value = config_env[var]
+                if model_value != "" and model_value != spec_value:
+                    tty.warn(
+                        f"The {model} model sets {var}={model_value} but "
+                        f"the spec sets {var}={spec_value}. "
+                        f"The value {spec_value} will be used.")
+
+
         spec = self.spec
-        env.prepend_path("PATH", spec["fcm"].prefix.bin)
+
+        # Define CPATH for dependencies that need include files.
         ideps = ["eccodes", "gcom", "netcdf-fortran"]
         incs = [spec[d].prefix.include for d in ideps]
         for ipath in incs:
             env.prepend_path("CPATH", ipath)
+
         # The gcom library does not contain shared objects and
         # therefore must be statically linked.
         env.prepend_path("LIBRARY_PATH", spec["gcom"].prefix.lib)
@@ -174,12 +201,7 @@ class Um(Package):
         # https://docs.python.org/3/library/configparser.html#customizing-parser-behaviour
         config.optionxform = lambda option: option
         model = spec.variants["model"].value
-        config_file = join_path(
-            self.package_dir,
-            "model",
-            model,
-            "rose-app.conf")
-        config.read(config_file)
+        config.read(self._config_file_path(model))
 
         # Modify the config as per points 8 and 9 of
         # https://metomi.github.io/rose/2019.01.8/html/api/configuration/rose-configuration-format.html
@@ -188,86 +210,51 @@ class Um(Package):
             if len(key) > 0 and key[0] != '!':
                 config_env[key] = config["env"][key].replace("\n=", "\n")
 
-        # Override the environment variables corresponding to
-        # the optim and site_platform variants.
-        optim = spec.variants["optim"].value
-        if optim != "none":
-            config_env["optimisation_level"] = optim
-        site_platform = spec.variants["site_platform"].value
-        if site_platform != "none":
-            if "platform_config_dir" in config_env:
-                platform_config_dir = config_env["platform_config_dir"]
-                if (platform_config_dir != "" and
-                    platform_config_dir != site_platform):
-                    tty.info(
-                        f"The {model} model uses "
-                        f"platform_config_dir={platform_config_dir} but "
-                        f"the spec calls for "
-                        f"platform_config_dir={site_platform}. "
-                        f"The value {site_platform} will be used.")
-            # Always use platform_config_dir based on site_platform
-            config_env["platform_config_dir"] = site_platform
-
         # Override the model UM revision based on the spec UM version.
-        model_um_rev = config_env["um_rev"]
+        key = "um_rev"
         spec_um_rev = f"vn{spec.version}"
-        if model_um_rev != spec_um_rev:
-            if model_um_rev != "":
-                tty.warn(
-                    f"The {model} model uses um_rev={model_um_rev} but "
-                    f"the spec calls for um_rev={spec_um_rev}. "
-                    f"Revision {spec_um_rev} will be used.")
-            # Always use the UM revision based on the spec UM version.
-            config_env["um_rev"] = spec_um_rev
+        check_model_vs_spec(model, config_env, key, spec_um_rev)
+        config_env[key] = spec_um_rev
 
-        # Overide the model component revisions only when
-        # the model leaves the revision unspecified.
-        components = ["casim", "jules", "shumlib", "socrates", "ukca"]
-        for comp in components:
-            model_comp_rev = config_env[f"{comp}_rev"]
-            spec_comp_rev = f"um{spec.version}"
-            if model_comp_rev != spec_comp_rev:
-                if model_comp_rev == "":
-                    config_env[f"{comp}_rev"] = spec_comp_rev
-                else:
-                    tty.warn(
-                        f"The {model} model uses {comp}_rev={model_comp_rev} but "
-                        f"the spec calls for {comp}_rev={spec_comp_rev}. "
-                        f"Revision {model_comp_rev} will be used.")
-
-        # Override those environment variables corresponding to a bool variant.
-        bool_to_str = lambda b: "true" if b else "false"
-        for b in self._bool_variants:
-            if b not in config_env:
-                tty.warn(
-                    f"The {model} model does not specify {b}. "
-                    f"The value {spec_b_value} will be used.")
+        # Overide each model component revision as the default
+        # *only when the model leaves the revision unspecified*.
+        for key in self._rev_variants:
+            version_comp_rev = f"um{spec.version}"
+            if key not in config_env or config_env[key] == "":
+                config_env[key] = version_comp_rev
             else:
-                model_b_value = config_env[b]
-                spec_b_value = bool_to_str(spec.variants[b].value)
-                if model_b_value != spec_b_value:
-                    tty.info(
-                        f"The {model} model uses {b}={model_b_value} but "
-                        f"the spec calls for {b}={spec_b_value}. "
-                        f"The value {spec_b_value} will be used.")
-            config_env[b] = spec_b_value
+                model_comp_rev = config_env[key]
+                if model_comp_rev != version_comp_rev:
+                    tty.warn(
+                        f"The {model} model sets {key}={model_comp_rev} but "
+                        f"the spec implies {key}={version_comp_rev}. "
+                        f"Revision {model_comp_rev} will be used as the default.")
+
+        # Set DR_HOOK="false" until this package is available.
+        config_env["DR_HOOK"] = "false"
+
+        # Override those environment variables where a bool variant is specified.
+        bool_to_str = lambda b: "true" if b else "false"
+        for var in self._bool_variants:
+            spec_str_value = bool_to_str(spec.variants[var].value)
+            check_model_vs_spec(model, config_env, var, spec_str_value)
+            config_env[var] = spec_str_value
+
+        # Override those environment variables where an off/on variant is specified.
+        off_on_to_str = lambda off_on: "true" if off_on == "on" else "false"
+        for var in self._off_on_variants:
+            spec_value = spec.variants[var].value
+            if spec_value != "none":
+                spec_str_value = off_on_to_str(spec_value)
+                check_model_vs_spec(model, config_env, var, spec_str_value)
+                config_env[var] = spec_str_value
 
         # Override those environment variables where a string variant is specified.
-        for v in self._str_variants:
-            spec_v_value = spec.variants[v].value
-            if spec_v_value != "none":
-                if v not in config_env:
-                    tty.warn(
-                        f"The {model} model does not specify {v}. "
-                        f"The value {spec_v_value} will be used.")
-                else:
-                    model_v_value = config_env[v]
-                    if model_v_value != "" and model_v_value != spec_v_value:
-                        tty.info(
-                            f"The {model} model uses {v}={model_v_value} but "
-                            f"the spec calls for {v}={spec_v_value}. "
-                            f"The value {spec_v_value} will be used.")
-                config_env[v] = spec_v_value
+        for var in self._str_variants:
+            spec_value = spec.variants[var].value
+            if spec_value != "none":
+                check_model_vs_spec(model, config_env, var, spec_value)
+                config_env[var] = spec_value
 
         # Get the linker arguments for some dependencies.
         for fcm_libname in ["eccodes", "netcdf"]:
@@ -276,8 +263,11 @@ class Um(Package):
 
         # Set environment variables based on config_env.
         for key in config_env:
-            tty.debug(f"{key}={config_env[key]}")
-            env.set(key, config_env[key])
+                tty.info(f"{key}={config_env[key]}")
+                env.set(key, config_env[key])
+
+        # Add the location of the FCM executable to PATH.
+        env.prepend_path("PATH", spec["fcm"].prefix.bin)
 
 
     def _build_dir(self):
