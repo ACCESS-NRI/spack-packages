@@ -19,17 +19,14 @@ class Mom5(MakefilePackage):
 
     version("master", branch="master", preferred=True)
     version("access-esm1.5", branch="access-esm1.5")
+    version("access-esm1.6", branch="master")
 
     variant("restart_repro", default=True, description="Reproducible restart build.")
     # The following two variants are not applicable when version is "access-esm1.5":
     variant("deterministic", default=False, description="Deterministic build.")
     variant("optimisation_report", default=False, description="Generate optimisation reports.")
     variant("type", default="ACCESS-OM",
-        # https://spack.readthedocs.io/en/latest/packaging_guide.html#conditional-possible-values
-        values=(
-            "ACCESS-CM",
-            # Spack does not have a spec syntax for NOT "@access-esm1.5", so use version ranges instead
-            conditional("ACCESS-ESM", "ACCESS-OM", "ACCESS-OM-BGC", "MOM_solo", when="@:access-esm0,access-esm2:")),
+        values=("ACCESS-CM", "ACCESS-ESM", "ACCESS-OM", "ACCESS-OM-BGC", "MOM_solo"),
         multi=False,
         description="Build MOM5 to support a particular use case.")
 
@@ -43,7 +40,7 @@ class Mom5(MakefilePackage):
         depends_on("oasis3-mct~deterministic", when="~deterministic")
         depends_on("libaccessom2+deterministic", when="+deterministic")
         depends_on("libaccessom2~deterministic", when="~deterministic")
-    with when("@access-esm1.5"):
+    with when("@access-esm1.5:access-esm1.6"):
         depends_on("netcdf-c@4.7.1:4.7.4")
         depends_on("netcdf-fortran@4.5.1:4.5.2")
         # Depend on "openmpi".
@@ -64,7 +61,7 @@ class Mom5(MakefilePackage):
         config = {}
 
         # NOTE: The order of the libraries matters during the linking step!
-        if "@access-esm1.5" in self.spec:
+        if self.spec.satisfies("@access-esm1.5:access-esm1.6"):
             istr = " ".join([
                     join_path((spec["oasis3-mct"].headers).cpp_flags, "psmile.MPI1"),
                     join_path((spec["oasis3-mct"].headers).cpp_flags, "mct")])
@@ -170,7 +167,7 @@ LDFLAGS += $(LIBS)
 """
 
         # Copied from bin/mkmf.template.nci
-        if "@access-esm1.5" in self.spec:
+        if self.spec.satisfies("@access-esm1.5:access-esm1.6"):
             config["intel"] = f"""
 ifeq ($(VTRACE), yes)
     FC = mpifort-vt
@@ -304,7 +301,7 @@ LDFLAGS += $(LIBS)
         config["oneapi"] = config["intel"]
 
         # Copied from bin/mkmf.template.t90
-        if "@access-esm1.5" in self.spec:
+        if self.spec.satisfies("@access-esm1.5:access-esm1.6"):
             config["post"] = """
 # you should never need to change any lines below.
 
@@ -490,7 +487,7 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
             build = Executable("./MOM_compile.csh")
             if "+restart_repro" in self.spec:
                 build.add_default_env("REPRO", "true")
-            if "@access-esm1.5" not in self.spec:
+            if not self.spec.satisfies("@access-esm1.5"):
                 # The MOM5 commit d7ba13a3f364ce130b6ad0ba813f01832cada7a2
                 # requires the --no_version switch to avoid git hashes being
                 # embedded in the binary.
