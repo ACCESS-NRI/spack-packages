@@ -56,6 +56,8 @@ class Um(Package):
 
     # String variants have their default values set to "none" here.
     # The real default is set by the model.
+
+    # Revision variants.
     _rev_variants = (
         "casim_rev",
         "jules_rev",
@@ -63,7 +65,8 @@ class Um(Package):
         "socrates_rev",
         "ukca_rev")
 
-    _other_str_variants = (
+    # Other string variants.
+    _other_variants = (
         "casim_sources",
         "compile_atmos",
         "compile_createbc",
@@ -98,7 +101,7 @@ class Um(Package):
         "timer_version",
         "ukca_sources",
         "um_sources")
-    _str_variants = _rev_variants + _other_str_variants
+    _str_variants = _rev_variants + _other_variants
 
     for var in _str_variants:
         variant(var, default="none", description=var, values="*", multi=False)
@@ -216,20 +219,6 @@ class Um(Package):
         check_model_vs_spec(model, config_env, key, spec_um_rev)
         config_env[key] = spec_um_rev
 
-        # Overide each model component revision as the default
-        # *only when the model leaves the revision unspecified*.
-        for key in self._rev_variants:
-            version_comp_rev = f"um{spec.version}"
-            if key not in config_env or config_env[key] == "":
-                config_env[key] = version_comp_rev
-            else:
-                model_comp_rev = config_env[key]
-                if model_comp_rev != version_comp_rev:
-                    tty.warn(
-                        f"The {model} model sets {key}={model_comp_rev} but "
-                        f"the spec implies {key}={version_comp_rev}. "
-                        f"Revision {model_comp_rev} will be used as the default.")
-
         # Set DR_HOOK="false" until this package is available.
         config_env["DR_HOOK"] = "false"
 
@@ -249,8 +238,19 @@ class Um(Package):
                 check_model_vs_spec(model, config_env, var, spec_str_value)
                 config_env[var] = spec_str_value
 
-        # Override those environment variables where a string variant is specified.
-        for var in self._str_variants:
+        # Overide those environment variables where a revision variant is specified.
+        # If the variant is left unspecified, and the model does not specify a revision,
+        # then use a component revision based on the spec UM version.
+        for var in self._rev_variants:
+            spec_value = spec.variants[var].value
+            if spec_value != "none":
+                check_model_vs_spec(model, config_env, var, spec_value)
+                config_env[var] = spec_value
+            elif var not in config_env or config_env[var] == "":
+                config_env[var] = f"um{spec.version}"
+
+        # Override those environment variables where any other string variant is specified.
+        for var in self._other_variants:
             spec_value = spec.variants[var].value
             if spec_value != "none":
                 check_model_vs_spec(model, config_env, var, spec_value)
@@ -304,4 +304,3 @@ class Um(Package):
             install_bin_dir = join_path(prefix, bin_dir)
             mkdirp(install_bin_dir)
             install_tree(build_bin_dir, install_bin_dir)
-
