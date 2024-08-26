@@ -300,7 +300,6 @@ LDFLAGS += $(LIBS)
         # Add support for the ifx compiler
         config["oneapi"] = config["intel"]
 
-        # Copied from bin/mkmf.template.t90
         if self.spec.satisfies("@access-esm1.5:access-esm1.6"):
             config["post"] = """
 # you should never need to change any lines below.
@@ -393,6 +392,8 @@ TMPFILES = .*.m *.B *.L *.i *.i90 *.l *.s *.mod *.opt
 	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -o $*.x $*.F90 *.o $(LDFLAGS)
 """
         else:
+            # Copied from bin/mkmf.template.t90
+            # TODO: Why from `mkmf.template.t90`? Copy bin/mkmf.template.nci.
             config["post"] = """
 # you should never need to change any lines below.
 
