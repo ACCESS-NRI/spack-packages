@@ -238,7 +238,7 @@ class Um(Package):
                 check_model_vs_spec(model, config_env, var, spec_str_value)
                 config_env[var] = spec_str_value
 
-        # Overide those environment variables where a revision variant is specified.
+        # Override those environment variables where a revision variant is specified.
         # If the variant is left unspecified, and the model does not specify a revision,
         # then use a component revision based on the spec UM version.
         for var in self._rev_variants:
