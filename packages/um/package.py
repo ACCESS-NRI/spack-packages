@@ -40,6 +40,7 @@ class Um(Package):
 
     # Bool variants have their default value set to True here.
     _bool_variants = (
+        "DR_HOOK",
         "eccodes",
         "netcdf")
     for var in _bool_variants:
@@ -118,6 +119,8 @@ class Um(Package):
     depends_on("gcom@8.1", when="@13.3", type=("build", "link"))
     depends_on("gcom@8.2", when="@13.4", type=("build", "link"))
     depends_on("gcom@8.3:", when="@13.5:", type=("build", "link"))
+    depends_on("fiat@1.1.0 ~mpi", type=("build", "link", "run"),
+        when="+DR_HOOK")
     depends_on("eccodes +fortran +netcdf", type=("build", "link", "run"),
         when="+eccodes")
     depends_on("netcdf-fortran@4.5.2", type=("build", "link", "run"),
@@ -125,14 +128,24 @@ class Um(Package):
 
     phases = ["build", "install"]
 
-    # The dependency name and the ld_flags from
+    # The dependency name, include paths, and ld_flags from
     # the FCM config for each library configured via FCM.
     _lib_cfg = {
+        "DR_HOOK": {
+            "dep_name": "fiat",
+            "includes": [
+                join_path("include", "fiat"),
+                join_path("module", "fiat"),
+                join_path("module", "parkind_dp"),
+                join_path("module", "parkind_sp")],
+            "fcm_ld_flags": "-lfiat -lparkind_dp -lparkind_sp"},
         "eccodes": {
             "dep_name": "eccodes",
+            "includes": ["include"],
             "fcm_ld_flags": "-leccodes_f90 -leccodes"},
         "netcdf": {
             "dep_name": "netcdf-fortran",
+            "includes": ["include"],
             "fcm_ld_flags": "-lnetcdff -lnetcdf"}}
 
 
@@ -188,16 +201,6 @@ class Um(Package):
 
         spec = self.spec
 
-        # Define CPATH for dependencies that need include files.
-        ideps = ["eccodes", "gcom", "netcdf-fortran"]
-        incs = [spec[d].prefix.include for d in ideps]
-        for ipath in incs:
-            env.prepend_path("CPATH", ipath)
-
-        # The gcom library does not contain shared objects and
-        # therefore must be statically linked.
-        env.prepend_path("LIBRARY_PATH", spec["gcom"].prefix.lib)
-
         # Use rose-app.conf to set config options.
         config = configparser.ConfigParser()
         # Ensure that keys are case sensitive.
@@ -218,9 +221,6 @@ class Um(Package):
         spec_um_rev = f"vn{spec.version}"
         check_model_vs_spec(model, config_env, key, spec_um_rev)
         config_env[key] = spec_um_rev
-
-        # Set DR_HOOK="false" until this package is available.
-        config_env["DR_HOOK"] = "false"
 
         # Override those environment variables where a bool variant is specified.
         bool_to_str = lambda b: "true" if b else "false"
@@ -256,8 +256,22 @@ class Um(Package):
                 check_model_vs_spec(model, config_env, var, spec_value)
                 config_env[var] = spec_value
 
+        # Define CPATH and FPATH for dependencies that need include files or modules.
+        for path in ["CPATH", "FPATH"]:
+            env.prepend_path(path, spec["gcom"].prefix.include)
+            for fcm_libname in ["DR_HOOK", "eccodes", "netcdf"]:
+                if config_env[fcm_libname] == "true":
+                    prefix = spec[self._lib_cfg[fcm_libname]["dep_name"]].prefix
+                    for include in self._lib_cfg[fcm_libname]["includes"]:
+                        env.prepend_path(path, prefix.join(include))
+            tty.info(f"{path}={[p.value for p in env.group_by_name()[path]]}")
+
+        # The gcom library does not contain shared objects and
+        # therefore must be statically linked.
+        env.prepend_path("LIBRARY_PATH", spec["gcom"].prefix.lib)
+
         # Get the linker arguments for some dependencies.
-        for fcm_libname in ["eccodes", "netcdf"]:
+        for fcm_libname in ["DR_HOOK", "eccodes", "netcdf"]:
             linker_args = self._get_linker_args(spec, fcm_libname)
             config_env[f"ldflags_{fcm_libname}_on"] = linker_args
 
