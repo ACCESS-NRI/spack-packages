@@ -119,7 +119,7 @@ class Um(Package):
     depends_on("gcom@8.1", when="@13.3", type=("build", "link"))
     depends_on("gcom@8.2", when="@13.4", type=("build", "link"))
     depends_on("gcom@8.3:", when="@13.5:", type=("build", "link"))
-    depends_on("fiat@1.1.0 ~mpi", type=("build", "link", "run"),
+    depends_on("fiat@um", type=("build", "link", "run"),
         when="+DR_HOOK")
     depends_on("eccodes +fortran +netcdf", type=("build", "link", "run"),
         when="+eccodes")
@@ -132,20 +132,22 @@ class Um(Package):
     # the FCM config for each library configured via FCM.
     _lib_cfg = {
         "DR_HOOK": {
-            "dep_name": "fiat",
             "includes": [
                 join_path("include", "fiat"),
                 join_path("module", "fiat"),
-                join_path("module", "parkind_dp"),
-                join_path("module", "parkind_sp")],
-            "fcm_ld_flags": "-lfiat -lparkind_dp -lparkind_sp"},
+                join_path("module", "parkind_dp")],
+            "dep_name": "fiat",
+            "fcm_name": "drhook",
+            "fcm_ld_flags": "-lfiat -lparkind_dp"},
         "eccodes": {
-            "dep_name": "eccodes",
             "includes": ["include"],
+            "dep_name": "eccodes",
+            "fcm_name": "eccodes",
             "fcm_ld_flags": "-leccodes_f90 -leccodes"},
         "netcdf": {
-            "dep_name": "netcdf-fortran",
             "includes": ["include"],
+            "dep_name": "netcdf-fortran",
+            "fcm_name": "netcdf",
             "fcm_ld_flags": "-lnetcdff -lnetcdf"}}
 
 
@@ -259,10 +261,10 @@ class Um(Package):
         # Define CPATH and FPATH for dependencies that need include files or modules.
         for path in ["CPATH", "FPATH"]:
             env.prepend_path(path, spec["gcom"].prefix.include)
-            for fcm_libname in ["DR_HOOK", "eccodes", "netcdf"]:
-                if config_env[fcm_libname] == "true":
-                    prefix = spec[self._lib_cfg[fcm_libname]["dep_name"]].prefix
-                    for include in self._lib_cfg[fcm_libname]["includes"]:
+            for var in self._bool_variants:
+                if config_env[var] == "true":
+                    prefix = spec[self._lib_cfg[var]["dep_name"]].prefix
+                    for include in self._lib_cfg[var]["includes"]:
                         env.prepend_path(path, prefix.join(include))
             tty.info(f"{path}={[p.value for p in env.group_by_name()[path]]}")
 
@@ -271,9 +273,11 @@ class Um(Package):
         env.prepend_path("LIBRARY_PATH", spec["gcom"].prefix.lib)
 
         # Get the linker arguments for some dependencies.
-        for fcm_libname in ["DR_HOOK", "eccodes", "netcdf"]:
-            linker_args = self._get_linker_args(spec, fcm_libname)
-            config_env[f"ldflags_{fcm_libname}_on"] = linker_args
+        for var in self._bool_variants:
+            if config_env[var] == "true":
+                fcm_name = self._lib_cfg[var]["fcm_name"]
+                linker_args = self._get_linker_args(spec, var)
+                config_env[f"ldflags_{fcm_name}_on"] = linker_args
 
         # Set environment variables based on config_env.
         for key in config_env:
