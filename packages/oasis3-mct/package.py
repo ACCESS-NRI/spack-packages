@@ -23,7 +23,7 @@ class Oasis3Mct(MakefilePackage):
     variant("deterministic", default=False, description="Deterministic build.")
     variant("optimisation_report", default=False, description="Generate optimisation reports.")
 
-    with when("@:access-esm0,access-esm2:"):
+    with when("@master"):
         depends_on("netcdf-fortran@4.5.2:")
         # Depend on virtual package "mpi".
         depends_on("mpi")
