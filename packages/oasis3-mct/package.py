@@ -251,7 +251,7 @@ f90         = $(F90)
 f           = $(F90)
 """
 
-        config["gcc"] = f"""
+        config["gcc"] = """
 # Compiling and other commands
 MAKE        = make
 F90         = mpif90 -Wall -fallow-argument-mismatch
@@ -295,7 +295,7 @@ endif
         # Add support for the ifx compiler
         config["oneapi"] = config["intel"]
 
-        config["post"] = f"""
+        config["post"] = """
 f90FLAGS_1  = $(F90FLAGS_1)
 FFLAGS_1    = $(F90FLAGS_1)
 fFLAGS_1    = $(F90FLAGS_1)
