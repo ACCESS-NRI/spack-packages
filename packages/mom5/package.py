@@ -30,7 +30,7 @@ class Mom5(MakefilePackage):
         multi=False,
         description="Build MOM5 to support a particular use case.")
 
-    with when("@:access-esm0,access-esm2:"):
+    with when("@master"):
         depends_on("netcdf-c@4.7.4:")
         depends_on("netcdf-fortran@4.5.2:")
         # Depend on virtual package "mpi".
