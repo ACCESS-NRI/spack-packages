@@ -28,7 +28,7 @@ class Cice5(MakefilePackage):
     # TODO: For initial verification we are going to use static pio.
     #       Eventually we plan to move to shared pio
     # ~shared requires: https://github.com/spack/spack/pull/34837
-    depends_on("parallelio~pnetcdf~timing~shared")
+   #  depends_on("parallelio~pnetcdf~timing~shared")
     depends_on("datetime-fortran")
     depends_on("oasis3-mct+deterministic", when="+deterministic")
     depends_on("oasis3-mct~deterministic", when="~deterministic")
@@ -41,29 +41,34 @@ class Cice5(MakefilePackage):
     _buildscript_path = join_path("bld", _buildscript)
 
     # The integer represents environment variable NTASK
-    __targets = {24: {}, 480: {}, 722: {}, 1682: {}}
-    __targets[24]["driver"] = "auscom"
-    __targets[24]["grid"] = "360x300"
-    __targets[24]["blocks"] = "24x1"
+    __targets = {12: {}} 
+    __targets[12]["driver"] = "access"
+    __targets[12]["grid"] = "360x300"
+    __targets[12]["blocks"] = "12x1"
 
-    __targets[480]["driver"] = "auscom"
-    __targets[480]["grid"] = "1440x1080"
-    __targets[480]["blocks"] = "48x40"
+   #  __targets = {24: {}, 480: {}, 722: {}, 1682: {}}
+   #  __targets[24]["driver"] = "access"
+   #  __targets[24]["grid"] = "360x300"
+   #  __targets[24]["blocks"] = "24x1"
 
-    # Comment from bld/config.nci.auscom.3600x2700:
-    # Recommendations:
-    #   use processor_shape = slenderX1 or slenderX2 in ice_in
-    #   one per processor with distribution_type='cartesian' or
-    #   squarish blocks with distribution_type='rake'
-    # If BLCKX (BLCKY) does not divide NXGLOB (NYGLOB) evenly, padding
-    # will be used on the right (top) of the grid.
-    __targets[722]["driver"] = "auscom"
-    __targets[722]["grid"] = "3600x2700"
-    __targets[722]["blocks"] = "90x90"
+   #  __targets[480]["driver"] = "access"
+   #  __targets[480]["grid"] = "1440x1080"
+   #  __targets[480]["blocks"] = "48x40"
 
-    __targets[1682]["driver"] = "auscom"
-    __targets[1682]["grid"] = "3600x2700"
-    __targets[1682]["blocks"] = "200x180"
+   #  # Comment from bld/config.nci.auscom.3600x2700:
+   #  # Recommendations:
+   #  #   use processor_shape = slenderX1 or slenderX2 in ice_in
+   #  #   one per processor with distribution_type='cartesian' or
+   #  #   squarish blocks with distribution_type='rake'
+   #  # If BLCKX (BLCKY) does not divide NXGLOB (NYGLOB) evenly, padding
+   #  # will be used on the right (top) of the grid.
+   #  __targets[722]["driver"] = "access"
+   #  __targets[722]["grid"] = "3600x2700"
+   #  __targets[722]["blocks"] = "90x90"
+
+   #  __targets[1682]["driver"] = "access"
+   #  __targets[1682]["grid"] = "3600x2700"
+   #  __targets[1682]["blocks"] = "200x180"
 
     def url_for_version(self, version):
         return "https://github.com/ACCESS-NRI/cice5/tarball/{0}".format(version)
@@ -97,14 +102,15 @@ class Cice5(MakefilePackage):
         config = {}
 
         istr = join_path((spec["oasis3-mct"].headers).cpp_flags, "psmile.MPI1")
-        ideps = ["parallelio", "oasis3-mct", "libaccessom2", "netcdf-fortran"]
+        ideps = ["oasis3-mct", "libaccessom2", "netcdf-fortran"]
         incs = " ".join([istr] + [(spec[d].headers).cpp_flags for d in ideps])
 
-        lstr = self.make_linker_args(spec, "parallelio", "-lpiof -lpioc")
+      #   lstr = self.make_linker_args(spec, "parallelio", "-lpiof -lpioc")
         # NOTE: The order of the libraries matter during the linking step!
         # NOTE: datetime-fortran is a dependency of libaccessom2.
         ldeps = ["oasis3-mct", "libaccessom2", "netcdf-c", "netcdf-fortran", "datetime-fortran"]
-        libs = " ".join([lstr] + [self.get_linker_args(spec, d) for d in ldeps])
+      #   libs = " ".join([lstr] + [self.get_linker_args(spec, d) for d in ldeps])
+        libs = " ".join([self.get_linker_args(spec, d) for d in ldeps])
 
         # TODO: https://github.com/ACCESS-NRI/ACCESS-OM/issues/12
         NCI_OPTIM_FLAGS = "-g3 -O2 -axCORE-AVX2 -debug all -check none -traceback -assume buffered_io"

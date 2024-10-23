@@ -37,7 +37,7 @@ endif
 ### Specialty code
 setenv CAM_ICE  no        # set to yes for CAM runs (single column)
 setenv SHRDIR   csm_share # location of CCSM shared code
-setenv IO_TYPE  pio       # set to none if netcdf library is unavailable
+setenv IO_TYPE  netcdf    # set to none if netcdf library is unavailable
 setenv DITTO    no        # reproducible diagnostics
 setenv THRD     no        # set to yes for OpenMP threading
 if ( $THRD == 'yes') setenv OMP_NUM_THREADS 2 # positive integer 
@@ -49,14 +49,14 @@ else
     setenv ACCESS   no
 endif
 setenv OASIS3_MCT yes	  # oasis3-mct version
-setenv NICELYR    4       # number of vertical layers in the ice
+setenv NICELYR    1       # number of vertical layers in the ice
 setenv NSNWLYR    1       # number of vertical layers in the snow
 setenv NICECAT    5       # number of ice thickness categories
 
 ### The version of an executable can be found with the following
 ### command: strings <executable> | grep 'CICE_VERSION='
-set version='202301'
-sed -e "s/{CICE_VERSION}/$version/g" $SRCDIR/drivers/$driver/version.F90.template > $SRCDIR/drivers/$driver/version_mod.F90
+# set version='202301'
+# sed -e "s/{CICE_VERSION}/$version/g" $SRCDIR/drivers/$driver/version.F90.template > $SRCDIR/drivers/$driver/version_mod.F90
 
 ### Where this model is compiled
 setenv OBJDIR $SRCDIR/build_${driver}_${grid}_${blocks}_${ntask}p
