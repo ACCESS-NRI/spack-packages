@@ -17,7 +17,7 @@ class Gcom4(Package):
     """
 
     homepage = "https://code.metoffice.gov.uk/trac/gcom"
-    git = "https://github.com/ACCESS-NRI/GCOM4.git"
+    git = "git@github.com:ACCESS-NRI/GCOM4.git"
 
     maintainers("penguian")
 
