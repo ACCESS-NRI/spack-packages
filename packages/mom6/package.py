@@ -39,6 +39,11 @@ class Mom6(CMakePackage):
 
     root_cmakelists_dir = "cmake"
 
+    variant(
+        "install_libraries",
+        default=False,
+        description="Install component libraries"
+    )
     variant("openmp", default=False, description="Enable OpenMP")
     variant("mom_symmetric", default=False, description="Use symmetric memory in MOM6")
 
