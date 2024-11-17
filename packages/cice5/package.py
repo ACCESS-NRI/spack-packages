@@ -16,8 +16,7 @@ class Cice5(MakefilePackage):
 
     maintainers = ["harshula"]
 
-    version("master", branch="master", preferred = True)
-    version("access-esm1.6", branch="cice_gsi8.1")
+    version("master", branch="master")
 
     variant("deterministic", default=False, description="Deterministic build.")
     variant("optimisation_report", default=False, description="Generate optimisation reports.")
@@ -33,49 +32,8 @@ class Cice5(MakefilePackage):
     depends_on("datetime-fortran")
     depends_on("oasis3-mct+deterministic", when="+deterministic")
     depends_on("oasis3-mct~deterministic", when="~deterministic")
-
-
-    with when("@:master"):
-       # TODO: For initial verification we are going to use static pio.
-       #       Eventually we plan to move to shared pio
-       # ~shared requires: https://github.com/spack/spack/pull/34837
-       depends_on("parallelio~pnetcdf~timing~shared")
-       depends_on("libaccessom2+deterministic", when="+deterministic")
-       depends_on("libaccessom2~deterministic", when="~deterministic")
-
-       # The integer represents environment variable NTASK
-       __targets = {24: {}, 480: {}, 722: {}, 1682: {}}
-       __targets[24]["driver"] = "auscom"
-       __targets[24]["grid"] = "360x300"
-       __targets[24]["blocks"] = "24x1"
-
-       __targets[480]["driver"] = "auscom"
-       __targets[480]["grid"] = "1440x1080"
-       __targets[480]["blocks"] = "48x40"
-
-       # Comment from bld/config.nci.auscom.3600x2700:
-       # Recommendations:
-       #   use processor_shape = slenderX1 or slenderX2 in ice_in
-       #   one per processor with distribution_type='cartesian' or
-       #   squarish blocks with distribution_type='rake'
-       # If BLCKX (BLCKY) does not divide NXGLOB (NYGLOB) evenly, padding
-       # will be used on the right (top) of the grid.
-       __targets[722]["driver"] = "auscom"
-       __targets[722]["grid"] = "3600x2700"
-       __targets[722]["blocks"] = "90x90"
-
-       __targets[1682]["driver"] = "auscom"
-       __targets[1682]["grid"] = "3600x2700"
-       __targets[1682]["blocks"] = "200x180"
-   
-   
-    with when("@:access-esm1.6"):
-      #possibly we should revert to netcdf/4.6.3
-      __targets = {12: {}} 
-      __targets[12]["driver"] = "access-esm1.6"
-      __targets[12]["grid"] = "360x300"
-      __targets[12]["blocks"] = "12x1"
-
+    depends_on("libaccessom2+deterministic", when="+deterministic")
+    depends_on("libaccessom2~deterministic", when="~deterministic")
 
     phases = ["edit", "build", "install"]
 
