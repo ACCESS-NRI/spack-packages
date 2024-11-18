@@ -29,7 +29,7 @@ class Access3Share(CMakePackage):
     homepage = "https://www.example.com"
     git = "https://github.com/ACCESS-NRI/access3-share"
     submodules = True
-    maintainers = ["anton-seaice", "harshula"]
+    maintainers = ["anton-seaice", "harshula", "micaeljtoliveira"]
 
     # FIXME: Add a list of GitHub accounts to
     # notify when the package is updated.
@@ -40,8 +40,13 @@ class Access3Share(CMakePackage):
     # the license, set checked_by to your Github username.
     license("UNKNOWN", checked_by="github_user1")
 
-    # FIXME: Add dependencies if required.
-    # depends_on("foo")
+
+    variant(
+        "install_libraries",
+        default=False,
+        description="Install component libraries"
+    )
+    variant("openmp", default=False, description="Enable OpenMP")
 
     depends_on("cmake@3.18:", type="build")
     depends_on("mpi")
@@ -57,8 +62,12 @@ class Access3Share(CMakePackage):
 
     def cmake_args(self):
 
-        args = []
+        args = [
+            self.define_from_variant("OM3_LIB_INSTALL", "install_libraries"),
+            self.define_from_variant("OM3_OPENMP", "openmp"),
+        ]
 
+        # we need this for cmake to find MPI_Fortran
         args.append(self.define("CMAKE_C_COMPILER", self.spec["mpi"].mpicc))
         args.append(self.define("CMAKE_CXX_COMPILER", self.spec["mpi"].mpicxx))
         args.append(self.define("CMAKE_Fortran_COMPILER", self.spec["mpi"].mpifc))
