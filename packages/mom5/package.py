@@ -498,7 +498,7 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
                 build.add_default_env("REPRO", "true")
 
             if self.spec.satisfies("+access-gtracers"):
-                build.add_default_env("SPACK_BUILD", "true")
+                build.add_default_env("SPACK_FMS_EXTERNAL", "true")
 
             if not self.spec.satisfies("@access-esm1.5"):
                 # The MOM5 commit d7ba13a3f364ce130b6ad0ba813f01832cada7a2
