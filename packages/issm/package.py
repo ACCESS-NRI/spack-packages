@@ -12,9 +12,10 @@ class Issm(AutotoolsPackage):
     """Ice-sheet and Sea-Level System Model"""
 
     homepage = "https://issm.jpl.nasa.gov/"
-    svn = "https://issm.ess.uci.edu/svn/issm/issm/trunk"
+    git = "https://github.com/ISSMteam/ISSM.git"
 
     version("develop")
+    version("4.24", sha256="0487bd025f37be4a39dfd48b047de6a6423e310dfe5281dbd9a52aa35b26151a")
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
@@ -24,6 +25,11 @@ class Issm(AutotoolsPackage):
     depends_on("mpi")
     depends_on("petsc+metis+mumps+scalapack")
     depends_on("m1qn3")
+
+    def url_for_version(self, version):
+        url = "https://github.com/ISSMteam/ISSM/archive/refs/tags/v{0}.tar.gz".format(version)
+        return url
+
 
     def autoreconf(self, spec, prefix):
         autoreconf("--install", "--verbose", "--force")
