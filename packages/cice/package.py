@@ -37,12 +37,32 @@ class Cice(CMakePackage):
     license("UNKNOWN", checked_by="github_user1")
 
     variant(
-        "install_libraries",
-        default=False,
-        description="Install component libraries"
+        "driver", 
+        default = "standalone" ,
+        values = (
+            "standalone",
+            "nuopc/cmeps"
+        )
     )
-    variant("openmp", default=False, description="Enable OpenMP")
 
+    variant("openmp", default=False, description="Enable OpenMP")
+    
+    
+    cesmcoupled = variant(
+        "cesmcoupled", 
+        default=False,
+        values=(
+            True, False, 
+            conditional(True, when="+access3")
+        ),
+        description="Set CESMCOUPLED CPP Flag"
+    )
+
+    # depends
+
+    # set_variant
+    variant("access3", default=False, description="Link to Access3 share")
+    
     depends_on("cmake@3.18:", type="build")
     depends_on("mpi")
     depends_on("netcdf-fortran@4.6.0:")
@@ -50,9 +70,8 @@ class Cice(CMakePackage):
     depends_on("parallelio@2.5.10: build_type==RelWithDebInfo")
     depends_on("parallelio fflags='-qno-opt-dynamic-align -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model source' cflags='-qno-opt-dynamic-align -fp-model precise -std=gnu99'", when="%intel")
 
-    depends_on("access3-share+install_libraries", when="+install_libraries")
-    #To-Do: fix syntax, need openmp from deps too
-    depends_on("access3-share+openmp+install_libraries", when="+install_libraries+openmp")
+    depends_on("access3-share+install_libraries", when="+access3")
+    depends_on("access3-share+openmp+install_libraries", when="+access3+openmp")
 
     root_cmakelists_dir = "cmake"
     
@@ -61,6 +80,7 @@ class Cice(CMakePackage):
             self.define("OM3_CICE_IO", "PIO"),
             self.define_from_variant("OM3_LIB_INSTALL", "install_libraries"),
             self.define_from_variant("OM3_OPENMP", "openmp"),
+            self.define_from_variant("CESMCOUPLED", "cesmcoupled")
         ]
 
         # we need this for cmake to find MPI_Fortran
