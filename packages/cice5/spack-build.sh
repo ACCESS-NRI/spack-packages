@@ -46,20 +46,19 @@ setenv NSNWLYR    1       # number of vertical layers in the snow
 setenv NICECAT    5       # number of ice thickness categories
 setenv AusCOM   yes
 if ($driver == 'access-esm1.6') then
-    set driver = 'access'
+    setenv DRVDIR 'access'
     setenv ACCESS   yes
     setenv IO_TYPE  netcdf
     setenv CHAN     MPI1	  # MPI1 or MPI2 (always MPI1!)
-    setenv NICELYR    1       # number of vertical layers in the ice
-                              #1 for ktherm=0, zero-layer thermodynamics
-if ($driver == 'access-cm2') then
-    set driver = 'access'
+    setenv NICELYR    1     #1 for ktherm=0, zero-layer thermodynamics
+else if ($driver == 'access-cm2') then
+    setenv DRVDIR 'access'
     setenv ACCESS   yes
     setenv IO_TYPE  netcdf
     setenv CHAN     MPI1	  # MPI1 or MPI2 (always MPI1!)
-    setenv NICELYR    4       # number of vertical layers in the ice
-                              #4 for standard multi-layer ice (ktherm=1)
+    setenv NICELYR    4     #4 for standard multi-layer ice (ktherm=1)
 else #driver = auscom
+    setenv DRVDIR $driver
     setenv ACCESS   no
     setenv IO_TYPE  pio
     setenv NICELYR    4       # number of vertical layers in the ice
@@ -87,11 +86,7 @@ setenv BLCKY `expr $NYGLOB / $NYBLOCK` # y-dimension of blocks (  ghost cells  )
 @ m = $a / $b ; setenv MXBLCKS $m ; if ($MXBLCKS == 0) setenv MXBLCKS 1
 echo Autimatically generated: MXBLCKS = $MXBLCKS
 
-###########################################
-# ars599: 24032014
-#	copy from /short/p66/ars599/CICE.v5.0/accice.v504_csiro
-#	solo_ice_comp
-###########################################
+
 ### Tracers               # match ice_in tracer_nml to conserve memory
 setenv TRAGE   1          # set to 1 for ice age tracer
 setenv TRFY    1          # set to 1 for first-year ice area tracer
@@ -117,8 +112,6 @@ else
   setenv IODIR io_binary
 endif
 
-
-
 cp -f $CBLD/Makefile.std $CBLD/Makefile
 
 if ($NTASK == 1) then
@@ -127,8 +120,6 @@ else
    setenv COMMDIR mpi
 endif
 echo COMMDIR: $COMMDIR
-
-setenv DRVDIR $driver
 
 cd $OBJDIR
 
