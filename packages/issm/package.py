@@ -27,9 +27,7 @@ class Issm(AutotoolsPackage):
     depends_on("m1qn3")
 
     def url_for_version(self, version):
-        url = "https://github.com/ISSMteam/ISSM/archive/refs/tags/v{0}.tar.gz".format(version)
-        return url
-
+        return "https://github.com/ISSMteam/ISSM/tarball/v{0}".format(version)
 
     def autoreconf(self, spec, prefix):
         autoreconf("--install", "--verbose", "--force")
