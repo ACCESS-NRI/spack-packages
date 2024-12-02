@@ -115,11 +115,11 @@ class Cice5(MakefilePackage):
         ldeps = ["oasis3-mct", "netcdf-c", "netcdf-fortran"] 
         lstr = str()
 
-        if "+parallelio" in self.spec:
+        if "^parallelio" in self.spec:
             lstr = self.make_linker_args(spec, "parallelio", "-lpiof -lpioc")
             ideps.extend(["parallelio"])
 
-        if "+libaccessom2" in self.spec:
+        if "^libaccessom2" in self.spec:
             ideps.extend(["libaccessom2"])
 
             # NOTE: The order of the libraries matter during the linking step!
