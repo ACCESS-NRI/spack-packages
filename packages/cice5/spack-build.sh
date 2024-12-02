@@ -37,7 +37,6 @@ endif
 ### Specialty code
 setenv CAM_ICE  no        # set to yes for CAM runs (single column)
 setenv SHRDIR   csm_share # location of CCSM shared code
-setenv IO_TYPE  netcdf    # set to none if netcdf library is unavailable
 setenv DITTO    no        # reproducible diagnostics
 setenv THRD     no        # set to yes for OpenMP threading
 if ( $THRD == 'yes') setenv OMP_NUM_THREADS 2 # positive integer 
@@ -51,12 +50,12 @@ if ($driver == 'access-esm1.6') then
     setenv IO_TYPE  netcdf
     setenv CHAN     MPI1	  # MPI1 or MPI2 (always MPI1!)
     setenv NICELYR    1     #1 for ktherm=0, zero-layer thermodynamics
-else if ($driver == 'access-cm2') then
-    setenv DRVDIR 'access'
-    setenv ACCESS   yes
-    setenv IO_TYPE  netcdf
-    setenv CHAN     MPI1	  # MPI1 or MPI2 (always MPI1!)
-    setenv NICELYR    4     #4 for standard multi-layer ice (ktherm=1)
+# else if ($driver == 'access-cm2') then
+#     setenv DRVDIR 'access'
+#     setenv ACCESS   yes
+#     setenv IO_TYPE  netcdf
+#     setenv CHAN     MPI1	  # MPI1 or MPI2 (always MPI1!)
+#     setenv NICELYR    4     #4 for standard multi-layer ice (ktherm=1)
 else #driver = auscom
     setenv DRVDIR $driver
     setenv ACCESS   no
@@ -64,9 +63,10 @@ else #driver = auscom
     setenv NICELYR    4       # number of vertical layers in the ice
     ### The version of an executable can be found with the following
     ### command: strings <executable> | grep 'CICE_VERSION='
-    # set version='202301'
-    # sed -e "s/{CICE_VERSION}/$version/g" $SRCDIR/drivers/$driver/version.F90.template > $SRCDIR/drivers/$driver/version_mod.F90
+    set version='202301'
+    sed -e "s/{CICE_VERSION}/$version/g" $SRCDIR/drivers/$driver/version.F90.template > $SRCDIR/drivers/$driver/version_mod.F90
 endif
+
 setenv OASIS3_MCT yes	    # oasis3-mct version
 
 ### Where this model is compiled

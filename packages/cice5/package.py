@@ -18,7 +18,6 @@ class Cice5(MakefilePackage):
 
     version("master", branch="master", preferred=True)
     version("access-esm1.6", branch="access-esm1.6")
-    version("access-cm2", branch="access-cm2")
 
     variant("deterministic", default=False, description="Deterministic build.")
     variant("optimisation_report", default=False, description="Generate optimisation reports.")
@@ -33,7 +32,7 @@ class Cice5(MakefilePackage):
     depends_on("oasis3-mct~deterministic", when="~deterministic")
 
 
-    with when("@master"):
+    with when("@:access-esm0, access-esm2:"): #master version
         # TODO: For initial verification we are going to use static pio.
         #       Eventually we plan to move to shared pio
         # ~shared requires: https://github.com/spack/spack/pull/34837
@@ -66,14 +65,7 @@ class Cice5(MakefilePackage):
         __targets[1682]["grid"] = "3600x2700"
         __targets[1682]["blocks"] = "200x180" 
 
-    with when("@access-cm2:"):
-        __targets = {12: {}} 
-        __targets[12]["driver"] = "access-cm2"
-        __targets[12]["grid"] = "360x300"
-        __targets[12]["blocks"] = "12x1"
-
-    with when("@=access-esm1.6"):
-        # possibly we should revert to netcdf/4.6.3
+    with when("@access-esm1.6:access-esm1.9"):
         __targets = {12: {}} 
         __targets[12]["driver"] = "access-esm1.6"
         __targets[12]["grid"] = "360x300"
@@ -83,7 +75,6 @@ class Cice5(MakefilePackage):
 
     _buildscript = "spack-build.sh"
     _buildscript_path = join_path("bld", _buildscript)
-
 
 
     def url_for_version(self, version):
@@ -124,8 +115,11 @@ class Cice5(MakefilePackage):
         ldeps = ["oasis3-mct", "netcdf-c", "netcdf-fortran"] 
         lstr = str()
 
-        if self.spec.satisfies("master"):
+        if "+parallelio" in self.spec:
             lstr = self.make_linker_args(spec, "parallelio", "-lpiof -lpioc")
+            ideps.extend(["parallelio"])
+
+        if "+libaccessom2" in self.spec:
             ideps.extend(["libaccessom2"])
 
             # NOTE: The order of the libraries matter during the linking step!
