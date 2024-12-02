@@ -32,7 +32,7 @@ class Cice5(MakefilePackage):
     depends_on("oasis3-mct~deterministic", when="~deterministic")
 
 
-    with when("@:access-esm0, access-esm2:"): #master version
+    with when("@:access-esm0,access-esm2:"): #master version
         # TODO: For initial verification we are going to use static pio.
         #       Eventually we plan to move to shared pio
         # ~shared requires: https://github.com/spack/spack/pull/34837
