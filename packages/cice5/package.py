@@ -40,37 +40,6 @@ class Cice5(MakefilePackage):
         depends_on("libaccessom2+deterministic", when="+deterministic")
         depends_on("libaccessom2~deterministic", when="~deterministic")
 
-        # The integer represents environment variable NTASK
-        __targets = {24: {}, 480: {}, 722: {}, 1682: {}}
-        __targets[24]["driver"] = "auscom"
-        __targets[24]["grid"] = "360x300"
-        __targets[24]["blocks"] = "24x1"
-
-        __targets[480]["driver"] = "auscom"
-        __targets[480]["grid"] = "1440x1080"
-        __targets[480]["blocks"] = "48x40"
-
-        # Comment from bld/config.nci.auscom.3600x2700:
-        # Recommendations:
-        #   use processor_shape = slenderX1 or slenderX2 in ice_in
-        #   one per processor with distribution_type='cartesian' or
-        #   squarish blocks with distribution_type='rake'
-        # If BLCKX (BLCKY) does not divide NXGLOB (NYGLOB) evenly, padding
-        # will be used on the right (top) of the grid.
-        __targets[722]["driver"] = "auscom"
-        __targets[722]["grid"] = "3600x2700"
-        __targets[722]["blocks"] = "90x90"
-
-        __targets[1682]["driver"] = "auscom"
-        __targets[1682]["grid"] = "3600x2700"
-        __targets[1682]["blocks"] = "200x180" 
-
-    with when("@access-esm1.6:access-esm1.9"):
-        __targets = {12: {}} 
-        __targets[12]["driver"] = "access-esm1.6"
-        __targets[12]["grid"] = "360x300"
-        __targets[12]["blocks"] = "12x1"
-
     phases = ["edit", "build", "install"]
 
     _buildscript = "spack-build.sh"
@@ -115,11 +84,11 @@ class Cice5(MakefilePackage):
         ldeps = ["oasis3-mct", "netcdf-c", "netcdf-fortran"] 
         lstr = str()
 
-        if "^parallelio" in self.spec:
+        if self.spec.satisfies("^parallelio"):
             lstr = self.make_linker_args(spec, "parallelio", "-lpiof -lpioc")
             ideps.extend(["parallelio"])
 
-        if "^libaccessom2" in self.spec:
+        if self.spec.satisfies("^libaccessom2"):
             ideps.extend(["libaccessom2"])
 
             # NOTE: The order of the libraries matter during the linking step!
@@ -245,6 +214,45 @@ endif
             makeinc.write(fullconfig)
 
     def build(self, spec, prefix):
+
+        if self.spec.satisfies("@access-esm1.6:access-esm1.9"):
+            __targets = {12: {}} 
+            __targets[12]["driver"] = "access-esm1.6"
+            __targets[12]["grid"] = "360x300"
+            __targets[12]["blocks"] = "12x1"
+        # future
+        # if self.spec.satisfies("@access-cm2:access-cm2.9"):
+            # __targets = {12: {}} 
+            # __targets[12]["driver"] = "access-cm2"
+            # __targets[12]["grid"] = "360x300"
+            # __targets[12]["blocks"] = "12x1"
+        else :
+            # The integer represents environment variable NTASK
+            __targets = {24: {}, 480: {}, 722: {}, 1682: {}}
+            __targets[24]["driver"] = "auscom"
+            __targets[24]["grid"] = "360x300"
+            __targets[24]["blocks"] = "24x1"
+
+            __targets[480]["driver"] = "auscom"
+            __targets[480]["grid"] = "1440x1080"
+            __targets[480]["blocks"] = "48x40"
+
+            # Comment from bld/config.nci.auscom.3600x2700:
+            # Recommendations:
+            #   use processor_shape = slenderX1 or slenderX2 in ice_in
+            #   one per processor with distribution_type='cartesian' or
+            #   squarish blocks with distribution_type='rake'
+            # If BLCKX (BLCKY) does not divide NXGLOB (NYGLOB) evenly, padding
+            # will be used on the right (top) of the grid.
+            __targets[722]["driver"] = "auscom"
+            __targets[722]["grid"] = "3600x2700"
+            __targets[722]["blocks"] = "90x90"
+
+            __targets[1682]["driver"] = "auscom"
+            __targets[1682]["grid"] = "3600x2700"
+            __targets[1682]["blocks"] = "200x180" 
+        
+        self.__targets = __targets
 
         build = Executable(
                     join_path(self.stage.source_path, self._buildscript_path)
