@@ -31,7 +31,6 @@ class Cice5(MakefilePackage):
     depends_on("oasis3-mct+deterministic", when="+deterministic")
     depends_on("oasis3-mct~deterministic", when="~deterministic")
 
-
     with when("@:access-esm0,access-esm2:"): #master version
         # TODO: For initial verification we are going to use static pio.
         #       Eventually we plan to move to shared pio
@@ -96,7 +95,6 @@ class Cice5(MakefilePackage):
             ldeps = ["oasis3-mct", "libaccessom2", "netcdf-c", "netcdf-fortran", "datetime-fortran"]
 
         libs = " ".join([lstr] + [self.get_linker_args(spec, d) for d in ldeps])
-        libs = " ".join([self.get_linker_args(spec, d) for d in ldeps])
 
         # TODO: https://github.com/ACCESS-NRI/ACCESS-OM/issues/12
         NCI_OPTIM_FLAGS = "-g3 -O2 -axCORE-AVX2 -debug all -check none -traceback -assume buffered_io"
