@@ -31,7 +31,7 @@ class Cice5(MakefilePackage):
     depends_on("oasis3-mct+deterministic", when="+deterministic")
     depends_on("oasis3-mct~deterministic", when="~deterministic")
 
-    with when("@:access-esm0,access-esm2:"): #master version
+    with when("@:access-esm0,access-esm2:"):  #master version
         # TODO: For initial verification we are going to use static pio.
         #       Eventually we plan to move to shared pio
         # ~shared requires: https://github.com/spack/spack/pull/34837
@@ -218,13 +218,13 @@ endif
             __targets[12]["driver"] = "access-esm1.6"
             __targets[12]["grid"] = "360x300"
             __targets[12]["blocks"] = "12x1"
-        # future
+        # To-do
         # if self.spec.satisfies("@access-cm2:access-cm2.9"):
             # __targets = {12: {}} 
             # __targets[12]["driver"] = "access-cm2"
             # __targets[12]["grid"] = "360x300"
             # __targets[12]["blocks"] = "12x1"
-        else :
+        else:
             # The integer represents environment variable NTASK
             __targets = {24: {}, 480: {}, 722: {}, 1682: {}}
             __targets[24]["driver"] = "auscom"
