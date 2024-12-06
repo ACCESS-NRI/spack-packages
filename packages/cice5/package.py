@@ -14,9 +14,10 @@ class Cice5(MakefilePackage):
     homepage = "https://www.access-nri.org.au"
     git = "https://github.com/ACCESS-NRI/cice5.git"
 
-    maintainers = ["harshula"]
+    maintainers = ["harshula", "anton-seaice"]
 
-    version("master", branch="master")
+    version("master", branch="master", preferred=True)
+    version("access-esm1.6", branch="access-esm1.6")
 
     variant("deterministic", default=False, description="Deterministic build.")
     variant("optimisation_report", default=False, description="Generate optimisation reports.")
@@ -25,45 +26,24 @@ class Cice5(MakefilePackage):
     depends_on("mpi")
     depends_on("netcdf-fortran@4.5.2:")
     depends_on("netcdf-c@4.7.4:")
-    # TODO: For initial verification we are going to use static pio.
-    #       Eventually we plan to move to shared pio
-    # ~shared requires: https://github.com/spack/spack/pull/34837
-    depends_on("parallelio~pnetcdf~timing~shared")
+    
     depends_on("datetime-fortran")
     depends_on("oasis3-mct+deterministic", when="+deterministic")
     depends_on("oasis3-mct~deterministic", when="~deterministic")
-    depends_on("libaccessom2+deterministic", when="+deterministic")
-    depends_on("libaccessom2~deterministic", when="~deterministic")
+
+    with when("@:access-esm0,access-esm2:"):  # master version
+        # TODO: For initial verification we are going to use static pio.
+        #       Eventually we plan to move to shared pio
+        # ~shared requires: https://github.com/spack/spack/pull/34837
+        depends_on("parallelio~pnetcdf~timing~shared")
+        depends_on("libaccessom2+deterministic", when="+deterministic")
+        depends_on("libaccessom2~deterministic", when="~deterministic")
 
     phases = ["edit", "build", "install"]
 
     _buildscript = "spack-build.sh"
     _buildscript_path = join_path("bld", _buildscript)
 
-    # The integer represents environment variable NTASK
-    __targets = {24: {}, 480: {}, 722: {}, 1682: {}}
-    __targets[24]["driver"] = "auscom"
-    __targets[24]["grid"] = "360x300"
-    __targets[24]["blocks"] = "24x1"
-
-    __targets[480]["driver"] = "auscom"
-    __targets[480]["grid"] = "1440x1080"
-    __targets[480]["blocks"] = "48x40"
-
-    # Comment from bld/config.nci.auscom.3600x2700:
-    # Recommendations:
-    #   use processor_shape = slenderX1 or slenderX2 in ice_in
-    #   one per processor with distribution_type='cartesian' or
-    #   squarish blocks with distribution_type='rake'
-    # If BLCKX (BLCKY) does not divide NXGLOB (NYGLOB) evenly, padding
-    # will be used on the right (top) of the grid.
-    __targets[722]["driver"] = "auscom"
-    __targets[722]["grid"] = "3600x2700"
-    __targets[722]["blocks"] = "90x90"
-
-    __targets[1682]["driver"] = "auscom"
-    __targets[1682]["grid"] = "3600x2700"
-    __targets[1682]["blocks"] = "200x180"
 
     def url_for_version(self, version):
         return "https://github.com/ACCESS-NRI/cice5/tarball/{0}".format(version)
@@ -97,13 +77,23 @@ class Cice5(MakefilePackage):
         config = {}
 
         istr = join_path((spec["oasis3-mct"].headers).cpp_flags, "psmile.MPI1")
-        ideps = ["parallelio", "oasis3-mct", "libaccessom2", "netcdf-fortran"]
+        ideps = ["oasis3-mct",  "netcdf-fortran"]
         incs = " ".join([istr] + [(spec[d].headers).cpp_flags for d in ideps])
 
-        lstr = self.make_linker_args(spec, "parallelio", "-lpiof -lpioc")
-        # NOTE: The order of the libraries matter during the linking step!
-        # NOTE: datetime-fortran is a dependency of libaccessom2.
-        ldeps = ["oasis3-mct", "libaccessom2", "netcdf-c", "netcdf-fortran", "datetime-fortran"]
+        ldeps = ["oasis3-mct", "netcdf-c", "netcdf-fortran"] 
+        lstr = str()
+
+        if self.spec.satisfies("^parallelio"):
+            lstr = self.make_linker_args(spec, "parallelio", "-lpiof -lpioc")
+            ideps.extend(["parallelio"])
+
+        if self.spec.satisfies("^libaccessom2"):
+            ideps.extend(["libaccessom2"])
+
+            # NOTE: The order of the libraries matter during the linking step!
+            # NOTE: datetime-fortran is a dependency of libaccessom2.
+            ldeps = ["oasis3-mct", "libaccessom2", "netcdf-c", "netcdf-fortran", "datetime-fortran"]
+
         libs = " ".join([lstr] + [self.get_linker_args(spec, d) for d in ldeps])
 
         # TODO: https://github.com/ACCESS-NRI/ACCESS-OM/issues/12
@@ -131,7 +121,7 @@ FIXEDFLAGS := -132
 FREEFLAGS  :=
 """
 
-        config["gcc"] = f"""
+        config["gcc"] = """
 # TODO: removed -std=f2008 due to compiler errors
 FFLAGS = -Wall -fdefault-real-8 -fdefault-double-8 -ffpe-trap=invalid,zero,overflow -fallow-argument-mismatch
 """
@@ -222,6 +212,45 @@ endif
             makeinc.write(fullconfig)
 
     def build(self, spec, prefix):
+
+        if self.spec.satisfies("@access-esm1.6:access-esm1.9"):
+            __targets = {12: {}} 
+            __targets[12]["driver"] = "access-esm1.6"
+            __targets[12]["grid"] = "360x300"
+            __targets[12]["blocks"] = "12x1"
+        # To-do
+        # if self.spec.satisfies("@access-cm2:access-cm2.9"):
+            # __targets = {12: {}} 
+            # __targets[12]["driver"] = "access-cm2"
+            # __targets[12]["grid"] = "360x300"
+            # __targets[12]["blocks"] = "12x1"
+        else:
+            # The integer represents environment variable NTASK
+            __targets = {24: {}, 480: {}, 722: {}, 1682: {}}
+            __targets[24]["driver"] = "auscom"
+            __targets[24]["grid"] = "360x300"
+            __targets[24]["blocks"] = "24x1"
+
+            __targets[480]["driver"] = "auscom"
+            __targets[480]["grid"] = "1440x1080"
+            __targets[480]["blocks"] = "48x40"
+
+            # Comment from bld/config.nci.auscom.3600x2700:
+            # Recommendations:
+            #   use processor_shape = slenderX1 or slenderX2 in ice_in
+            #   one per processor with distribution_type='cartesian' or
+            #   squarish blocks with distribution_type='rake'
+            # If BLCKX (BLCKY) does not divide NXGLOB (NYGLOB) evenly, padding
+            # will be used on the right (top) of the grid.
+            __targets[722]["driver"] = "auscom"
+            __targets[722]["grid"] = "3600x2700"
+            __targets[722]["blocks"] = "90x90"
+
+            __targets[1682]["driver"] = "auscom"
+            __targets[1682]["grid"] = "3600x2700"
+            __targets[1682]["blocks"] = "200x180" 
+        
+        self.__targets = __targets
 
         build = Executable(
                     join_path(self.stage.source_path, self._buildscript_path)
