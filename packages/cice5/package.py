@@ -16,7 +16,7 @@ class Cice5(MakefilePackage):
 
     maintainers = ["harshula"]
 
-    version("master", branch="master")
+    version("master", branch="master", preferred=True)
 
     variant("deterministic", default=False, description="Deterministic build.")
     variant("optimisation_report", default=False, description="Generate optimisation reports.")
@@ -25,45 +25,25 @@ class Cice5(MakefilePackage):
     depends_on("mpi")
     depends_on("netcdf-fortran@4.5.2:")
     depends_on("netcdf-c@4.7.4:")
-    # TODO: For initial verification we are going to use static pio.
-    #       Eventually we plan to move to shared pio
-    # ~shared requires: https://github.com/spack/spack/pull/34837
-    depends_on("parallelio~pnetcdf~timing~shared")
     depends_on("datetime-fortran")
     depends_on("oasis3-mct+deterministic", when="+deterministic")
     depends_on("oasis3-mct~deterministic", when="~deterministic")
-    depends_on("libaccessom2+deterministic", when="+deterministic")
-    depends_on("libaccessom2~deterministic", when="~deterministic")
 
-    phases = ["edit", "build", "install"]
+    # Copied with when() from MOM5 SPR
+    with when("@:access-esm0,access-esm2:"):
+        # TODO: For initial verification we are going to use static pio.
+        #       Eventually we plan to move to shared pio
+        # ~shared requires: https://github.com/spack/spack/pull/34837
+        depends_on("parallelio~pnetcdf~timing~shared")
+        depends_on("libaccessom2+deterministic", when="+deterministic")
+        depends_on("libaccessom2~deterministic", when="~deterministic")
 
-    _buildscript = "spack-build.sh"
-    _buildscript_path = join_path("bld", _buildscript)
+    phases = ["set_targets", "edit", "build", "install"]
 
-    # The integer represents environment variable NTASK
-    __targets = {24: {}, 480: {}, 722: {}, 1682: {}}
-    __targets[24]["driver"] = "auscom"
-    __targets[24]["grid"] = "360x300"
-    __targets[24]["blocks"] = "24x1"
+    __buildscript = "spack-build.sh"
+    __buildscript_path = join_path("bld", __buildscript)
 
-    __targets[480]["driver"] = "auscom"
-    __targets[480]["grid"] = "1440x1080"
-    __targets[480]["blocks"] = "48x40"
-
-    # Comment from bld/config.nci.auscom.3600x2700:
-    # Recommendations:
-    #   use processor_shape = slenderX1 or slenderX2 in ice_in
-    #   one per processor with distribution_type='cartesian' or
-    #   squarish blocks with distribution_type='rake'
-    # If BLCKX (BLCKY) does not divide NXGLOB (NYGLOB) evenly, padding
-    # will be used on the right (top) of the grid.
-    __targets[722]["driver"] = "auscom"
-    __targets[722]["grid"] = "3600x2700"
-    __targets[722]["blocks"] = "90x90"
-
-    __targets[1682]["driver"] = "auscom"
-    __targets[1682]["grid"] = "3600x2700"
-    __targets[1682]["blocks"] = "200x180"
+    __targets = {}
 
     def url_for_version(self, version):
         return "https://github.com/ACCESS-NRI/cice5/tarball/{0}".format(version)
@@ -86,13 +66,43 @@ class Cice5(MakefilePackage):
                     "-Wl,-rpath=" + path]
                    )
 
+    def add_target(self, ntask, driver, grid, blocks):
+        self.__targets[ntask]["driver"] = driver
+        self.__targets[ntask]["grid"] = grid
+        self.__targets[ntask]["blocks"] = blocks
+
+    def set_targets(self, spec, prefix):
+
+        if self.spec.satisfies("@access-esm1.6"):
+            # The integer represents environment variable NTASK
+            self.__targets = {12: {}}
+            self.add_target(12, "access-esm1.6", "360x300", "12x1")
+
+        else:
+            # The integer represents environment variable NTASK
+            self.__targets = {24: {}, 480: {}, 722: {}, 1682: {}}
+
+            # TODO: Each of these targets could map to a variant:
+            self.add_target(24, "auscom", "360x300", "24x1")
+            self.add_target(480, "auscom", "1440x1080", "48x40")
+
+            # Comment from bld/config.nci.auscom.3600x2700:
+            # Recommendations:
+            #   use processor_shape = slenderX1 or slenderX2 in ice_in
+            #   one per processor with distribution_type='cartesian' or
+            #   squarish blocks with distribution_type='rake'
+            # If BLCKX (BLCKY) does not divide NXGLOB (NYGLOB) evenly, padding
+            # will be used on the right (top) of the grid.
+            self.add_target(722, "auscom", "3600x2700", "90x90")
+            self.add_target(1682, "auscom", "3600x2700", "200x180")
+
     def edit(self, spec, prefix):
 
         srcdir = self.stage.source_path
-        buildscript_dest = join_path(srcdir, self._buildscript_path)
+        buildscript_dest = join_path(srcdir, self.__buildscript_path)
         makeinc_path = join_path(srcdir, "bld", "Macros.spack")
 
-        copy(join_path(self.package_dir, self._buildscript), buildscript_dest)
+        copy(join_path(self.package_dir, self.__buildscript), buildscript_dest)
 
         config = {}
 
@@ -224,7 +234,7 @@ endif
     def build(self, spec, prefix):
 
         build = Executable(
-                    join_path(self.stage.source_path, self._buildscript_path)
+                    join_path(self.stage.source_path, self.__buildscript_path)
                 )
 
         for k in self.__targets:
