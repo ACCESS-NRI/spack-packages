@@ -29,6 +29,7 @@ class Cice5(MakefilePackage):
     depends_on("oasis3-mct+deterministic", when="+deterministic")
     depends_on("oasis3-mct~deterministic", when="~deterministic")
 
+    # These are the default dependencies when building version "master".
     # Copied with when() from MOM5 SPR
     with when("@:access-esm0,access-esm2:"):
         # TODO: For initial verification we are going to use static pio.
@@ -38,11 +39,12 @@ class Cice5(MakefilePackage):
         depends_on("libaccessom2+deterministic", when="+deterministic")
         depends_on("libaccessom2~deterministic", when="~deterministic")
 
-    phases = ["set_targets", "edit", "build", "install"]
+    phases = ["set_deps_targets", "edit", "build", "install"]
 
     __buildscript = "spack-build.sh"
     __buildscript_path = join_path("bld", __buildscript)
 
+    __deps = {"includes": "", "ldflags": ""}
     __targets = {}
 
     def url_for_version(self, version):
@@ -71,13 +73,20 @@ class Cice5(MakefilePackage):
         self.__targets[ntask]["grid"] = grid
         self.__targets[ntask]["blocks"] = blocks
 
-    def set_targets(self, spec, prefix):
+    def set_deps_targets(self, spec, prefix):
 
         if self.spec.satisfies("@access-esm1.6"):
             # The integer represents environment variable NTASK
             self.__targets = {12: {}}
             self.add_target(12, "access-esm1.6", "360x300", "12x1")
 
+            ideps = ["oasis3-mct", "netcdf-fortran"]
+
+            # NOTE: The order of the libraries matter during the linking step!
+            ldeps = ["oasis3-mct", "netcdf-c", "netcdf-fortran"]
+            lstr = ""
+
+        # These are the default settings when building version "master".
         else:
             # The integer represents environment variable NTASK
             self.__targets = {24: {}, 480: {}, 722: {}, 1682: {}}
@@ -96,6 +105,19 @@ class Cice5(MakefilePackage):
             self.add_target(722, "auscom", "3600x2700", "90x90")
             self.add_target(1682, "auscom", "3600x2700", "200x180")
 
+            ideps = ["parallelio", "oasis3-mct", "libaccessom2", "netcdf-fortran"]
+
+            # NOTE: The order of the libraries matter during the linking step!
+            # NOTE: datetime-fortran is a dependency of libaccessom2.
+            ldeps = ["oasis3-mct", "libaccessom2", "netcdf-c", "netcdf-fortran", "datetime-fortran"]
+            lstr = self.make_linker_args(spec, "parallelio", "-lpiof -lpioc")
+
+        istr = join_path((spec["oasis3-mct"].headers).cpp_flags, "psmile.MPI1")
+        self.__deps["includes"] = " ".join([istr] + [(spec[d].headers).cpp_flags for d in ideps])
+
+        self.__deps["ldflags"] = " ".join([lstr] + [self.get_linker_args(spec, d) for d in ldeps])
+
+
     def edit(self, spec, prefix):
 
         srcdir = self.stage.source_path
@@ -105,16 +127,8 @@ class Cice5(MakefilePackage):
         copy(join_path(self.package_dir, self.__buildscript), buildscript_dest)
 
         config = {}
-
-        istr = join_path((spec["oasis3-mct"].headers).cpp_flags, "psmile.MPI1")
-        ideps = ["parallelio", "oasis3-mct", "libaccessom2", "netcdf-fortran"]
-        incs = " ".join([istr] + [(spec[d].headers).cpp_flags for d in ideps])
-
-        lstr = self.make_linker_args(spec, "parallelio", "-lpiof -lpioc")
-        # NOTE: The order of the libraries matter during the linking step!
-        # NOTE: datetime-fortran is a dependency of libaccessom2.
-        ldeps = ["oasis3-mct", "libaccessom2", "netcdf-c", "netcdf-fortran", "datetime-fortran"]
-        libs = " ".join([lstr] + [self.get_linker_args(spec, d) for d in ldeps])
+        incs = self.__deps["includes"]
+        libs = self.__deps["ldflags"]
 
         # TODO: https://github.com/ACCESS-NRI/ACCESS-OM/issues/12
         NCI_OPTIM_FLAGS = "-g3 -O2 -axCORE-AVX2 -debug all -check none -traceback -assume buffered_io"
