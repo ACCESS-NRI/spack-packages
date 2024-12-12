@@ -7,19 +7,19 @@
 from spack.package import *
 
 
-class Cice(CMakePackage):
-    """FIXME: Put a proper description of your package here."""
+class AccessCice(CMakePackage):
+    """CICE is a computationally efficient model for simulating the growth, melting, 
+    and movement of polar sea ice. CICE is maintained and developed by the CICE-Consortium."""
 
     homepage = "https://github.com/CICE-Consortium/CICE"
     url = "https://github.com/CICE-Consortium/CICE/archive/refs/tags/CICE6.6.0.tar.gz"
+    version("6.6.0", md5="1c678c0af67bf09f92c0a861344c3a92")
     git = "https://github.com/ACCESS-NRI/CICE"
     submodules = True
     maintainers = ["anton-seaice", "harshula"]
 
-    # FIXME: Add the SPDX identifier of the project's license below.
-    # See https://spdx.org/licenses/ for a list. Upon manually verifying
-    # the license, set checked_by to your Github username.
-    license("UNKNOWN", checked_by="github_user1")
+    # see license file in at https://github.com/CICE-Consortium/CICE
+    license("LicenseRef-CICE", checked_by="anton-seaice")
 
     variant(
         "driver", 
