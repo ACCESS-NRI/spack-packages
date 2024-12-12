@@ -20,7 +20,7 @@ class Um7(Package):
     git = "git@github.com:ACCESS-NRI/UM7.git"
 
     # https://code.metoffice.gov.uk/trac/um/wiki/PastReleases
-    version("7.3", branch="main", preferred=True)
+    version("access-esm1.6", branch="dev-access-esm1.6", preferred=True)
     version("access-esm1.5", branch="access-esm1.5")
 
     maintainers("penguian")
