@@ -14,9 +14,10 @@ class Cice5(MakefilePackage):
     homepage = "https://www.access-nri.org.au"
     git = "https://github.com/ACCESS-NRI/cice5.git"
 
-    maintainers = ["harshula"]
+    maintainers = ["harshula", "anton-seaice"]
 
     version("master", branch="master", preferred=True)
+    version("access-esm1.6", branch="access-esm1.6")
 
     variant("deterministic", default=False, description="Deterministic build.")
     variant("optimisation_report", default=False, description="Generate optimisation reports.")
@@ -77,8 +78,10 @@ class Cice5(MakefilePackage):
 
         if self.spec.satisfies("@access-esm1.6"):
             # The integer represents environment variable NTASK
-            self.__targets = {12: {}}
+            # esm1.5 used 12 (cice4), cm2 used 16 (cice5), build both for testing
+            self.__targets = {12: {}, 16: {}} 
             self.add_target(12, "access-esm1.6", "360x300", "12x1")
+            self.add_target(16, "access-esm1.6", "360x300", "8x2")
 
             ideps = ["oasis3-mct", "netcdf-fortran"]
 

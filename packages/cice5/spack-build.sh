@@ -35,28 +35,44 @@ if ($debug == 'unit_testing') then
 endif
 
 ### Specialty code
-setenv CAM_ICE  no        # set to yes for CAM runs (single column)
-setenv SHRDIR   csm_share # location of CCSM shared code
-setenv IO_TYPE  pio       # set to none if netcdf library is unavailable
-setenv DITTO    no        # reproducible diagnostics
-setenv THRD     no        # set to yes for OpenMP threading
+setenv CAM_ICE    no        # set to yes for CAM runs (single column)
+setenv SHRDIR     csm_share # location of CCSM shared code
+setenv DITTO      no        # reproducible diagnostics
+setenv THRD       no        # set to yes for OpenMP threading
 if ( $THRD == 'yes') setenv OMP_NUM_THREADS 2 # positive integer 
-setenv BARRIERS yes       # set -Dgather_scatter_barrier, prevents hangs on raijin
-setenv AusCOM   yes
-if ($driver == 'access') then
-    setenv ACCESS   yes
-else
-    setenv ACCESS   no
-endif
-setenv OASIS3_MCT yes	  # oasis3-mct version
-setenv NICELYR    4       # number of vertical layers in the ice
-setenv NSNWLYR    1       # number of vertical layers in the snow
-setenv NICECAT    5       # number of ice thickness categories
+setenv BARRIERS   yes       # set -Dgather_scatter_barrier, prevents hangs on raijin
+setenv NSNWLYR    1         # number of vertical layers in the snow
+setenv NICECAT    5         # number of ice thickness categories
+setenv OASIS3_MCT yes	      # oasis3-mct version
+setenv AusCOM     yes
 
-### The version of an executable can be found with the following
-### command: strings <executable> | grep 'CICE_VERSION='
-set version='202301'
-sed -e "s/{CICE_VERSION}/$version/g" $SRCDIR/drivers/$driver/version.F90.template > $SRCDIR/drivers/$driver/version_mod.F90
+if ($driver == 'access-esm1.6') then
+  setenv DRVDIR   'access'
+  setenv ACCESS   yes
+  setenv IO_TYPE  netcdf
+  setenv CHAN     MPI1	  # MPI1 or MPI2 (always MPI1!)
+  setenv NICELYR  1       # 1 for ktherm=0, zero-layer thermodynamics
+  setenv TRBGCS   0
+# else if ($driver == 'access-cm2') then
+#     setenv DRVDIR   'access'
+#     setenv ACCESS   yes
+#     setenv IO_TYPE  netcdf
+#     setenv CHAN     MPI1	  # MPI1 or MPI2 (always MPI1!)
+#     setenv NICELYR  4       #4 for standard multi-layer ice (ktherm=1)
+#     setenv TRBGCS   2 
+else #driver = auscom
+  setenv DRVDIR   $driver
+  setenv ACCESS   no
+  setenv IO_TYPE  pio
+  setenv NICELYR  4         # number of vertical layers in the ice
+  setenv TRBGCS   2         # number of skeletal layer bgc tracers 
+                            # TRBGCS=0 or 2<=TRBGCS<=9)
+  ### The version of an executable can be found with the following
+  ### command: strings <executable> | grep 'CICE_VERSION='
+  set version='202301'
+  sed -e "s/{CICE_VERSION}/$version/g" $SRCDIR/drivers/$driver/version.F90.template > $SRCDIR/drivers/$driver/version_mod.F90
+endif
+
 
 ### Where this model is compiled
 setenv OBJDIR $SRCDIR/build_${driver}_${grid}_${blocks}_${ntask}p
@@ -75,11 +91,7 @@ setenv BLCKY `expr $NYGLOB / $NYBLOCK` # y-dimension of blocks (  ghost cells  )
 @ m = $a / $b ; setenv MXBLCKS $m ; if ($MXBLCKS == 0) setenv MXBLCKS 1
 echo Autimatically generated: MXBLCKS = $MXBLCKS
 
-###########################################
-# ars599: 24032014
-#	copy from /short/p66/ars599/CICE.v5.0/accice.v504_csiro
-#	solo_ice_comp
-###########################################
+
 ### Tracers               # match ice_in tracer_nml to conserve memory
 setenv TRAGE   1          # set to 1 for ice age tracer
 setenv TRFY    1          # set to 1 for first-year ice area tracer
@@ -90,8 +102,6 @@ setenv NTRAERO 0          # number of aerosol tracers
                           # CESM uses 3 aerosol tracers
 setenv TRBRI   1          # set to 1 for brine height tracer
 setenv NBGCLYR 0          # number of zbgc layers
-setenv TRBGCS  2          # number of skeletal layer bgc tracers 
-                          # TRBGCS=0 or 2<=TRBGCS<=9)
 
 ### File unit numbers
 setenv NUMIN 11           # minimum file unit number
@@ -105,8 +115,6 @@ else
   setenv IODIR io_binary
 endif
 
-
-
 cp -f $CBLD/Makefile.std $CBLD/Makefile
 
 if ($NTASK == 1) then
@@ -115,8 +123,6 @@ else
    setenv COMMDIR mpi
 endif
 echo COMMDIR: $COMMDIR
-
-setenv DRVDIR $driver
 
 cd $OBJDIR
 
