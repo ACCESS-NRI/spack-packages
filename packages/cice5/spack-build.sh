@@ -53,13 +53,15 @@ if ($driver == 'access-esm1.6') then
   setenv CHAN     MPI1	  # MPI1 or MPI2 (always MPI1!)
   setenv NICELYR  1       # 1 for ktherm=0, zero-layer thermodynamics
   setenv TRBGCS   0
+  # This branch does not include version.F90.template and does not need version_mod.F90
 # else if ($driver == 'access-cm2') then
 #     setenv DRVDIR   'access'
 #     setenv ACCESS   yes
 #     setenv IO_TYPE  netcdf
 #     setenv CHAN     MPI1	  # MPI1 or MPI2 (always MPI1!)
 #     setenv NICELYR  4       #4 for standard multi-layer ice (ktherm=1)
-#     setenv TRBGCS   2 
+#     setenv TRBGCS   2
+      # This branch does not include version.F90.template and does not need version_mod.F90
 else #driver = auscom
   setenv DRVDIR   $driver
   setenv ACCESS   no
@@ -91,7 +93,11 @@ setenv BLCKY `expr $NYGLOB / $NYBLOCK` # y-dimension of blocks (  ghost cells  )
 @ m = $a / $b ; setenv MXBLCKS $m ; if ($MXBLCKS == 0) setenv MXBLCKS 1
 echo Autimatically generated: MXBLCKS = $MXBLCKS
 
-
+###########################################
+# ars599: 24032014
+#	copy from /short/p66/ars599/CICE.v5.0/accice.v504_csiro
+#	solo_ice_comp
+###########################################
 ### Tracers               # match ice_in tracer_nml to conserve memory
 setenv TRAGE   1          # set to 1 for ice age tracer
 setenv TRFY    1          # set to 1 for first-year ice area tracer
