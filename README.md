@@ -2,7 +2,7 @@
 
 This is a spack package repository maintained by ACCESS-NRI for packages that are not available by default in spack. Where possible packages developed will be contributed to the builtin spack supported packages. In some cases it is not possible to do this, for example software packages that we are not the copyright holders where it isn't appropriate to distribute a package that only supports ACCESS-NRI build use-cases.
 
-The namespace of the pacakge repository is access.nri
+The namespace of the package repository is access.nri
 
 ## How to utilise this package repository
 
