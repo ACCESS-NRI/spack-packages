@@ -29,6 +29,13 @@ class Cable(CMakePackage):
         default=True,
         description="Build MPI executable.",
     )
+
+    variant(
+        "library",
+        default=False,
+        description="Build CABLE science library object.",
+    )
+
     variant(
         "build_type",
         default="Release",
@@ -42,4 +49,5 @@ class Cable(CMakePackage):
     def cmake_args(self):
         args = []
         args.append(self.define_from_variant("CABLE_MPI", "mpi"))
+        args.append(self.define_from_variant("CABLE_LIBRARY", "library"))
         return args
