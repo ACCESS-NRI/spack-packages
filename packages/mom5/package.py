@@ -22,6 +22,7 @@ class Mom5(MakefilePackage):
     version("access-esm1.6", branch="master")
 
     variant("restart_repro", default=True, description="Reproducible restart build.")
+    variant("access-gtracers", default=False, description="Use ACCESS-NRI's fork of GFDL-generic-tracers.")
     # The following two variants are not applicable when version is "access-esm1.5":
     variant("deterministic", default=False, description="Deterministic build.")
     variant("optimisation_report", default=False, description="Generate optimisation reports.")
@@ -29,6 +30,9 @@ class Mom5(MakefilePackage):
         values=("ACCESS-CM", "ACCESS-ESM", "ACCESS-OM", "ACCESS-OM-BGC", "MOM_solo"),
         multi=False,
         description="Build MOM5 to support a particular use case.")
+
+    depends_on("access-fms", when="+access-gtracers")
+    depends_on("access-generic-tracers", when="+access-gtracers")
 
     with when("@:access-esm0,access-esm2:"):
         depends_on("netcdf-c@4.7.4:")
@@ -81,6 +85,10 @@ class Mom5(MakefilePackage):
             if "+deterministic" in self.spec:
                 FFLAGS_OPT = "-g0 -O0 -xCORE-AVX2 -debug none -check none"
                 CFLAGS_OPT = "-O0 -debug none -xCORE-AVX2"
+
+        if self.spec.satisfies("+access-gtracers"):
+            ideps.extend(["access-fms", "access-generic-tracers"])
+            ldeps.extend(["access-fms", "access-generic-tracers"])
 
         incs = " ".join([istr] + [(spec[d].headers).cpp_flags for d in ideps])
         libs = " ".join([(spec[d].libs).ld_flags for d in ldeps])
@@ -488,6 +496,10 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
             build = Executable("./MOM_compile.csh")
             if "+restart_repro" in self.spec:
                 build.add_default_env("REPRO", "true")
+
+            if self.spec.satisfies("+access-gtracers"):
+                build.add_default_env("SPACK_GTRACERS_EXTERNAL", "true")
+
             if not self.spec.satisfies("@access-esm1.5"):
                 # The MOM5 commit d7ba13a3f364ce130b6ad0ba813f01832cada7a2
                 # requires the --no_version switch to avoid git hashes being
