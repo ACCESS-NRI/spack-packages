@@ -24,7 +24,7 @@ class AccessCice(CMakePackage):
 
     variant(
         "driver", 
-        default="nuopc/cmeps" ,
+        default="nuopc/cmeps",
         values=(
             "standalone",
             "nuopc/cmeps"
@@ -32,7 +32,7 @@ class AccessCice(CMakePackage):
     )
 
     variant("io_type", 
-        default="NetCDF" ,
+        default="NetCDF",
         values=("NetCDF", "PIO", "Binary"),
         description="CICE IO Method"
     )
