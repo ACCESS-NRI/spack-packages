@@ -24,7 +24,7 @@ class Access3Exe(CMakePackage):
     #     values=("Debug", "Release"),
     # )
 
-    #To-do: confirm if we want a MOM6 only for regional modelling
+    # To-DO: confirm if we want a MOM6 only for regional modelling
     variant(
         "configurations",
         default="MOM6-CICE6, CICE6-WW3, MOM6-CICE6-WW3",
@@ -45,7 +45,7 @@ class Access3Exe(CMakePackage):
     
     depends_on("cmake@3.18:", type="build")
     depends_on("mpi")
-    depends_on("access-cice driver=nuopc/cmeps +cesmcoupled")
+    depends_on("access-cice +cesmcoupled")
     # depends_on("access-mom6 driver=nuopc/cmeps +cesmcoupled")
     # depends_on("access-ww3 driver=nuopc/cmeps +cesmcoupled")
     
