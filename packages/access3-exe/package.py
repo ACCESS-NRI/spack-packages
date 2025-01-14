@@ -1,59 +1,30 @@
 # Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install access3-exe
-#
-# You can edit this file again by typing:
-#
-#     spack edit access3-exe
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
+# SPDX-License-Identifier: Apache-2.0 
 
 from spack.package import *
 
 
 class Access3Exe(CMakePackage):
-    """FIXME: Put a proper description of your package here."""
+    """Executable build for ACCESS version 3 climate models. The exectuable is defined in Community Mediator for Earth Prediction Systems (CMEPS). Currently implemented for ACCESS-OM3, and in the future may support ACCESS-CM3 and ACCESS-ESM3. This is a companion pacakge to Access3Share which builds the some libraries."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://www.example.com"
+    homepage = "https://github.com/ACCESS-NRI/access3-share"
     git = "https://github.com/ACCESS-NRI/access3-share"
     submodules = True
+    maintainers = ["anton-seaice", "harshula", "micaeljtoliveira"]
 
+    license("Apache-2.0", checked_by="anton-seaice")
 
-    # FIXME: Add a list of GitHub accounts to
-    # notify when the package is updated.
-    # maintainers("github_user1", "github_user2")
+    # TO-DO : implement in components?
+    # variant(
+    #     "build_type",
+    #     default="Release",
+    #     description="The build type to build",
+    #     values=("Debug", "Release"),
+    # )
 
-    # FIXME: Add the SPDX identifier of the project's license below.
-    # See https://spdx.org/licenses/ for a list. Upon manually verifying
-    # the license, set checked_by to your Github username.
-    license("UNKNOWN", checked_by="github_user1")
-
-    # version("3-share", sha256="fe86962fde9479ebb5f34528a81f650d69661d398d27a35d950e41d20a577bda")
-
-    # FIXME: Add dependencies if required.
-    # depends_on("foo")
-
-    version("main", branch="main", submodules=True)
-
-    variant(
-        "build_type",
-        default="Release",
-        description="The build type to build",
-        values=("Debug", "Release"),
-    )
+    #To-do: confirm if we want a MOM6 only for regional modelling
     variant(
         "configurations",
         default="MOM6-CICE6, CICE6-WW3, MOM6-CICE6-WW3",
@@ -74,7 +45,9 @@ class Access3Exe(CMakePackage):
     
     depends_on("cmake@3.18:", type="build")
     depends_on("mpi")
-    depends_on("access-cice driver=nuopc/cmeps io_type=PIO +cesmcoupled")
+    depends_on("access-cice driver=nuopc/cmeps +cesmcoupled")
+    # depends_on("access-mom6 driver=nuopc/cmeps +cesmcoupled")
+    # depends_on("access-ww3 driver=nuopc/cmeps +cesmcoupled")
     
     flag_handler = CMakePackage.build_system_flags
 
@@ -82,7 +55,28 @@ class Access3Exe(CMakePackage):
 
         args = [
             self.define_from_variant("OPENMP", "openmp"),
-            self.define("CESMCOUPLED", True)
+            self.define(
+                "OM3_ENABLE_MOM6", "configurations=MOM6" in self.spec
+            ),
+            self.define(
+                "OM3_ENABLE_CICE6", "configurations=CICE6" in self.spec
+            ),
+            self.define(
+                "OM3_ENABLE_WW3", "configurations=WW3" in self.spec
+            ),
+            self.define(
+                "OM3_ENABLE_MOM6-WW3", "configurations=MOM6-WW3" in self.spec
+            ),
+            self.define(
+                "OM3_ENABLE_MOM6-CICE6", "configurations=MOM6-CICE6" in self.spec
+            ),
+            self.define(
+                "OM3_ENABLE_CICE6-WW3", "configurations=CICE6-WW3" in self.spec
+            ),
+            self.define(
+                "OM3_ENABLE_MOM6-CICE6-WW3",
+                "configurations=MOM6-CICE6-WW3" in self.spec
+            ),
         ]
 
         # we need this for cmake to find MPI_Fortran

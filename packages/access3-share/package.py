@@ -1,51 +1,21 @@
 # Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install access3-share
-#
-# You can edit this file again by typing:
-#
-#     spack edit access3-share
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
+# SPDX-License-Identifier: Apache-2.0
 
 from spack.package import *
 
 
 class Access3Share(CMakePackage):
-    """FIXME: Put a proper description of your package here."""
+    """Shared coupler/mediator libraries used by the ACCESS version 3 climate models. This package includes the Community Mediator for Earth Prediction Systems (CMEPS) and Community Data models for Earth Prediction Systems (CDEPS) as used in ACCESS-OM3 (and the future ACCESS-CM3 and ACCESS-ESM3 etc)."""
 
-    homepage = "https://www.example.com"
+    homepage = "https://github.com/ACCESS-NRI/access3-share"
     git = "https://github.com/ACCESS-NRI/access3-share"
     submodules = True
     maintainers = ["anton-seaice", "harshula", "micaeljtoliveira"]
 
-    # FIXME: Add a list of GitHub accounts to
-    # notify when the package is updated.
-    # maintainers("github_user1", "github_user2")
+    license("Apache-2.0", checked_by="anton-seaice")
 
-    # FIXME: Add the SPDX identifier of the project's license below.
-    # See https://spdx.org/licenses/ for a list. Upon manually verifying
-    # the license, set checked_by to your Github username.
-    license("UNKNOWN", checked_by="github_user1")
-
-
-    variant(
-        "install_libraries",
-        default=False,
-        description="Install component libraries"
-    )
     variant("openmp", default=False, description="Enable OpenMP")
 
     depends_on("cmake@3.18:", type="build")
@@ -63,8 +33,8 @@ class Access3Share(CMakePackage):
     def cmake_args(self):
 
         args = [
-            self.define_from_variant("OM3_LIB_INSTALL", "install_libraries"),
-            self.define_from_variant("OM3_OPENMP", "openmp"),
+            self.define("ACCESS3_LIB_INSTALL"),
+            self.define_from_variant("OPENMP", "openmp"),
         ]
 
         # we need this for cmake to find MPI_Fortran

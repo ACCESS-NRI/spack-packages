@@ -9,7 +9,8 @@ from spack.package import *
 
 class AccessCice(CMakePackage):
     """CICE is a computationally efficient model for simulating the growth, melting, 
-    and movement of polar sea ice. CICE is maintained and developed by the CICE-Consortium."""
+    and movement of polar sea ice. CICE is maintained and developed by the CICE-Consortium. 
+    This package builds using the Access3Share common libraries for ACCESS 3 models."""
 
     homepage = "https://github.com/CICE-Consortium/CICE"
     url = "https://github.com/CICE-Consortium/CICE/archive/refs/tags/CICE6.6.0.tar.gz"
@@ -23,7 +24,7 @@ class AccessCice(CMakePackage):
 
     variant(
         "driver", 
-        default = "standalone" ,
+        default = "nuopc/cmeps" ,
         values = (
             "standalone",
             "nuopc/cmeps"
@@ -36,7 +37,7 @@ class AccessCice(CMakePackage):
         description = "CICE IO Method"
     )
 
-    variant("openmp", default=False, description="Enable OpenMP")
+    # variant("openmp", default=False, description="Enable OpenMP")
     variant("cesmcoupled", default=False, description="Set CESMCOUPLED CPP Flag")
 
     depends_on("cmake@3.18:", type="build")
@@ -46,15 +47,15 @@ class AccessCice(CMakePackage):
     depends_on("parallelio@2.5.10: build_type==RelWithDebInfo", when="io_type=PIO")
     depends_on("parallelio fflags='-qno-opt-dynamic-align -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model source' cflags='-qno-opt-dynamic-align -fp-model precise -std=gnu99'", when="%intel io_type=PIO")
 
-    depends_on("access3-share+install_libraries", when="driver=nuopc/cmeps")
-    depends_on("access3-share+openmp+install_libraries", when="+openmp driver=nuopc/cmeps")
+    depends_on("access3-share", when="driver=nuopc/cmeps")
+    # depends_on("access3-share+openmp", when="+openmp driver=nuopc/cmeps")
 
     root_cmakelists_dir = "cmake"
     
     def cmake_args(self):
         args = [
             self.define_from_variant("CICE_IO", "io_type"),
-            self.define_from_variant("OPENMP", "openmp"),
+            # self.define_from_variant("OPENMP", "openmp"),
             self.define_from_variant("CESMCOUPLED", "cesmcoupled")
         ]
 
