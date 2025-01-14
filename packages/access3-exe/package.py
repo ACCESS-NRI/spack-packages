@@ -27,7 +27,8 @@ class Access3Exe(CMakePackage):
     # To-DO: confirm if we want a MOM6 only for regional modelling
     variant(
         "configurations",
-        default="MOM6-CICE6, CICE6-WW3, MOM6-CICE6-WW3",
+        # default="MOM6-CICE6, CICE6-WW3, MOM6-CICE6-WW3", if we set these defaults there is no way to unset them in the deployment
+        default = "CICE6" ,
         values=(
             "MOM6",
             "CICE6",
