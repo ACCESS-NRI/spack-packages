@@ -1,7 +1,7 @@
 # Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+# SPDX-License-Identifier: Apache-2.0
 # ----------------------------------------------------------------------------
 
 from spack.package import *
@@ -24,17 +24,17 @@ class AccessCice(CMakePackage):
 
     variant(
         "driver", 
-        default = "nuopc/cmeps" ,
-        values = (
+        default="nuopc/cmeps" ,
+        values=(
             "standalone",
             "nuopc/cmeps"
         )
     )
 
     variant("io_type", 
-        default = "NetCDF" ,
-        values = ("NetCDF", "PIO", "Binary"),
-        description = "CICE IO Method"
+        default="NetCDF" ,
+        values=("NetCDF", "PIO", "Binary"),
+        description="CICE IO Method"
     )
 
     # variant("openmp", default=False, description="Enable OpenMP")
