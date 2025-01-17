@@ -22,14 +22,9 @@ class AccessCice(CMakePackage):
     # see license file in at https://github.com/CICE-Consortium/CICE
     license("LicenseRef-CICE", checked_by="anton-seaice")
 
-    variant(
-        "driver", 
-        default="nuopc/cmeps",
-        values=(
-            "standalone",
-            "nuopc/cmeps"
-        )
-    )
+    # variant("openmp", default=False, description="Enable OpenMP")
+    variant("cesmcoupled", default=False, description="Set CESMCOUPLED CPP Flag")
+    variant("access3", default=True, description="Install CICE as library for Access3 models") 
 
     variant("io_type", 
         default="NetCDF",
@@ -37,18 +32,21 @@ class AccessCice(CMakePackage):
         description="CICE IO Method"
     )
 
-    # variant("openmp", default=False, description="Enable OpenMP")
-    variant("cesmcoupled", default=False, description="Set CESMCOUPLED CPP Flag")
+    variant(
+        "build_type",
+        default="Release",
+        description="The build type to build",
+        values=("Debug", "Release"),
+    )
+
+    depends_on("access3-share", when="+access3") 
+    # depends_on("access3-share+openmp", when="+openmp+access3")
 
     depends_on("cmake@3.18:", type="build")
     depends_on("mpi")
-
     depends_on("netcdf-fortran@4.6.0:", when="io_type=NetCDF")
     depends_on("parallelio@2.5.10: build_type==RelWithDebInfo", when="io_type=PIO")
     depends_on("parallelio fflags='-qno-opt-dynamic-align -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model source' cflags='-qno-opt-dynamic-align -fp-model precise -std=gnu99'", when="%intel io_type=PIO")
-
-    depends_on("access3-share", when="driver=nuopc/cmeps")
-    # depends_on("access3-share+openmp", when="+openmp driver=nuopc/cmeps")
 
     root_cmakelists_dir = "cmake"
     
@@ -56,11 +54,9 @@ class AccessCice(CMakePackage):
         args = [
             self.define_from_variant("CICE_IO", "io_type"),
             # self.define_from_variant("OPENMP", "openmp"),
-            self.define_from_variant("CESMCOUPLED", "cesmcoupled")
+            self.define_from_variant("CESMCOUPLED", "cesmcoupled"),
+            self.define_from_variant("ACCESS3_CICE", "access3")
         ]
-
-        if self.spec.satisfies("driver=nuopc/cmeps"):
-            args.append(self.define("ACCESS3_LIB_INSTALL", True))
 
         # we need this for cmake to find MPI_Fortran
         args.append(self.define("CMAKE_C_COMPILER", self.spec["mpi"].mpicc))

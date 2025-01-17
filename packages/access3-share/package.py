@@ -19,7 +19,14 @@ class Access3Share(CMakePackage):
 
     license("Apache-2.0", checked_by="anton-seaice")
 
-    variant("openmp", default=False, description="Enable OpenMP")
+    # variant("openmp", default=False, description="Enable OpenMP")
+
+    variant(
+        "build_type",
+        default="Release",
+        description="The build type to build",
+        values=("Debug", "Release"),
+    )
 
     depends_on("cmake@3.18:", type="build")
     depends_on("mpi")
@@ -37,7 +44,7 @@ class Access3Share(CMakePackage):
 
         args = [
             self.define("ACCESS3_LIB_INSTALL", True),
-            self.define_from_variant("OPENMP", "openmp"),
+            # self.define_from_variant("OPENMP", "openmp"),
         ]
 
         # we need this for cmake to find MPI_Fortran

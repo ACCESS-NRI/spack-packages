@@ -7,7 +7,9 @@ from spack.package import *
 
 
 class Access3Exe(CMakePackage):
-    """Executable build for ACCESS version 3 climate models. The exectuable is defined in Community Mediator for Earth Prediction Systems (CMEPS). Currently implemented for ACCESS-OM3, and in the future may support ACCESS-CM3 and ACCESS-ESM3. This is a companion pacakge to Access3Share which builds the some libraries."""
+    """Executable build for ACCESS version 3 climate models. The exectuable is defined in Community Mediator for Earth Prediction 
+    Systems (CMEPS). Currently implemented for ACCESS-OM3, and in the future may support ACCESS-CM3 and ACCESS-ESM3. This is a 
+    companion pacakge to Access3Share which builds the shared libraries."""
 
     homepage = "https://github.com/ACCESS-NRI/access3-share"
     git = "https://github.com/ACCESS-NRI/access3-share"
@@ -16,13 +18,12 @@ class Access3Exe(CMakePackage):
 
     license("Apache-2.0", checked_by="anton-seaice")
 
-    # TO-DO : implement in components?
-    # variant(
-    #     "build_type",
-    #     default="Release",
-    #     description="The build type to build",
-    #     values=("Debug", "Release"),
-    # )
+    variant(
+        "build_type",
+        default="Release",
+        description="The build type to build",
+        values=("Debug", "Release"),
+    )
 
     # To-DO: confirm if we want a MOM6 only for regional modelling
     variant(
@@ -46,7 +47,7 @@ class Access3Exe(CMakePackage):
     
     depends_on("cmake@3.18:", type="build")
     depends_on("mpi")
-    depends_on("access-cice +cesmcoupled")
+    depends_on("access-cice+cesmcoupled+access3")
     # depends_on("access-mom6 driver=nuopc/cmeps +cesmcoupled")
     # depends_on("access-ww3 driver=nuopc/cmeps +cesmcoupled")
     
@@ -57,26 +58,25 @@ class Access3Exe(CMakePackage):
         args = [
             self.define_from_variant("OPENMP", "openmp"),
             self.define(
-                "OM3_ENABLE_MOM6", "configurations=MOM6" in self.spec
+                "ENABLE_MOM6", "configurations=MOM6" in self.spec
             ),
             self.define(
-                "OM3_ENABLE_CICE6", "configurations=CICE6" in self.spec
+                "ENABLE_CICE6", "configurations=CICE6" in self.spec
             ),
             self.define(
-                "OM3_ENABLE_WW3", "configurations=WW3" in self.spec
+                "ENABLE_WW3", "configurations=WW3" in self.spec
             ),
             self.define(
-                "OM3_ENABLE_MOM6-WW3", "configurations=MOM6-WW3" in self.spec
+                "ENABLE_MOM6-WW3", "configurations=MOM6-WW3" in self.spec
             ),
             self.define(
-                "OM3_ENABLE_MOM6-CICE6", "configurations=MOM6-CICE6" in self.spec
+                "ENABLE_MOM6-CICE6", "configurations=MOM6-CICE6" in self.spec
             ),
             self.define(
-                "OM3_ENABLE_CICE6-WW3", "configurations=CICE6-WW3" in self.spec
+                "ENABLE_CICE6-WW3", "configurations=CICE6-WW3" in self.spec
             ),
             self.define(
-                "OM3_ENABLE_MOM6-CICE6-WW3",
-                "configurations=MOM6-CICE6-WW3" in self.spec
+                "ENABLE_MOM6-CICE6-WW3", "configurations=MOM6-CICE6-WW3" in self.spec
             ),
         ]
 
