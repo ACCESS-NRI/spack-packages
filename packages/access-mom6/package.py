@@ -14,7 +14,7 @@ class AccessMom6(CMakePackage):
     This package builds using the Access3Share common libraries for ACCESS 3 models."""
 
     homepage = "https://github.com/ACCESS-NRI"
-    git="https://github.com/ACCESS-NRI/MOM6.git"
+    git = "https://github.com/ACCESS-NRI/MOM6.git"
     url = "https://github.com/ACCESS-NRI/MOM6.git"
 
     version("cmake_build",
@@ -30,11 +30,11 @@ class AccessMom6(CMakePackage):
 
     root_cmakelists_dir = "cmake"
 
-    variant("openmp"       , default=False, description="Enable OpenMP"                          )
-    variant("mom6_exec"    , default=False, description="Building MOM6 executable standalone"    )
-    variant("mom_symmetric", default=True , description="Use symmetric memory in MOM6"           )
-    variant("access3"      , default=True , description="Building MOM6 library with Access3share")
-    variant("cesmcoupled"  , default=False, description="Enable parameters with cesm coupled"    )
+    variant("openmp", default=False, description="Enable OpenMP")
+    variant("mom6_exec", default=False, description="Building MOM6 executable standalone")
+    variant("mom_symmetric", default=True, description="Use symmetric memory in MOM6")
+    variant("access3", default=True, description="Building MOM6 library with Access3share")
+    variant("cesmcoupled", default=False, description="Enable parameters with cesm coupled")
 
     depends_on("access3-share", when="+access3")
     depends_on("cmake@3.18:", type="build")
@@ -48,11 +48,11 @@ class AccessMom6(CMakePackage):
 
     def cmake_args(self):
         args = [
-            self.define_from_variant("OPENMP"              , "openmp"),
-            self.define_from_variant("ENABLE_MOM6"         , "mom6_exec"),
+            self.define_from_variant("OPENMP", "openmp"),
+            self.define_from_variant("ENABLE_MOM6", "mom6_exec"),
             self.define_from_variant("ENABLE_MOM_SYMMETRIC", "mom_symmetric"),
-            self.define_from_variant("ENABLE_ACCESS_MOM6"  , "access3"),
-            self.define_from_variant("ENABLE_CESMCOUPLED"  , "cesmcoupled"),
+            self.define_from_variant("ENABLE_ACCESS_MOM6", "access3"),
+            self.define_from_variant("ENABLE_CESMCOUPLED", "cesmcoupled"),
         ]
 
         args.append(self.define("CMAKE_C_COMPILER", self.spec["mpi"].mpicc))
