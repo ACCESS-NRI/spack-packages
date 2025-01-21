@@ -48,7 +48,7 @@ class Access3Exe(CMakePackage):
     depends_on("cmake@3.18:", type="build")
     depends_on("mpi")
     depends_on("access-cice+cesmcoupled+access3")
-    # depends_on("access-mom6 driver=nuopc/cmeps +cesmcoupled")
+    depends_on("access-mom6+cesmcoupled+access3")
     # depends_on("access-ww3 driver=nuopc/cmeps +cesmcoupled")
     
     flag_handler = CMakePackage.build_system_flags
