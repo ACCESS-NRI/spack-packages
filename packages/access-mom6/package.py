@@ -41,6 +41,7 @@ class AccessMom6(CMakePackage):
     depends_on("cmake@3.18:", type="build")
     depends_on("mpi")
     depends_on("netcdf-fortran@4.6.0:")
+    depends_on("fms@2021.03: build_type==RelWithDebInfo precision=64 +large_file ~gfs_phys ~quad_precision")
     depends_on("fms +openmp", when="+openmp")
     depends_on("fms ~openmp", when="~openmp")
 
