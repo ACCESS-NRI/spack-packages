@@ -15,6 +15,7 @@ class AccessMom6(CMakePackage):
 
     homepage = "https://github.com/ACCESS-NRI"
     git = "https://github.com/ACCESS-NRI/MOM6.git"
+    submodules = True
     url = "https://github.com/ACCESS-NRI/MOM6.git"
 
     version("cmake_build",
