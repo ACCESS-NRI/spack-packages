@@ -48,7 +48,7 @@ class AccessCice(CMakePackage):
     depends_on("parallelio@2.5.10: build_type==RelWithDebInfo", when="io_type=PIO")
     depends_on("parallelio fflags='-qno-opt-dynamic-align -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model source' cflags='-qno-opt-dynamic-align -fp-model precise -std=gnu99'", when="%intel io_type=PIO")
 
-    root_cmakelists_dir = "configurations/scripts/cmake"
+    root_cmakelists_dir = "configuration/scripts/cmake"
     
     def cmake_args(self):
         args = [
