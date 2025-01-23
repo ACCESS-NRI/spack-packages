@@ -32,7 +32,6 @@ class AccessMom6(CMakePackage):
     root_cmakelists_dir = "cmake"
 
     variant("openmp", default=False, description="Enable OpenMP")
-    variant("mom6_exec", default=False, description="Building MOM6 executable standalone")
     variant("mom_symmetric", default=True, description="Use symmetric memory in MOM6")
     variant("access3", default=True, description="Building MOM6 library with Access3share")
     variant("cesmcoupled", default=False, description="Enable parameters with cesm coupled")
@@ -51,7 +50,6 @@ class AccessMom6(CMakePackage):
     def cmake_args(self):
         args = [
             self.define_from_variant("OPENMP", "openmp"),
-            self.define_from_variant("ENABLE_MOM6", "mom6_exec"),
             self.define_from_variant("ENABLE_MOM_SYMMETRIC", "mom_symmetric"),
             self.define_from_variant("ENABLE_ACCESS_MOM6", "access3"),
             self.define_from_variant("ENABLE_CESMCOUPLED", "cesmcoupled"),
