@@ -51,8 +51,8 @@ class AccessMom6(CMakePackage):
         args = [
             self.define_from_variant("OPENMP", "openmp"),
             self.define_from_variant("ENABLE_MOM_SYMMETRIC", "mom_symmetric"),
-            self.define_from_variant("ENABLE_ACCESS_MOM6", "access3"),
-            self.define_from_variant("ENABLE_CESMCOUPLED", "cesmcoupled"),
+            self.define_from_variant("ACCESS3_MOM6", "access3"),
+            self.define_from_variant("CESMCOUPLED", "cesmcoupled"),
         ]
 
         args.append(self.define("CMAKE_C_COMPILER", self.spec["mpi"].mpicc))
