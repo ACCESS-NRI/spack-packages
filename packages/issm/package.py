@@ -15,7 +15,9 @@ class Issm(AutotoolsPackage):
     git = "https://github.com/ISSMteam/ISSM.git"
 
     version("develop")
-    version("4.24", sha256="0487bd025f37be4a39dfd48b047de6a6423e310dfe5281dbd9a52aa35b26151a")
+    version("4.24", sha256="c71d870e63f0ce3ae938d6a669e80dc2cecef827084db31a4b2cfc3a26a44820")
+
+    variant("with_wrappers", default=False, description="Enable building with wrappers")
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
@@ -34,12 +36,13 @@ class Issm(AutotoolsPackage):
 
     def configure_args(self):
         args = [
-          "--with-wrappers=no",
-          "--enable-debugging",
-          "--enable-development",
-          "--enable-shared",
-          "--without-kriging",
+            "--enable-debugging",
+            "--enable-development",
+            "--enable-shared",
+            "--without-kriging",
         ]
+
+        args.append(self.with_or_without("wrappers"))
         args.append("--with-petsc-dir={0}".format(self.spec["petsc"].prefix))
         args.append("--with-metis-dir={0}".format(self.spec["metis"].prefix))
         args.append("--with-mumps-dir={0}".format(self.spec["mumps"].prefix))
