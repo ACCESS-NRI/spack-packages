@@ -14,9 +14,9 @@ class Cice5(MakefilePackage):
     homepage = "https://www.access-nri.org.au"
     git = "https://github.com/ACCESS-NRI/cice5.git"
 
-    maintainers = ["harshula", "anton-seaice"]
+    maintainers("harshula", "anton-seaice")
 
-    version("master", branch="master", preferred=True)
+    version("access-om2", branch="master", preferred=True)
     version("access-esm1.6", branch="access-esm1.6")
 
     variant("deterministic", default=False, description="Deterministic build.")

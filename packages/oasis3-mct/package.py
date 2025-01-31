@@ -17,7 +17,7 @@ class Oasis3Mct(MakefilePackage):
 
     maintainers("harshula", "penguian")
 
-    version("master", branch="master", preferred=True)
+    version("access-om2", branch="master", preferred=True)
     version("access-esm1.5", branch="access-esm1.5")
 
     variant("deterministic", default=False, description="Deterministic build.")
