@@ -20,6 +20,8 @@ class FreNctools(AutotoolsPackage):
 
     maintainers("dougiesquire")
 
+    license("LGPL-3.0-only")
+
     # A number of versions are excluded from this spack package due to bugs:
     # - 2024.05.01: see https://github.com/NOAA-GFDL/FRE-NCtools/issues/344
     # - 2024.03: implicit funcion delcaration in mppncscatter.c; fixed in edcdf78
