@@ -47,37 +47,22 @@ class Access3Exe(CMakePackage):
     
     depends_on("cmake@3.18:", type="build")
     depends_on("mpi")
-    depends_on("access-cice+cesmcoupled+access3")
-    depends_on("access-mom6+cesmcoupled+access3")
-    # depends_on("access-ww3 driver=nuopc/cmeps +cesmcoupled")
+
+    for configurations in ["CICE6", "MOM6-CICE6", "MOM6-CICE6-WW3", "CICE6-WW3"]:
+        depends_on("access-cice+cesmcoupled+access3")
+    for configurations in ["MOM6", "MOM6-CICE6", "MOM6-CICE6-WW3", "MOM6-WW3"]:
+        depends_on("access-mom6+cesmcoupled+access3")
+    for configurations in ["WW3", "CICE6-WW3", "MOM6-CICE6-WW3", "MOM6-WW3"]:
+        depends_on("access-ww3 driver=nuopc/cmeps +cesmcoupled")
     
     flag_handler = CMakePackage.build_system_flags
 
     def cmake_args(self):
 
+        #make configurations a cmake argument
+        buildConf = ";".join(self.spec.variants["configurations"].value)
         args = [
-            self.define_from_variant("OPENMP", "openmp"),
-            self.define(
-                "ENABLE_MOM6", "configurations=MOM6" in self.spec
-            ),
-            self.define(
-                "ENABLE_CICE6", "configurations=CICE6" in self.spec
-            ),
-            self.define(
-                "ENABLE_WW3", "configurations=WW3" in self.spec
-            ),
-            self.define(
-                "ENABLE_MOM6-WW3", "configurations=MOM6-WW3" in self.spec
-            ),
-            self.define(
-                "ENABLE_MOM6-CICE6", "configurations=MOM6-CICE6" in self.spec
-            ),
-            self.define(
-                "ENABLE_CICE6-WW3", "configurations=CICE6-WW3" in self.spec
-            ),
-            self.define(
-                "ENABLE_MOM6-CICE6-WW3", "configurations=MOM6-CICE6-WW3" in self.spec
-            ),
+            self.define("BuildConfigurations",buildConf)
         ]
 
         # we need this for cmake to find MPI_Fortran
