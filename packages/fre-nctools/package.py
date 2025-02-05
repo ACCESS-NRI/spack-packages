@@ -16,7 +16,7 @@ class FreNctools(AutotoolsPackage):
     supporting the work of the Geophysical Fluid Dynamics Laboratory (GFDL)."""
 
     homepage = "https://github.com/NOAA-GFDL/FRE-NCtools"
-    url = "https://github.com/NOAA-GFDL/FRE-NCtools/archive/2022.02.tar.gz"
+    git = "https://github.com/NOAA-GFDL/FRE-NCtools.git"
 
     maintainers("dougiesquire")
 
@@ -30,6 +30,7 @@ class FreNctools(AutotoolsPackage):
     # - 2023.01.01: implicit function declaration in make_topog.c; fixed in 6b4d2fb
     # - 2023.01: implicit function declaration in make_topog.c; fixed in 6b4d2fb
 
+    version("main", branch="main")
     version("2024.05", sha256="61cec52aa03e066b64bed794ef9dc3eb28654c3d1b872aef1b69ce99ef7a9c65")
     version("2024.04", sha256="e27346d7ade1b67af163bb7f327a47a288d5e475fe797323bd7cee3a46385de0")
     version("2024.02", sha256="90d52abc1b467d635dd648185b0046efcc6d58a232143b0ccaf9a0bff23d2f5d")
@@ -44,6 +45,9 @@ class FreNctools(AutotoolsPackage):
     depends_on("netcdf-fortran")
     depends_on("mpi", when="+mpi")
     depends_on("nco", when="@2024.05:")
+
+    def url_for_version(self, version):
+        return "https://github.com/NOAA-GFDL/FRE-NCtools/tarball/v{0}".format(version)
 
     def configure_args(self):
         spec = self.spec
