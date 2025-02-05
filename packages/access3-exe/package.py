@@ -52,8 +52,8 @@ class Access3Exe(CMakePackage):
         depends_on("access-cice+cesmcoupled+access3")
     for configurations in ["MOM6", "MOM6-CICE6", "MOM6-CICE6-WW3", "MOM6-WW3"]:
         depends_on("access-mom6+cesmcoupled+access3")
-    for configurations in ["WW3", "CICE6-WW3", "MOM6-CICE6-WW3", "MOM6-WW3"]:
-        depends_on("access-ww3 driver=nuopc/cmeps +cesmcoupled")
+    # for configurations in ["WW3", "CICE6-WW3", "MOM6-CICE6-WW3", "MOM6-WW3"]:
+        # depends_on("access-ww3 driver=nuopc/cmeps +cesmcoupled")
     
     flag_handler = CMakePackage.build_system_flags
 
