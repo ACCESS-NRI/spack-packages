@@ -47,7 +47,7 @@ class FreNctools(AutotoolsPackage):
     depends_on("nco", when="@2024.05:")
 
     def url_for_version(self, version):
-        return "https://github.com/NOAA-GFDL/FRE-NCtools/tarball/v{0}".format(version)
+        return "https://github.com/NOAA-GFDL/FRE-NCtools/tarball/{0}".format(version)
 
     def configure_args(self):
         spec = self.spec
