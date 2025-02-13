@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # Copyright 2023 Angus Gibson
+# Modified by Justin Kin Jun Hew, 2025
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -12,12 +13,11 @@ class Issm(AutotoolsPackage):
     """Ice-sheet and Sea-Level System Model"""
 
     homepage = "https://issm.jpl.nasa.gov/"
-    git = "https://github.com/ISSMteam/ISSM.git"
+    git = "https://github.com/ACCESS-NRI/ISSM.git"
 
-    version("develop")
     version("4.24", sha256="c71d870e63f0ce3ae938d6a669e80dc2cecef827084db31a4b2cfc3a26a44820")
 
-    variant("with_wrappers", default=False, description="Enable building with wrappers")
+    variant("wrappers", default=False, description="Enable building with wrappers")
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
@@ -29,7 +29,7 @@ class Issm(AutotoolsPackage):
     depends_on("m1qn3")
 
     def url_for_version(self, version):
-        return "https://github.com/ISSMteam/ISSM/tarball/v{0}".format(version)
+        return "https://github.com/ACCESS-NRI/ISSM/tarball/v{0}".format(version)
 
     def autoreconf(self, spec, prefix):
         autoreconf("--install", "--verbose", "--force")
@@ -42,7 +42,11 @@ class Issm(AutotoolsPackage):
             "--without-kriging",
         ]
 
-        args.append(self.with_or_without("wrappers"))
+        if "+wrappers" in self.spec:
+            args.append("--with-wrappers=yes")
+        else:
+            args.append("--with-wrappers=no")
+
         args.append("--with-petsc-dir={0}".format(self.spec["petsc"].prefix))
         args.append("--with-metis-dir={0}".format(self.spec["metis"].prefix))
         args.append("--with-mumps-dir={0}".format(self.spec["mumps"].prefix))
