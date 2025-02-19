@@ -52,7 +52,7 @@ class Cice5(MakefilePackage):
         return "https://github.com/ACCESS-NRI/cice5/tarball/{0}".format(version)
 
     # The reason for the explicit -rpath is:
-    # https://github.com/ACCESS-NRI/spack_packages/issues/14#issuecomment-1653651447
+    # https://github.com/ACCESS-NRI/spack-packages/issues/14#issuecomment-1653651447
     def get_linker_args(self, spec, name):
         return " ".join(
                     [(spec[name].libs).ld_flags,
@@ -60,7 +60,7 @@ class Cice5(MakefilePackage):
                    )
 
     # The reason for the explicit -rpath is:
-    # https://github.com/ACCESS-NRI/spack_packages/issues/14#issuecomment-1653651447
+    # https://github.com/ACCESS-NRI/spack-packages/issues/14#issuecomment-1653651447
     def make_linker_args(self, spec, name, namespecs):
         path = join_path(spec[name].prefix, "lib")
         return " ".join(

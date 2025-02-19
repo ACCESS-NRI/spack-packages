@@ -75,7 +75,7 @@ class Um7(Package):
     def _get_linker_args(self, spec, name):
         """
         The reason for the explicit -rpath is:
-        https://github.com/ACCESS-NRI/spack_packages/issues/14#issuecomment-1653651447
+        https://github.com/ACCESS-NRI/spack-packages/issues/14#issuecomment-1653651447
         """
         return " ".join(
                     [(spec[name].libs).ld_flags,
