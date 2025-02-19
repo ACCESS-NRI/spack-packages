@@ -26,7 +26,7 @@ git clone git@github.com:ACCESS-NRI/spack-packages.git $PACKAGE_PATH/spack-packa
 ```
 and then add the location of the repository to your spack instance
 ```
-git repo add $PACKAGE_PATH/spack-packages
+spack repo add $PACKAGE_PATH/spack-packages
 ```
 and then confirm it is has been added correctly:
 ```
