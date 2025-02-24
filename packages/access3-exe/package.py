@@ -59,7 +59,7 @@ class Access3Exe(CMakePackage):
 
     def cmake_args(self):
 
-        #make configurations a cmake argument
+        # make configurations a cmake argument
         buildConf = ";".join(self.spec.variants["configurations"].value)
         args = [
             self.define("BuildConfigurations",buildConf)
