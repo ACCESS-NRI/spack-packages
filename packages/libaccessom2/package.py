@@ -13,9 +13,9 @@ class Libaccessom2(CMakePackage):
     homepage = "https://www.access-nri.org.au"
     git = "https://github.com/ACCESS-NRI/libaccessom2.git"
 
-    maintainers = ["harshula"]
+    maintainers("harshula")
 
-    version("master", branch="master")
+    version("access-om2", branch="master", preferred=True)
 
     variant("deterministic", default=False, description="Deterministic build.")
     variant("optimisation_report", default=False, description="Generate optimisation reports.")

@@ -2,7 +2,7 @@
 
 This is a spack package repository maintained by ACCESS-NRI for packages that are not available by default in spack. Where possible packages developed will be contributed to the builtin spack supported packages. In some cases it is not possible to do this, for example software packages that we are not the copyright holders where it isn't appropriate to distribute a package that only supports ACCESS-NRI build use-cases.
 
-The namespace of the pacakge repository is access.nri
+The namespace of the package repository is access.nri
 
 ## How to utilise this package repository
 
@@ -22,17 +22,17 @@ $ spack list oasis3_mct
 
 To use the packages in this repository first clone the repo to a path of your choosing (represented here as `$PACKAGE_PATH`)
 ```
-git clone git@github.com:ACCESS-NRI/spack_packages.git $PACKAGE_PATH/spack_packages
+git clone git@github.com:ACCESS-NRI/spack-packages.git $PACKAGE_PATH/spack-packages
 ```
 and then add the location of the repository to your spack instance
 ```
-git repo add $PACKAGE_PATH/spack_packages
+spack repo add $PACKAGE_PATH/spack-packages
 ```
 and then confirm it is has been added correctly:
 ```
 $ spack repo list
 ==> 2 package repositories.
-access.nri    $PACKAGE_PATH/spack_packages
+access.nri    $PACKAGE_PATH/spack-packages
 builtin       $SPACK_ROOT/var/spack/repos/builtin
 ```
 Now the `oasis3-mct` package should be available to install

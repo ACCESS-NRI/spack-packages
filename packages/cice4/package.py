@@ -37,7 +37,7 @@ class Cice4(MakefilePackage):
     __targets[12]["blocks"] = "12x1"
 
     # The reason for the explicit -rpath is:
-    # https://github.com/ACCESS-NRI/spack_packages/issues/14#issuecomment-1653651447
+    # https://github.com/ACCESS-NRI/spack-packages/issues/14#issuecomment-1653651447
     def get_linker_args(self, spec, name):
         return " ".join(
                     [(spec[name].libs).ld_flags,
