@@ -59,8 +59,8 @@ class AccessCice(CMakePackage):
         ]
 
         # we need this for cmake to find MPI_Fortran
-        args.append(self.define("CMAKE_C_COMPILER", self.spec["mpi"].mpicc))
-        args.append(self.define("CMAKE_CXX_COMPILER", self.spec["mpi"].mpicxx))
-        args.append(self.define("CMAKE_Fortran_COMPILER", self.spec["mpi"].mpifc))
+        # args.append(self.define("CMAKE_C_COMPILER", self.spec["mpi"].mpicc))
+        # args.append(self.define("CMAKE_CXX_COMPILER", self.spec["mpi"].mpicxx))
+        # args.append(self.define("CMAKE_Fortran_COMPILER", self.spec["mpi"].mpifc))
         
         return args
