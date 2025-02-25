@@ -25,4 +25,4 @@ class AccessOm3(BundlePackage):
 
     version("latest")
 
-    depends_on("access-om3-nuopc")
+    depends_on("access3-exe")
