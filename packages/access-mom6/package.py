@@ -1,4 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2025 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -13,23 +13,13 @@ class AccessMom6(CMakePackage):
     enabling scientists to answer fundamental questions about the role of the ocean in the dynamics of the global climate.
     This package builds using the Access3Share common libraries for ACCESS 3 models."""
 
-    homepage = "https://github.com/ACCESS-NRI"
+    homepage = "https://github.com/ACCESS-NRI/MOM6"
     git = "https://github.com/ACCESS-NRI/MOM6.git"
     submodules = True
-    url = "https://github.com/ACCESS-NRI/MOM6.git"
-
-    version("cmake_build",
-            git="https://github.com/ACCESS-NRI/MOM6.git",
-            branch="cmake_build",
-            submodules=True,
-            preferred=True,
-            )
     maintainers = ["minghangli-uni", "harshula"]
-
+    
     # see license file in https://github.com/ACCESS-NRI/MOM6/blob/e92c971084e185cfd3902f18072320b45d583a54/LICENSE.md
     license("LGPL-3.0", checked_by="minghangli-uni")
-
-    root_cmakelists_dir = "cmake"
 
     variant("openmp", default=False, description="Enable OpenMP")
     variant("mom_symmetric", default=True, description="Use symmetric memory in MOM6")
@@ -37,13 +27,14 @@ class AccessMom6(CMakePackage):
     variant("cesmcoupled", default=False, description="Enable parameters with cesm coupled")
 
     depends_on("access3-share", when="+access3")
+    depends_on("access3-share+openmp", when="+openmp+access3")
+
     depends_on("cmake@3.18:", type="build")
     depends_on("mpi")
     depends_on("netcdf-fortran@4.6.0:")
     depends_on("fms@2021.03: build_type==RelWithDebInfo precision=64 +large_file ~gfs_phys ~quad_precision")
     depends_on("fms +openmp", when="+openmp")
     depends_on("fms ~openmp", when="~openmp")
-
 
     root_cmakelists_dir = "cmake"
 
@@ -54,9 +45,5 @@ class AccessMom6(CMakePackage):
             self.define_from_variant("ACCESS3_MOM6", "access3"),
             self.define_from_variant("CESMCOUPLED", "cesmcoupled"),
         ]
-
-        args.append(self.define("CMAKE_C_COMPILER", self.spec["mpi"].mpicc))
-        args.append(self.define("CMAKE_CXX_COMPILER", self.spec["mpi"].mpicxx))
-        args.append(self.define("CMAKE_Fortran_COMPILER", self.spec["mpi"].mpifc))
 
         return args

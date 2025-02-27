@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0 
 
 from spack.package import *
-
+from spack.variant import any_combination_of
 
 class Access3Exe(CMakePackage):
     """Executable build for ACCESS version 3 climate models. The exectuable is defined in Community Mediator for Earth Prediction 
@@ -19,17 +19,10 @@ class Access3Exe(CMakePackage):
     license("Apache-2.0", checked_by="anton-seaice")
 
     variant(
-        "build_type",
-        default="Release",
-        description="The build type to build",
-        values=("Debug", "Release"),
-    )
-
-    variant(
         "configurations",
         # default="MOM6-CICE6, CICE6-WW3, MOM6-CICE6-WW3", if we set these defaults there is no way to unset them in the deployment
-        default="CICE6",
-        values=(
+        # default="CICE6",
+        values=any_combination_of(
             "MOM6",
             "CICE6",
             "WW3",
@@ -37,8 +30,8 @@ class Access3Exe(CMakePackage):
             "MOM6-CICE6",
             "CICE6-WW3",
             "MOM6-CICE6-WW3",
-        ),
-        multi=True,
+        ).prohibit_empty_set().with_error("at least one configuration to build is required (e.g. MOM6-CICE6)"),
+        # multi=True,
         description="ACCESS-OM3 configurations to build",
     )
     
@@ -63,10 +56,5 @@ class Access3Exe(CMakePackage):
         args = [
             self.define("BuildConfigurations",buildConf)
         ]
-
-        # we need this for cmake to find MPI_Fortran
-        args.append(self.define("CMAKE_C_COMPILER", self.spec["mpi"].mpicc))
-        args.append(self.define("CMAKE_CXX_COMPILER", self.spec["mpi"].mpicxx))
-        args.append(self.define("CMAKE_Fortran_COMPILER", self.spec["mpi"].mpifc))
         
         return args

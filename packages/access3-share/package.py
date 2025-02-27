@@ -19,37 +19,26 @@ class Access3Share(CMakePackage):
 
     license("Apache-2.0", checked_by="anton-seaice")
 
-    # variant("openmp", default=False, description="Enable OpenMP")
-
-    variant(
-        "build_type",
-        default="Release",
-        description="The build type to build",
-        values=("Debug", "Release"),
-    )
+    variant("openmp", default=False, description="Enable OpenMP")
 
     depends_on("cmake@3.18:", type="build")
     depends_on("mpi")
     depends_on("netcdf-fortran@4.6.0:")
     depends_on("esmf@8.3.0:")
     depends_on("esmf cflags='-fp-model precise' fflags='-fp-model precise'", when="%intel")
+    depends_on("esmf cflags='-fp-model precise' fflags='-fp-model precise'", when="%oneapi")
     depends_on("fortranxml@4.1.2:")
 
     depends_on("parallelio@2.5.10: build_type==RelWithDebInfo")
     depends_on("parallelio fflags='-qno-opt-dynamic-align -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model source' cflags='-qno-opt-dynamic-align -fp-model precise -std=gnu99'", when="%intel")
+    depends_on("parallelio fflags='-qno-opt-dynamic-align -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model source' cflags='-qno-opt-dynamic-align -fp-model precise -std=gnu99'", when="%oneapi")
 
     flag_handler = CMakePackage.build_system_flags
 
     def cmake_args(self):
-
         args = [
             self.define("ACCESS3_LIB_INSTALL", True),
-            # self.define_from_variant("OPENMP", "openmp"),
+            self.define_from_variant("OPENMP", "openmp"),
         ]
-
-        # we need this for cmake to find MPI_Fortran
-        args.append(self.define("CMAKE_C_COMPILER", self.spec["mpi"].mpicc))
-        args.append(self.define("CMAKE_CXX_COMPILER", self.spec["mpi"].mpicxx))
-        args.append(self.define("CMAKE_Fortran_COMPILER", self.spec["mpi"].mpifc))
 
         return args
