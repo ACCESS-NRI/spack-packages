@@ -18,7 +18,7 @@ import os
 
 
 class AccessTriangle(MakefilePackage):
-    """Example Spack package for the ISSM Triangle library."""
+    """Spack package for the ISSM Triangle library."""
 
     homepage = "https://github.com/ACCESS-NRI/issm-triangle"
     git = 'https://github.com/ACCESS-NRI/issm-triangle.git'
@@ -35,9 +35,7 @@ class AccessTriangle(MakefilePackage):
 
     def edit(self, spec, prefix):
         """
-        This stage is where you typically patch or customize the makefile.
-        If the package comes with a pre-written Makefile that needs minimal
-        changes, you can do them here. Below, we just copy in the 'configs'
+        Below, we just copy in the 'configs'
         so that the build can find them in `self.build_directory`.
         """
         src_dir = join_path(self.stage.source_path, "src")
