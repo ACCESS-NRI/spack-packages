@@ -4,7 +4,9 @@
 # SPDX-License-Identifier: Apache-2.0 
 
 from spack.package import *
-from spack.variant import any_combination_of
+from spack.variant import auto_or_any_combination_of
+
+
 
 class Access3Exe(CMakePackage):
     """Executable build for ACCESS version 3 climate models. The exectuable is defined in Community Mediator for Earth Prediction 
@@ -20,9 +22,7 @@ class Access3Exe(CMakePackage):
 
     variant(
         "configurations",
-        # default="MOM6-CICE6, CICE6-WW3, MOM6-CICE6-WW3", if we set these defaults there is no way to unset them in the deployment
-        # default="CICE6",
-        values=any_combination_of(
+        values=auto_or_any_combination_of(
             "MOM6",
             "CICE6",
             "WW3",
@@ -30,8 +30,7 @@ class Access3Exe(CMakePackage):
             "MOM6-CICE6",
             "CICE6-WW3",
             "MOM6-CICE6-WW3",
-        ).prohibit_empty_set().with_error("at least one configuration to build is required (e.g. MOM6-CICE6)"),
-        # multi=True,
+        ), 
         description="ACCESS-OM3 configurations to build",
     )
     
@@ -52,7 +51,10 @@ class Access3Exe(CMakePackage):
     def cmake_args(self):
 
         # make configurations a cmake argument
-        buildConf = ";".join(self.spec.variants["configurations"].value)
+        if self.spec.satisfies("configurations=auto"):
+            buildConf = "MOM6;MOM6-CICE6;MOM6-CICE6-WW3"
+        else:
+            buildConf = ";".join(self.spec.variants["configurations"].value)
         args = [
             self.define("BuildConfigurations",buildConf)
         ]
