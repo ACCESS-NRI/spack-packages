@@ -306,7 +306,10 @@ LDFLAGS += $(LIBS)
 """
 
         # Add support for the ifx compiler
-        config["oneapi"] = config["intel"]
+        # TODO: `.replace() is a temporary workaround for:
+        # icx: error: unsupported argument 'source' to option '-ffp-model='
+        # The `.replace()` apparently doesn't modify the object.
+        config["oneapi"] = config["intel"].replace("CFLAGS_REPRO := -fp-model precise -fp-model source", "CFLAGS_REPRO := -fp-model precise")
 
         if self.spec.satisfies("@access-esm1.5:access-esm1.6"):
             config["post"] = """
