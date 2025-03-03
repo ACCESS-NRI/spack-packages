@@ -256,14 +256,14 @@ FFLAGS := -fno-alias -safe-cray-ptr -fpe0 -ftz -assume byterecl -i4 -r8 -nowarn 
 FFLAGS_OPT := {FFLAGS_OPT}
 FFLAGS_REPORT := -qopt-report=5 -qopt-report-annotate
 FFLAGS_DEBUG := -g3 -O0 -debug all -check -check noarg_temp_created -check nopointer -warn -warn noerrors -ftrapuv -traceback
-FFLAGS_REPRO := -fp-model precise -fp-model source -align all
+FFLAGS_REPRO := -fp-model precise -align all
 FFLAGS_VERBOSE := -v -V -what
 
 CFLAGS := -D__IFC $(INCLUDE)
 CFLAGS_OPT := {CFLAGS_OPT}
 CFLAGS_REPORT := -qopt-report=5 -qopt-report-annotate
 CFLAGS_DEBUG := -O0 -g -ftrapuv -traceback
-CFLAGS_REPRO := -fp-model precise -fp-model source
+CFLAGS_REPRO := -fp-model precise
 
 LDFLAGS :=
 LDFLAGS_VERBOSE := -Wl,-V,--verbose,-cref,-M
