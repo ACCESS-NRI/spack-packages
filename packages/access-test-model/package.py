@@ -25,6 +25,8 @@ class AccessTestModel(CMakePackage):
 
     depends_on("mpi", when="+mpi")
 
+    root_cmakelists_dir = "stub"
+
     def cmake_args(self):
         args = [
             self.define_from_variant("ENABLE_MPI", "mpi"),
