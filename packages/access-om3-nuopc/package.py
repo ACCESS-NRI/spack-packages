@@ -47,7 +47,7 @@ class AccessOm3Nuopc(CMakePackage):
         "cice_io",
         default="PIO",
         description="CICE IO option",
-        values=("NectCDF", "PIO", "Binary"),
+        values=("NetCDF", "PIO", "Binary"),
         multi=False,
     )
 
