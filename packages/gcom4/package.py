@@ -34,6 +34,8 @@ class Gcom4(Package):
         """
         if spec.satisfies("%intel"):
             mach_c = "ifort"
+        elif spec.satisfies("%oneapi"):
+            mach_c = "oneapi"
         elif spec.satisfies("%gcc"):
             mach_c = "gfortran"
         else:
@@ -55,6 +57,8 @@ class Gcom4(Package):
         filter_file(
             r"build\.target\{ns\}.*", "#",
             join_path("fcm-make", "gcom.cfg"))
+        # MS: The oneAPI config already uses the `-qopenmp` flag, so a
+        # substitution is not required for oneAPI.
         if self.spec.satisfies("%intel"):
             machine = self.gcom_machine(self.spec)
             filter_file(
