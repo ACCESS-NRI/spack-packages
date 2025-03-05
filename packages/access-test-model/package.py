@@ -27,8 +27,5 @@ class AccessTestModel(CMakePackage):
 
     root_cmakelists_dir = "stub"
 
-    def cmake_args(self):
-        args = [
-            self.define_from_variant("ENABLE_MPI", "mpi"),
-        ]
-        return args
+    def url_for_version(self, version):
+        return "https://github.com/ACCESS-NRI/access-test-model/tarball/{0}".format(version)
