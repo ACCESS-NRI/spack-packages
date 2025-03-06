@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2025 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,12 +15,6 @@ class AccessOm3Nuopc(CMakePackage):
 
     version("main", branch="main", submodules=True)
 
-    variant(
-        "build_type",
-        default="Release",
-        description="The build type to build",
-        values=("Debug", "Release"),
-    )
     variant(
         "configurations",
         default="MOM6-CICE6, CICE6-WW3, MOM6-CICE6-WW3",
@@ -55,16 +49,17 @@ class AccessOm3Nuopc(CMakePackage):
     depends_on("mpi")
     depends_on("netcdf-fortran@4.6.0:")
     depends_on("esmf@8.3.0:")
-    depends_on("esmf cflags='-fp-model precise' fflags='-fp-model precise'", when="%intel")
-    depends_on("esmf cflags='-fp-model precise' fflags='-fp-model precise'", when="%oneapi")
+    for compiler in ["%intel", "%oneapi"]:
+        depends_on("esmf cflags='-fp-model precise' fflags='-fp-model precise'", when=compiler)
     depends_on("fortranxml@4.1.2:")
     depends_on("fms@2021.03: build_type==RelWithDebInfo precision=64 +large_file ~gfs_phys ~quad_precision")
     depends_on("fms +openmp", when="+openmp")
     depends_on("fms ~openmp", when="~openmp")
 
     depends_on("parallelio@2.5.10: build_type==RelWithDebInfo")
-    depends_on("parallelio fflags='-qno-opt-dynamic-align -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model source' cflags='-qno-opt-dynamic-align -fp-model precise -std=gnu99'", when="%intel")
-
+    depends_on("parallelio fflags='-qno-opt-dynamic-align -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model precise' cflags='-qno-opt-dynamic-align -fp-model precise -std=gnu99'", when="%intel")
+    depends_on("parallelio fflags='-fp-model precise' cflags='-fp-model precise', when='%oneapi')
+    
     flag_handler = CMakePackage.build_system_flags
 
     def cmake_args(self):
