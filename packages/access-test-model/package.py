@@ -11,8 +11,8 @@ class AccessTestModel(CMakePackage):
     """ACCESS Test Model is a small test FORTRAN model component
        used to test CI workflows."""
 
-    homepage = "https://github.com/ACCESS-NRI/ACCESS-TEST-model"
-    git = "https://github.com/ACCESS-NRI/ACCESS-TEST-model.git"
+    homepage = "https://github.com/ACCESS-NRI/access-test-model"
+    git = "https://github.com/ACCESS-NRI/access-test-model.git"
 
     maintainers("aidanheerdegen", "codegat", "harshula")
 
