@@ -49,8 +49,8 @@ class AccessOm3Nuopc(CMakePackage):
     depends_on("mpi")
     depends_on("netcdf-fortran@4.6.0:")
     depends_on("esmf@8.3.0:")
-    for compiler in ["%intel", "%oneapi"]:
-        depends_on("esmf cflags='-fp-model precise' fflags='-fp-model precise'", when=f"{compiler}")
+    depends_on("esmf cflags='-fp-model precise' fflags='-fp-model precise'", when="%intel")
+    depends_on("esmf cflags='-fp-model precise' fflags='-fp-model precise'", when="%oneapi")
     depends_on("fortranxml@4.1.2:")
     depends_on("fms@2021.03: build_type==RelWithDebInfo precision=64 +large_file ~gfs_phys ~quad_precision")
     depends_on("fms +openmp", when="+openmp")
