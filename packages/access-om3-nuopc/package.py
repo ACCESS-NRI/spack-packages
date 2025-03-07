@@ -58,7 +58,7 @@ class AccessOm3Nuopc(CMakePackage):
 
     depends_on("parallelio@2.5.10: build_type==RelWithDebInfo")
     depends_on("parallelio fflags='-qno-opt-dynamic-align -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model precise' cflags='-qno-opt-dynamic-align -fp-model precise -std=gnu99'", when="%intel")
-    depends_on("parallelio fflags='-qno-opt-dynamic-align -fp-model precise' cflags='-fp-model precise'", when='%oneapi')
+    depends_on("parallelio fflags='-qno-opt-dynamic-align -fp-model precise' cflags='-qno-opt-dynamic-align -fp-model precise'", when='%oneapi')
     
     flag_handler = CMakePackage.build_system_flags
 
