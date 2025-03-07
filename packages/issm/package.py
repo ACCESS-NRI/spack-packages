@@ -8,6 +8,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+import os 
+import subprocess
 
 
 class Issm(AutotoolsPackage):
@@ -16,7 +18,10 @@ class Issm(AutotoolsPackage):
     homepage = "https://issm.jpl.nasa.gov/"
     git      = "https://github.com/ACCESS-NRI/ISSM.git"
 
-    version("4.24", sha256="c71d870e63f0ce3ae938d6a669e80dc2cecef827084db31a4b2cfc3a26a44820")
+    #version("4.24", sha256="c71d870e63f0ce3ae938d6a669e80dc2cecef827084db31a4b2cfc3a26a44820")
+    
+    version("main", branch="main", git="https://github.com/ACCESS-NRI/ISSM.git")
+    version("access-development", branch="access-development", git="https://github.com/ACCESS-NRI/ISSM.git")
 
     #
     # Variants
@@ -35,8 +40,7 @@ class Issm(AutotoolsPackage):
     depends_on("automake", type="build")
     depends_on("libtool",  type="build")
     depends_on("m4",       type="build")
-
-    #
+    
     # Required libraries
     #
     depends_on("mpi")
@@ -46,18 +50,22 @@ class Issm(AutotoolsPackage):
     #
     # Optional libraries
     #
-    depends_on('access-triangle-git', when='+wrappers')
+    depends_on('access-triangle', when='+wrappers')
     depends_on("parmetis",  when="+wrappers")
-    depends_on("python@3.9.0:3.9", when="+wrappers", type=("build", "run"))
-    depends_on("py-numpy",         when="+wrappers", type=("build", "run"))
+    # depends_on("python@3.9.0:3.9", when="+wrappers", type=("build", "run"))
+    # depends_on("py-numpy",         when="+wrappers", type=("build", "run"))
 
     def url_for_version(self, version):
         # Example of how you might form a URL for a particular version:
-        return "https://github.com/ACCESS-NRI/ISSM/tarball/v{0}".format(version)
+        #branch = "access-development"
+        return "https://github.com/ACCESS-NRI/ISSM/archive/refs/heads/{0}.tar.gz".format(version)
 
     def autoreconf(self, spec, prefix):
         # If the repo has an Autotools build system, run autoreconf:
         autoreconf("--install", "--verbose", "--force")
+        
+    def setup_run_environment(self, env):
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
 
     def configure_args(self):
         """Populate configure arguments, including optional flags to mimic 
@@ -101,7 +109,7 @@ class Issm(AutotoolsPackage):
         # checks them individually, add them:
         args.append("--with-scalapack-dir={0}".format(self.spec["scalapack"].prefix))
         args.append("--with-parmetis-dir={0}".format(self.spec["parmetis"].prefix))
-        args.append("--with-triangle-dir={0}".format(self.spec["triangle"].prefix))
+        args.append("--with-triangle-dir={0}".format(self.spec["access-triangle"].prefix))
 
         #
         # M1QN3
@@ -110,16 +118,20 @@ class Issm(AutotoolsPackage):
         # e.g. "prefix.lib" or "prefix" depending on the configure logic:
         #
         args.append("--with-m1qn3-dir={0}".format(self.spec["m1qn3"].prefix.lib))
-
         args.append("--with-python-version=3.9")
-
-        args.append("--with-python-dir={0}".format(self.spec["python"].prefix))
-
-        numpy_prefix = self.spec["py-numpy"].prefix
-        # Possibly site-packages is in something like: 
-        #   numpy_prefix.lib/python3.9/site-packages
-        # or similar. You can either guess or do something more dynamic. 
-        args.append("--with-python-numpy-dir={0}".format(numpy_prefix))
+        args.append("--with-python-dir=/apps/python3/3.9.2")
 
 
+        numpy_site_packages = "/apps/python3/3.9.2/lib/python3.9/site-packages/numpy-1.20.0-py3.9-linux-x86_64.egg/numpy"
+        numpy_core_dir = "/apps/python3/3.9.2/lib/python3.9/site-packages/numpy-1.20.0-py3.9-linux-x86_64.egg/numpy"
+        args.append("--with-python-numpy-dir={0}".format(numpy_core_dir))
+        
         return args
+
+    def install(self, spec, prefix):
+        # Run the normal Autotools install logic
+        super().install(spec, prefix)
+
+        # Copy the entire source tree into an additional directory
+        install_tree(self.stage.source_path, prefix.src)
+
