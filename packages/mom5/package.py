@@ -45,11 +45,11 @@ class Mom5(MakefilePackage):
         depends_on("libaccessom2+deterministic", when="+deterministic")
         depends_on("libaccessom2~deterministic", when="~deterministic")
     with when("@access-esm1.5:access-esm1.6"):
-        depends_on("netcdf-c@4.7.1:4.7.4")
-        depends_on("netcdf-fortran@4.5.1:4.5.2")
+        depends_on("netcdf-c@4.7.1:")
+        depends_on("netcdf-fortran@4.5.1:")
         # Depend on "openmpi".
-        depends_on("openmpi@4.0.2:4.1.0")
-        depends_on("oasis3-mct@access-esm1.5")
+        depends_on("openmpi")
+        depends_on("oasis3-mct")
 
     phases = ["edit", "build", "install"]
 

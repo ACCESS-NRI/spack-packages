@@ -28,10 +28,9 @@ class Oasis3Mct(MakefilePackage):
         # Depend on virtual package "mpi".
         depends_on("mpi")
     with when("@access-esm1.5"):
-        depends_on("hdf5@1.10.5:1.10.11")
-        depends_on("netcdf-fortran@4.5.1:4.5.2")
+        depends_on("netcdf-fortran@4.5.1:")
         # Depend on "openmpi".
-        depends_on("openmpi@4.0.2:4.1.0")
+        depends_on("openmpi")
 
     phases = ["edit", "build", "install"]
 

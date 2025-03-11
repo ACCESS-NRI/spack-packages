@@ -27,10 +27,10 @@ class Um7(Package):
 
     depends_on("fcm", type="build")
     depends_on("dummygrib", type=("build", "link"))
-    depends_on("gcom4@access-esm1.5+mpi", type=("build", "link"))
-    depends_on("openmpi@4.0.2:4.1.0", type=("build", "run"))
-    depends_on("netcdf-fortran@4.5.2", type=("build", "link"))
-    depends_on("oasis3-mct@access-esm1.5", type=("build", "link"))
+    depends_on("gcom4+mpi", type=("build", "link"))
+    depends_on("openmpi", type=("build", "run"))
+    depends_on("netcdf-fortran@4.5.2:", type=("build", "link"))
+    depends_on("oasis3-mct", type=("build", "link"))
 
     variant("optim", default="high", description="Optimization level",
             values=("high", "debug"), multi=False)
