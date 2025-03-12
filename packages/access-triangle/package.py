@@ -68,6 +68,9 @@ class AccessTriangle(MakefilePackage):
         mkdirp(prefix.lib)
 
         with working_dir(src):
+            # Make sure we see what's actually there, for debugging:
+            # ls_output = Executable('ls')('-l', '.', output=str, error=str)
+            # print("Files in build directory:\n", ls_output)
             
             install('triangle.h', prefix.include)
 
