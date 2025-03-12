@@ -45,11 +45,11 @@ class Mom5(MakefilePackage):
         depends_on("libaccessom2+deterministic", when="+deterministic")
         depends_on("libaccessom2~deterministic", when="~deterministic")
     with when("@access-esm1.5:access-esm1.6"):
-        depends_on("netcdf-c@4.7.1:4.7.4")
-        depends_on("netcdf-fortran@4.5.1:4.5.2")
+        depends_on("netcdf-c@4.7.1:")
+        depends_on("netcdf-fortran@4.5.1:")
         # Depend on "openmpi".
-        depends_on("openmpi@4.0.2:4.1.0")
-        depends_on("oasis3-mct@access-esm1.5")
+        depends_on("openmpi")
+        depends_on("oasis3-mct")
 
     phases = ["edit", "build", "install"]
 
@@ -306,7 +306,10 @@ LDFLAGS += $(LIBS)
 """
 
         # Add support for the ifx compiler
-        config["oneapi"] = config["intel"]
+        # TODO: `.replace() is a temporary workaround for:
+        # icx: error: unsupported argument 'source' to option '-ffp-model='
+        # The `.replace()` apparently doesn't modify the object.
+        config["oneapi"] = config["intel"].replace("CFLAGS_REPRO := -fp-model precise -fp-model source", "CFLAGS_REPRO := -fp-model precise")
 
         if self.spec.satisfies("@access-esm1.5:access-esm1.6"):
             config["post"] = """
