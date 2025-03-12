@@ -19,10 +19,6 @@ class AccessTriangle(MakefilePackage):
     git = 'https://github.com/ACCESS-NRI/issm-triangle.git'
 
     version('main')
-
-    # If on some systems 'gmake' is truly required, keep it. Otherwise, 'make'
-    # is often sufficient because Spack sets MAKE appropriately.
-    depends_on('gmake',  type='build')
     
     # variant for building the showme utility (requires X11).
     variant('showme', default=False,
