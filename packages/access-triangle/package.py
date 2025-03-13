@@ -18,7 +18,7 @@ class AccessTriangle(MakefilePackage):
     homepage = "https://github.com/ACCESS-NRI/issm-triangle"
     git = 'https://github.com/ACCESS-NRI/issm-triangle.git'
 
-    version('main')
+    version('1.6-access1')
     
     # variant for building the showme utility (requires X11).
     variant('showme', default=False,
