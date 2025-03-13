@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0 
 
 from spack.package import *
-from spack.variant import disjoint_sets, auto_or_any_combination_of
+from spack.variant import any_combination_of
 
 # supported model configurations
 KNOWN_CONF = (
@@ -17,8 +17,6 @@ KNOWN_CONF = (
     "MOM6-CICE6-WW3",
 )
 
-DEFAULT_CONF = ("MOM6", "MOM6-CICE6", "MOM6-CICE6-WW3")
-
 class Access3Exe(CMakePackage):
     """Executable build for ACCESS version 3 climate models. The exectuable is defined in Community Mediator for Earth Prediction 
     Systems (CMEPS). Currently implemented for ACCESS-OM3, and in the future may support ACCESS-CM3 and ACCESS-ESM3. This is a 
@@ -27,8 +25,7 @@ class Access3Exe(CMakePackage):
     homepage = "https://github.com/ACCESS-NRI/access3-share"
     git = "https://github.com/ACCESS-NRI/access3-share"
     submodules = True
-    maintainers = ["anton-seaice", "harshula", "micaeljtoliveira"]
-
+    maintainers("anton-seaice", "harshula", "micaeljtoliveira")
     license("Apache-2.0", checked_by="anton-seaice")
 
     variant(
@@ -37,43 +34,38 @@ class Access3Exe(CMakePackage):
         description="ACCESS-OM3 configurations to build",
         sticky=True #force concretizer to not pick alternative variants
     )
-    
+
+    # force user to supply a build combination
+    # conflicts(
+    #     "configurations='none'",
+    #     msg = f"A configurations variant must be set, can be one or many of {KNOWN_CONF}"
+    # )
+        
     variant("openmp", default=False, description="Enable OpenMP")
     
     depends_on("cmake@3.18:", type="build")
     depends_on("mpi")
     depends_on("esmf@8.3.0:")
+
     depends_on("esmf cflags='-fp-model precise' fflags='-fp-model precise'", when="%intel")
     depends_on("esmf cflags='-fp-model precise' fflags='-fp-model precise'", when="%oneapi")
 
-    depends_on("access-cice+access3+cesmcoupled", when="configurations=CICE6")
-    depends_on("access-cice+access3+cesmcoupled", when="configurations=CICE6-WW3")
-    depends_on("access-cice+access3+cesmcoupled", when="configurations=MOM6-CICE6")
-    depends_on("access-cice+access3+cesmcoupled", when="configurations=MOM6-CICE6-WW3")
-    depends_on("access-cice+access3+cesmcoupled", when="configurations=none")
+    for conf in KNOWN_CONF:
+        if "CICE6" in conf:
+            depends_on("access-cice+access3+cesmcoupled", when=f"configurations={conf}")
+        if "MOM6" in conf:
+            depends_on("access-mom6+access3+cesmcoupled", when=f"configurations={conf}")
+        if "WW3" in conf:
+            depends_on("access-ww3+access3+cesmcoupled", when=f"configurations={conf}")
 
-    depends_on("access-mom6+access3+cesmcoupled", when="configurations=MOM6")
-    depends_on("access-mom6+access3+cesmcoupled", when="configurations=MOM6-CICE6")
-    depends_on("access-mom6+access3+cesmcoupled", when="configurations=MOM6-WW3")
-    depends_on("access-mom6+access3+cesmcoupled", when="configurations=MOM6-CICE6-WW3")
-    depends_on("access-mom6+access3+cesmcoupled", when="configurations=none")
-
-    # depends_on("access-ww3+access3+cesmcoupled", when="configurations=WW3")
-    # depends_on("access-ww3+access3+cesmcoupled", when="configurations=MOM6-WW3")
-    # depends_on("access-ww3+access3+cesmcoupled", when="configurations=CICE6-WW3")
-    # depends_on("access-ww3+access3+cesmcoupled", when="configurations=MOM6-CICE6-WW3")
-    # depends_on("access-ww3+access3+cesmcoupled", when="configurations=none")
-   
     def cmake_args(self):
 
         # make configurations a cmake argument
-        if self.spec.satisfies("configurations=none"):
-            buildConf = ";".join(DEFAULT_CONF)
-        else:
-            buildConf = ";".join(self.spec.variants["configurations"].value)
+        buildConf = ";".join(self.spec.variants["configurations"].value)
         
         args = [
-            self.define("BuildConfigurations",buildConf)
+            self.define("BuildConfigurations",buildConf),
+            self.define_from_variant("OPENMP", "openmp"),
         ]
         
         return args

@@ -15,8 +15,8 @@ class AccessCice(CMakePackage):
     homepage = "https://github.com/CICE-Consortium/CICE"
     git = "https://github.com/ACCESS-NRI/CICE"
     submodules = True
-    maintainers = ["anton-seaice", "harshula"]
-
+    maintainers("anton-seaice", "harshula")
+    
     # see license file at https://github.com/CICE-Consortium/CICE
     license("LicenseRef-CICE", checked_by="anton-seaice")
 

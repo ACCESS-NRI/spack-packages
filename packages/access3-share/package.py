@@ -15,7 +15,7 @@ class Access3Share(CMakePackage):
     homepage = "https://github.com/ACCESS-NRI/access3-share"
     git = "https://github.com/ACCESS-NRI/access3-share"
     submodules = True
-    maintainers = ["anton-seaice", "harshula", "micaeljtoliveira"]
+    maintainers("anton-seaice", "harshula", "micaeljtoliveira")
 
     license("Apache-2.0", checked_by="anton-seaice")
 
@@ -24,14 +24,14 @@ class Access3Share(CMakePackage):
     depends_on("cmake@3.18:", type="build")
     depends_on("mpi")
     depends_on("netcdf-fortran@4.6.0:")
-    depends_on("esmf@8.3.0:")
+    depends_on("esmf@8.7.0:")
     depends_on("esmf cflags='-fp-model precise' fflags='-fp-model precise'", when="%intel")
     depends_on("esmf cflags='-fp-model precise' fflags='-fp-model precise'", when="%oneapi")
     depends_on("fortranxml@4.1.2:")
 
     depends_on("parallelio@2.5.10: build_type==RelWithDebInfo")
-    depends_on("parallelio fflags='-qno-opt-dynamic-align -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model source' cflags='-qno-opt-dynamic-align -fp-model precise -std=gnu99'", when="%intel")
-    depends_on("parallelio fflags='-qno-opt-dynamic-align -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model source' cflags='-qno-opt-dynamic-align -fp-model precise -std=gnu99'", when="%oneapi")
+    depends_on("parallelio fflags='-qno-opt-dynamic-align -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model precise' cflags='-qno-opt-dynamic-align -fp-model precise -std=gnu99'", when="%intel")
+    depends_on("parallelio fflags='-qno-opt-dynamic-align -fp-model precise' cflags='-qno-opt-dynamic-align -fp-model precise'", when="%oneapi")
 
     def cmake_args(self):
         args = [
