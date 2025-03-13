@@ -22,7 +22,7 @@ class AccessMom6(CMakePackage):
     license("LGPL-3.0", checked_by="minghangli-uni")
 
     variant("openmp", default=False, description="Enable OpenMP")
-    variant("mom_symmetric", default=True, description="Use symmetric memory in MOM6")
+    variant("mom_symmetric", default=False, description="Use symmetric memory in MOM6")
     variant("access3", default=True, description="Building MOM6 library with Access3share")
     variant("cesmcoupled", default=False, description="Enable parameters with cesm coupled")
 
