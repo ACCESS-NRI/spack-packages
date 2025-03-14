@@ -4,8 +4,7 @@
 
 
 from spack.package import *
-import glob
-import os
+# import os
 
 
 class AccessTriangle(MakefilePackage):
