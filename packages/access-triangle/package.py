@@ -20,7 +20,7 @@ class AccessTriangle(MakefilePackage):
     
     maintainers("justinh2002")
 
-    version("1.6.1", branch = "main")
+    version("1.6.1", branch="main")
     
     # variant for building the showme utility (requires X11).
     variant("showme", default=False,
