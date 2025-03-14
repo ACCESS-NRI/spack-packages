@@ -18,7 +18,7 @@ class AccessTriangle(MakefilePackage):
     homepage = "https://github.com/ACCESS-NRI/issm-triangle"
     git = 'https://github.com/ACCESS-NRI/issm-triangle.git'
 
-    version('1.6-access1')
+    version('1.6.1', branch = 'main')
     
     # variant for building the showme utility (requires X11).
     variant('showme', default=False,
@@ -69,13 +69,11 @@ class AccessTriangle(MakefilePackage):
 
         with working_dir(src):
             # Make sure we see what's actually there, for debugging:
-            # ls_output = Executable('ls')('-l', '.', output=str, error=str)
+            # ls_output = os.listdir('.')
             # print("Files in build directory:\n", ls_output)
             
             install('triangle.h', prefix.include)
-
-            for libfile in glob.glob("libtriangle.*"):
-                install(libfile, prefix.lib)
+            install('libtriangle.so', prefix.lib)
             
             # Install showme only if +showme is chosen
             if '+showme' in spec:
