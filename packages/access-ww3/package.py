@@ -1,11 +1,8 @@
-# Copyright 2013-2025 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
-# SPDX-License-Identifier: Apache-2.0
-# ----------------------------------------------------------------------------
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
-
 
 class AccessWw3(CMakePackage):
     """WAVEWATCH III® is a community wave modeling framework that includes the latest 
@@ -23,11 +20,10 @@ class AccessWw3(CMakePackage):
     variant("cesmcoupled", default=False, description="Set CESMCOUPLED CPP Flag")
 
     depends_on("access3-share", when="+access3") 
-    depends_on("access3-share+openmp", when="+openmp+access3")
 
     depends_on("cmake@3.18:", type="build")
     depends_on("mpi")
-    
+    depends_on("netcdf-fortran@4.6.0:")   
     
     def cmake_args(self):
         args = [
@@ -35,5 +31,9 @@ class AccessWw3(CMakePackage):
             self.define_from_variant("ACCESS3_WW3", "access3"),
             self.define_from_variant("CESMCOUPLED", "cesmcoupled"),
         ]
+
+        # args.append(self.define("CMAKE_C_COMPILER", self.spec["mpi"].mpicc))
+        # args.append(self.define("CMAKE_CXX_COMPILER", self.spec["mpi"].mpicxx))
+        # args.append(self.define("CMAKE_Fortran_COMPILER", self.spec["mpi"].mpifc))
         
         return args

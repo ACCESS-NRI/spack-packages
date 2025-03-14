@@ -1,8 +1,6 @@
-# Copyright 2013-2025 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
-# SPDX-License-Identifier: Apache-2.0
-# ----------------------------------------------------------------------------
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import CMakePackage, variant, version, depends_on
 
@@ -27,7 +25,6 @@ class AccessMom6(CMakePackage):
     variant("cesmcoupled", default=False, description="Enable parameters with cesm coupled")
 
     depends_on("access3-share", when="+access3")
-    depends_on("access3-share+openmp", when="+openmp+access3")
 
     depends_on("cmake@3.18:", type="build")
     depends_on("mpi")
@@ -36,12 +33,11 @@ class AccessMom6(CMakePackage):
     depends_on("fms +openmp", when="+openmp")
     depends_on("fms ~openmp", when="~openmp")
 
-    root_cmakelists_dir = "cmake"
 
     def cmake_args(self):
         args = [
             self.define_from_variant("OPENMP", "openmp"),
-            self.define_from_variant("ENABLE_MOM_SYMMETRIC", "mom_symmetric"),
+            self.define_from_variant("MOM_SYMMETRIC", "mom_symmetric"),
             self.define_from_variant("ACCESS3_MOM6", "access3"),
             self.define_from_variant("CESMCOUPLED", "cesmcoupled"),
         ]

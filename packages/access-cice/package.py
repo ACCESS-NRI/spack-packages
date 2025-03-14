@@ -31,7 +31,6 @@ class AccessCice(CMakePackage):
     )
 
     depends_on("access3-share", when="+access3") 
-    depends_on("access3-share+openmp", when="+openmp+access3")
 
     depends_on("cmake@3.18:", type="build")
     depends_on("mpi")

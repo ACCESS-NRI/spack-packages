@@ -1,7 +1,6 @@
-# Copyright 2013-2025 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
-# SPDX-License-Identifier: Apache-2.0 
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
 from spack.variant import any_combination_of
@@ -37,12 +36,10 @@ class Access3Exe(CMakePackage):
 
     # force user to supply a build combination
     # conflicts(
-    #     "configurations='none'",
+    #     "configurations=none",
     #     msg = f"A configurations variant must be set, can be one or many of {KNOWN_CONF}"
     # )
         
-    variant("openmp", default=False, description="Enable OpenMP")
-    
     depends_on("cmake@3.18:", type="build")
     depends_on("mpi")
     depends_on("esmf@8.3.0:")
@@ -65,7 +62,6 @@ class Access3Exe(CMakePackage):
         
         args = [
             self.define("BuildConfigurations",buildConf),
-            self.define_from_variant("OPENMP", "openmp"),
         ]
         
         return args
