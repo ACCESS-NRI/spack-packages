@@ -17,34 +17,34 @@ class AccessTriangle(MakefilePackage):
 
     homepage = "https://github.com/ACCESS-NRI/issm-triangle"
     git = 'https://github.com/ACCESS-NRI/issm-triangle.git'
+    
+    maintainers("justinh2002")
 
-    version('1.6.1', branch = 'main')
+    version("1.6.1", branch = "main")
     
     # variant for building the showme utility (requires X11).
-    variant('showme', default=False,
-            description='Build the showme utility (requires libX11).')
+    variant("showme", default=False,
+            description="Build the showme utility (requires libX11).")
 
     # Make libX11 conditional on +showme
-    depends_on('libx11', when='+showme', type='link')
+    depends_on("libx11", when="+showme", type="link")
     
     def url_for_version(self, version):
         return "https://github.com/ACCESS-NRI/issm-triangle/archive/refs/heads/{0}.tar.gz".format(version)
 
     def edit(self, spec, prefix):
         """
-        This stage is where you typically patch or customise the makefile.
-        If the package comes with a pre-written Makefile that needs minimal
-        changes, you can do them here. Below, we just copy in the 'configs'
+        Below, we just copy in the 'configs'
         so that the build can find them in `src_dir`.
         """
         src_dir = join_path(self.stage.source_path, "src")
         mkdirp(src_dir)
         
         # Copy necessary files to src directory
-        install('configs/makefile', src_dir)
-        install('configs/linux/configure.make', src_dir)
-        install('triangle.c', src_dir)
-        install('triangle.h', src_dir)
+        install("configs/makefile", src_dir)
+        install("configs/linux/configure.make", src_dir)
+        install("triangle.c", src_dir)
+        install("triangle.h", src_dir)
         
     def build(self, spec, prefix):
         """
@@ -52,9 +52,9 @@ class AccessTriangle(MakefilePackage):
         Using MakefilePackage, you *could* rely on build_targets
         """
         with working_dir(join_path(self.stage.source_path, "src")):
-            make('shared')
-            if '+showme' in spec:
-                make('showme')
+            make("shared")
+            if "+showme" in spec:
+                make("showme")
             
 
     def install(self, spec, prefix):
@@ -72,12 +72,12 @@ class AccessTriangle(MakefilePackage):
             # ls_output = os.listdir('.')
             # print("Files in build directory:\n", ls_output)
             
-            install('triangle.h', prefix.include)
-            install('libtriangle.so', prefix.lib)
+            install("triangle.h", prefix.include)
+            install("libtriangle.so", prefix.lib)
             
             # Install showme only if +showme is chosen
-            if '+showme' in spec:
-                install('showme', prefix.bin)
+            if "+showme" in spec:
+                install("showme", prefix.bin)
 
             
 
