@@ -17,7 +17,6 @@ class AccessWw3(CMakePackage):
 
     variant("openmp", default=False, description="Enable OpenMP")
     variant("access3", default=True, description="Install CICE as library for Access3 models") 
-    variant("cesmcoupled", default=False, description="Set CESMCOUPLED CPP Flag")
 
     depends_on("access3-share", when="+access3") 
 
@@ -29,11 +28,6 @@ class AccessWw3(CMakePackage):
         args = [
             self.define_from_variant("OPENMP", "openmp"),
             self.define_from_variant("ACCESS3_WW3", "access3"),
-            self.define_from_variant("CESMCOUPLED", "cesmcoupled"),
         ]
-
-        # args.append(self.define("CMAKE_C_COMPILER", self.spec["mpi"].mpicc))
-        # args.append(self.define("CMAKE_CXX_COMPILER", self.spec["mpi"].mpicxx))
-        # args.append(self.define("CMAKE_Fortran_COMPILER", self.spec["mpi"].mpifc))
         
         return args

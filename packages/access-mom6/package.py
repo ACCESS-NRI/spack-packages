@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import CMakePackage, variant, version, depends_on
+from spack.package import *
 
 
 class AccessMom6(CMakePackage):

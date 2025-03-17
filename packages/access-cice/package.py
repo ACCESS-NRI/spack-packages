@@ -1,8 +1,6 @@
-# Copyright 2013-2025 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
-# SPDX-License-Identifier: Apache-2.0
-# ----------------------------------------------------------------------------
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
 
@@ -36,8 +34,8 @@ class AccessCice(CMakePackage):
     depends_on("mpi")
     depends_on("netcdf-fortran@4.6.0:", when="io_type=NetCDF")
     depends_on("parallelio@2.5.10: build_type==RelWithDebInfo", when="io_type=PIO")
-    depends_on("parallelio fflags='-qno-opt-dynamic-align -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model source' cflags='-qno-opt-dynamic-align -fp-model precise -std=gnu99'", when="%intel io_type=PIO")
-    depends_on("parallelio fflags='-qno-opt-dynamic-align -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model source' cflags='-qno-opt-dynamic-align -fp-model precise -std=gnu99'", when="%oneapi io_type=PIO")
+    depends_on("parallelio fflags='-qno-opt-dynamic-align -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model precise' cflags='-qno-opt-dynamic-align -fp-model precise -std=gnu99'", when="%intel io_type=PIO")
+    depends_on("parallelio fflags='-qno-opt-dynamic-align -fp-model precise' cflags='-qno-opt-dynamic-align -fp-model precise'", when="%oneapi io_type=PIO")
 
     root_cmakelists_dir = "configuration/scripts/cmake"
     
