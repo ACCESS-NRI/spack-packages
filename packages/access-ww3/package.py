@@ -12,22 +12,20 @@ class AccessWw3(CMakePackage):
     homepage = "https://github.com/noaa-emc/ww3/"
     git = "https://github.com/ACCESS-NRI/WW3"
     maintainers("anton-seaice", "harshula")
-    
     license("LGPL-3.0", checked_by="anton-seaice")
 
     variant("openmp", default=False, description="Enable OpenMP")
     variant("access3", default=True, description="Install CICE as library for Access3 models") 
 
-    depends_on("access3-share", when="+access3") 
-
+    depends_on("access3-share", when="+access3")
     depends_on("cmake@3.18:", type="build")
     depends_on("mpi")
-    depends_on("netcdf-fortran@4.6.0:")   
-    
+    depends_on("netcdf-fortran@4.6.0:")
+
     def cmake_args(self):
         args = [
             self.define_from_variant("OPENMP", "openmp"),
             self.define_from_variant("ACCESS3_WW3", "access3"),
         ]
-        
+
         return args

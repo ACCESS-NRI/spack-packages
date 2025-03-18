@@ -14,7 +14,7 @@ class AccessCice(CMakePackage):
     git = "https://github.com/ACCESS-NRI/CICE"
     submodules = True
     maintainers("anton-seaice", "harshula")
-    
+
     # see license file at https://github.com/CICE-Consortium/CICE
     license("LicenseRef-CICE", checked_by="anton-seaice")
 
@@ -29,16 +29,13 @@ class AccessCice(CMakePackage):
     )
 
     depends_on("access3-share", when="+access3") 
-
     depends_on("cmake@3.18:", type="build")
     depends_on("mpi")
     depends_on("netcdf-fortran@4.6.0:", when="io_type=NetCDF")
     depends_on("parallelio@2.5.10: build_type==RelWithDebInfo", when="io_type=PIO")
-    depends_on("parallelio fflags='-qno-opt-dynamic-align -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model precise' cflags='-qno-opt-dynamic-align -fp-model precise -std=gnu99'", when="%intel io_type=PIO")
-    depends_on("parallelio fflags='-qno-opt-dynamic-align -fp-model precise' cflags='-qno-opt-dynamic-align -fp-model precise'", when="%oneapi io_type=PIO")
 
     root_cmakelists_dir = "configuration/scripts/cmake"
-    
+
     def cmake_args(self):
         args = [
             self.define_from_variant("OPENMP", "openmp"),
@@ -46,5 +43,5 @@ class AccessCice(CMakePackage):
             self.define_from_variant("ACCESS3_CICE", "access3"),
             self.define_from_variant("CESMCOUPLED", "cesmcoupled"),
         ]
-        
+
         return args

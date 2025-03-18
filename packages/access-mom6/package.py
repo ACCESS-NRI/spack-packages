@@ -15,7 +15,7 @@ class AccessMom6(CMakePackage):
     git = "https://github.com/ACCESS-NRI/MOM6.git"
     submodules = True
     maintainers("minghangli-uni", "harshula")
-    
+
     # see license file in https://github.com/ACCESS-NRI/MOM6/blob/e92c971084e185cfd3902f18072320b45d583a54/LICENSE.md
     license("LGPL-3.0", checked_by="minghangli-uni")
 
