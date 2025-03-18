@@ -45,7 +45,7 @@ class Access3Exe(CMakePackage):
 
     depends_on("cmake@3.18:", type="build")
     depends_on("mpi")
-    deponds_on("access3-share")
+    depends_on("access3-share")
     depends_on("esmf@8.3.0:")
 
     for conf in KNOWN_CONF:
