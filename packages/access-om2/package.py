@@ -16,7 +16,7 @@ class AccessOm2(BundlePackage):
 
     maintainers("harshula")
 
-    version("access-om2")
+    version("latest")
 
     variant("deterministic", default=False, description="Deterministic build.")
 
