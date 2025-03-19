@@ -32,7 +32,7 @@ class AccessCice(CMakePackage):
     depends_on("cmake@3.18:", type="build")
     depends_on("mpi")
     depends_on("netcdf-fortran@4.6.0:", when="io_type=NetCDF")
-    depends_on("parallelio@2.5.10: build_type==RelWithDebInfo", when="io_type=PIO")
+    depends_on("parallelio@2.5.10:", when="io_type=PIO")
 
     root_cmakelists_dir = "configuration/scripts/cmake"
 

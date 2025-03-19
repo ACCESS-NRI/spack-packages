@@ -27,9 +27,11 @@ class Access3Share(CMakePackage):
     depends_on("esmf fflags='-fp-model precise'", when="%intel")
     depends_on("fortranxml@4.1.2:")
 
-    depends_on("parallelio@2.5.10: build_type==RelWithDebInfo")
-    depends_on("parallelio fflags='-qno-opt-dynamic-align -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model precise' cflags='-qno-opt-dynamic-align -fp-model precise -std=gnu99'", when="%intel")
-    # depends_on("parallelio fflags='-qno-opt-dynamic-align -fp-model precise' cflags='-qno-opt-dynamic-align -fp-model precise'", when="%oneapi")
+    depends_on("parallelio@2.5.10:")
+    depends_on(("parallelio build_type==RelWithDebInfo "
+                "fflags='-qno-opt-dynamic-align -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model precise' "
+                "cflags='-qno-opt-dynamic-align -fp-model precise -std=gnu99'"),
+                when="%intel")
 
     def cmake_args(self):
         args = [
