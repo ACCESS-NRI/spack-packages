@@ -11,8 +11,10 @@ class AccessTestModelComponent(CMakePackage):
     """ACCESS Test Model Component is a small test FORTRAN model component
        used to test CI workflows."""
 
-    homepage = "https://github.com/ACCESS-NRI/access-test-model"
-    git = "https://github.com/ACCESS-NRI/access-test-model.git"
+    githubrepo = "ACCESS-NRI/access-test-model-component"
+
+    homepage = f"https://github.com/{githubrepo}"
+    git = f"https://github.com/{githubrepo}.git"
 
     maintainers("aidanheerdegen", "codegat", "harshula")
 
@@ -27,4 +29,4 @@ class AccessTestModelComponent(CMakePackage):
     root_cmakelists_dir = "stub"
 
     def url_for_version(self, version):
-        return "https://github.com/ACCESS-NRI/access-test-model/tarball/{0}".format(version)
+        return f"https://github.com/{self.githubrepo/tarball/{version}"
