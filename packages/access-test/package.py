@@ -20,7 +20,7 @@ class AccessTest(BundlePackage):
 
     variant("mpi", default=True, description="MPI build")
 
-    depends_on("access-test-model+mpi", when="+mpi", type="run")
-    depends_on("access-test-model~mpi", when="~mpi", type="run")
+    depends_on("access-test-model-component+mpi", when="+mpi", type="run")
+    depends_on("access-test-model-component~mpi", when="~mpi", type="run")
 
     # There is no need for install() since there is no code.
