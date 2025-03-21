@@ -29,4 +29,4 @@ class AccessTestModelComponent(CMakePackage):
     root_cmakelists_dir = "stub"
 
     def url_for_version(self, version):
-        return f"https://github.com/{self.githubrepo/tarball/{version}"
+        return f"https://github.com/{self.githubrepo}/tarball/{version}"
