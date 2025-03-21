@@ -7,8 +7,8 @@
 from spack.package import *
 
 
-class AccessTestModel(CMakePackage):
-    """ACCESS Test Model is a small test FORTRAN model component
+class AccessTestModelComponent(CMakePackage):
+    """ACCESS Test Model Component is a small test FORTRAN model component
        used to test CI workflows."""
 
     homepage = "https://github.com/ACCESS-NRI/access-test-model"
