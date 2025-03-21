@@ -7,11 +7,11 @@
 from spack.package import *
 
 
-class AccessTestModelComponent(CMakePackage):
-    """ACCESS Test Model Component is a small test FORTRAN model component
+class AccessTestComponent(CMakePackage):
+    """ACCESS Test Component is a small test FORTRAN model component
        used to test CI workflows."""
 
-    githubrepo = "ACCESS-NRI/access-test-model-component"
+    githubrepo = "ACCESS-NRI/access-test-component"
 
     homepage = f"https://github.com/{githubrepo}"
     git = f"https://github.com/{githubrepo}.git"
