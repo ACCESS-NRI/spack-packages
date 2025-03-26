@@ -20,7 +20,11 @@ class AccessMom6(CMakePackage):
     license("LGPL-3.0", checked_by="minghangli-uni")
 
     variant("openmp", default=False, description="Enable OpenMP")
+<<<<<<< Updated upstream
     variant("mom_symmetric", default=False, description="Use symmetric memory in MOM6")
+=======
+    variant("asymmetric_mem", default=False, description="Use asymmetric memory in MOM6")
+>>>>>>> Stashed changes
     variant("access3", default=True, description="Building MOM6 library with Access3share")
     variant("cesmcoupled", default=False, description="Enable parameters with cesm coupled")
 
@@ -37,10 +41,17 @@ class AccessMom6(CMakePackage):
 
     def cmake_args(self):
         args = [
+<<<<<<< Updated upstream
             self.define_from_variant("OPENMP", "openmp"),
             self.define_from_variant("MOM_SYMMETRIC", "mom_symmetric"),
             self.define_from_variant("ACCESS3_MOM6", "access3"),
             self.define_from_variant("CESMCOUPLED", "cesmcoupled"),
+=======
+            self.define_from_variant("MOM6_OPENMP", "openmp"),
+            self.define_from_variant("MOM6_SYMMETRIC", "mom6_asymmetric"),
+            self.define_from_variant("MOM6_ACCESS3_MOM6", "access3"),
+            self.define_from_variant("MOM6_CESMCOUPLED", "cesmcoupled"),
+>>>>>>> Stashed changes
         ]
 
         return args

@@ -24,8 +24,13 @@ class AccessWw3(CMakePackage):
 
     def cmake_args(self):
         args = [
+<<<<<<< Updated upstream
             self.define_from_variant("OPENMP", "openmp"),
             self.define_from_variant("ACCESS3_WW3", "access3"),
+=======
+            self.define_from_variant("WW3_OPENMP", "openmp"),
+            self.define_from_variant("WW3_ACCESS3", "access3"),
+>>>>>>> Stashed changes
         ]
 
         return args
