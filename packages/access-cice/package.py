@@ -38,17 +38,10 @@ class AccessCice(CMakePackage):
 
     def cmake_args(self):
         args = [
-<<<<<<< Updated upstream
-            self.define_from_variant("OPENMP", "openmp"),
-            self.define_from_variant("CICE_IO", "io_type"),
-            self.define_from_variant("ACCESS3_CICE", "access3"),
-            self.define_from_variant("CESMCOUPLED", "cesmcoupled"),
-=======
             self.define_from_variant("CICE_OPENMP", "openmp"),
             self.define_from_variant("CICE_IO", "io_type"),
             self.define_from_variant("CICE_ACCESS3", "access3"),
             self.define_from_variant("CICE_CESMCOUPLED", "cesmcoupled"),
->>>>>>> Stashed changes
         ]
 
         return args
