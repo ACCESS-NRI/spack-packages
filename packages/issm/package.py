@@ -120,9 +120,6 @@ class Issm(AutotoolsPackage):
         args.append("--with-m1qn3-dir={0}".format(self.spec["m1qn3"].prefix.lib))
         args.append("--with-python-version=3.9")
         args.append("--with-python-dir=/apps/python3/3.9.2")
-
-
-        numpy_site_packages = "/apps/python3/3.9.2/lib/python3.9/site-packages/numpy-1.20.0-py3.9-linux-x86_64.egg/numpy"
         numpy_core_dir = "/apps/python3/3.9.2/lib/python3.9/site-packages/numpy-1.20.0-py3.9-linux-x86_64.egg/numpy"
         args.append("--with-python-numpy-dir={0}".format(numpy_core_dir))
         
@@ -132,6 +129,8 @@ class Issm(AutotoolsPackage):
         # Run the normal Autotools install logic
         super().install(spec, prefix)
 
-        # Copy the entire source tree into an additional directory
-        install_tree(self.stage.source_path, prefix.src)
+        # Copy only the examples directory directly into the prefix directory
+        examples_src = os.path.join(self.stage.source_path, 'examples')
+        examples_dst = os.path.join(prefix, 'examples')
+        install_tree(examples_src, examples_dst)
 
