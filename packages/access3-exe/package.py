@@ -30,17 +30,17 @@ class Access3Exe(CMakePackage):
 
     variant(
         "configurations",
-        values=(*KNOWN_CONF,'none'),
+        values=(*KNOWN_CONF, 'none'),
         default='none',
         multi=True,
         description="ACCESS-OM3 configurations to build",
-        sticky=True #force concretizer to not pick alternative variants
+        sticky=True  # force concretizer to not pick alternative variants
     )
 
     # force user to supply a build combination
     conflicts(
         "configurations=none",
-        msg = f"A configurations variant must be set, can be one or many of {KNOWN_CONF}"
+        msg=f"A configurations variant must be set, can be one or many of {KNOWN_CONF}"
     )
 
     depends_on("cmake@3.18:", type="build")
@@ -62,7 +62,7 @@ class Access3Exe(CMakePackage):
         buildConf = ";".join(self.spec.variants["configurations"].value)
 
         args = [
-            self.define("BuildConfigurations",buildConf),
+            self.define("BuildConfigurations", buildConf),
         ]
 
         return args
