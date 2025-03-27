@@ -28,7 +28,7 @@ class DatetimeFortran(AutotoolsPackage):
 
     homepage = "https://github.com/wavebitscientific/datetime-fortran/tree/main"
 
-    maintainers = ['aidanheerdegen', 'milancurcic']
+    maintainers('aidanheerdegen', 'milancurcic')
 
     version('1.7.0', sha256='cff4c1f53af87a9f8f31256a3e04176f887cc3e947a4540481ade4139baf0d6f')
     version('1.6.2', sha256='765f4ea77e9057f099612f66e52f92162f9f6325a8d219e67cb9d5ebaa41b67e')

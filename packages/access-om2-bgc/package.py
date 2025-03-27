@@ -14,7 +14,7 @@ class AccessOm2Bgc(BundlePackage):
 
     git = "https://github.com/ACCESS-NRI/ACCESS-OM2-BGC.git"
 
-    maintainers = ["harshula"]
+    maintainers("harshula")
 
     version("latest")
 
