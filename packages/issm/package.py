@@ -23,16 +23,8 @@ class Issm(AutotoolsPackage):
     version("main", branch="main", git="https://github.com/ACCESS-NRI/ISSM.git")
     version("access-development", branch="access-development", git="https://github.com/ACCESS-NRI/ISSM.git")
 
-    #
-    # Variants
-    #
     variant("wrappers", default=False,
             description="Enable building with MPI wrappers")
-
-    # If you want to make external Fortran linking optional or specialized,
-    # you can create a separate variant for it, but typically you might
-    # rely on Spack's compiler wrappers for Fortran libraries.
-
     #
     # Build dependencies
     #
@@ -40,16 +32,10 @@ class Issm(AutotoolsPackage):
     depends_on("automake", type="build")
     depends_on("libtool",  type="build")
     depends_on("m4",       type="build")
-    
-    # Required libraries
-    #
     depends_on("mpi")
     depends_on("petsc+metis+mumps+scalapack")
     depends_on("m1qn3")
 
-    #
-    # Optional libraries
-    #
     depends_on('access-triangle', when='+wrappers')
     depends_on("parmetis",  when="+wrappers")
     # depends_on("python@3.9.0:3.9", when="+wrappers", type=("build", "run"))
@@ -110,18 +96,26 @@ class Issm(AutotoolsPackage):
         args.append("--with-scalapack-dir={0}".format(self.spec["scalapack"].prefix))
         args.append("--with-parmetis-dir={0}".format(self.spec["parmetis"].prefix))
         args.append("--with-triangle-dir={0}".format(self.spec["access-triangle"].prefix))
-
-        #
-        # M1QN3
-        #
         # Some codes want the actual library subdir for m1qn3, 
         # e.g. "prefix.lib" or "prefix" depending on the configure logic:
         #
         args.append("--with-m1qn3-dir={0}".format(self.spec["m1qn3"].prefix.lib))
-        args.append("--with-python-version=3.9")
-        args.append("--with-python-dir=/apps/python3/3.9.2")
-        numpy_core_dir = "/apps/python3/3.9.2/lib/python3.9/site-packages/numpy-1.20.0-py3.9-linux-x86_64.egg/numpy"
-        args.append("--with-python-numpy-dir={0}".format(numpy_core_dir))
+        
+        python_version = "{0}.{1}".format(sys.version_info.major, sys.version_info.minor)
+        python_prefix = self.spec['python'].prefix
+
+        args.append("--with-python-version={0}".format(python_version))
+        args.append("--with-python-dir={0}".format(python_prefix))
+
+        numpy_prefix = self.spec['py-numpy'].prefix
+        args.append("--with-python-numpy-dir={0}".format(numpy_prefix))
+        # args.append("--with-python-version=3.9")
+        # args.append("--with-python-dir=/apps/python3/3.9.2")
+        # numpy_core_dir = "/apps/python3/3.9.2/lib/python3.9/site-packages/numpy-1.20.0-py3.9-linux-x86_64.egg/numpy"
+        # args.append("--with-python-numpy-dir={0}".format(numpy_core_dir))
+        
+        # numpy_prefix = self.spec['py-numpy'].prefix
+        # args.append('--with-python-numpy-dir={0}'.format(numpy_prefix))
         
         return args
 
