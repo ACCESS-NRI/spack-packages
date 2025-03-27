@@ -1,6 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, 
-# LLC and other Spack Project Developers. See the top-level COPYRIGHT 
-# file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # Copyright 2023 Angus Gibson
 # Modified by Justin Kin Jun Hew, 2025
