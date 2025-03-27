@@ -50,9 +50,9 @@ class Access3Exe(CMakePackage):
 
     for conf in KNOWN_CONF:
         if "CICE6" in conf:
-            depends_on("access-cice+access3+cesmcoupled", when=f"configurations={conf}")
+            depends_on("access-cice+access3", when=f"configurations={conf}")
         if "MOM6" in conf:
-            depends_on("access-mom6+access3+cesmcoupled", when=f"configurations={conf}")
+            depends_on("access-mom6+access3", when=f"configurations={conf}")
         if "WW3" in conf:
             depends_on("access-ww3+access3", when=f"configurations={conf}")
 
