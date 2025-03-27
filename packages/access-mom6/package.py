@@ -39,7 +39,7 @@ class AccessMom6(CMakePackage):
         args = [
             self.define_from_variant("MOM6_OPENMP", "openmp"),
             self.define_from_variant("MOM6_ASYMMETRIC", "asymmetric_mem"),
-            self.define_from_variant("MOM6_ACCESS3_MOM6", "access3"),
+            self.define_from_variant("MOM6_ACCESS3", "access3"),
             self.define_from_variant("MOM6_CESMCOUPLED", "cesmcoupled"),
         ]
 
