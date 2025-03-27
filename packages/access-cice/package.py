@@ -20,7 +20,6 @@ class AccessCice(CMakePackage):
 
     variant("openmp", default=False, description="Enable OpenMP")
     variant("access3", default=True, description="Install CICE as library for Access3 models") 
-    variant("cesmcoupled", default=False, description="Set CESMCOUPLED CPP Flag")
 
     variant("io_type", 
         default="NetCDF",
@@ -41,7 +40,6 @@ class AccessCice(CMakePackage):
             self.define_from_variant("CICE_OPENMP", "openmp"),
             self.define_from_variant("CICE_IO", "io_type"),
             self.define_from_variant("CICE_ACCESS3", "access3"),
-            self.define_from_variant("CICE_CESMCOUPLED", "cesmcoupled"),
         ]
 
         return args

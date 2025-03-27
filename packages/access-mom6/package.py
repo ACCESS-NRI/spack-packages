@@ -22,7 +22,6 @@ class AccessMom6(CMakePackage):
     variant("openmp", default=False, description="Enable OpenMP")
     variant("asymmetric_mem", default=False, description="Use asymmetric memory in MOM6")
     variant("access3", default=True, description="Building MOM6 library with Access3share")
-    variant("cesmcoupled", default=False, description="Enable parameters with cesm coupled")
 
     depends_on("access3-share", when="+access3")
 
@@ -40,7 +39,6 @@ class AccessMom6(CMakePackage):
             self.define_from_variant("MOM6_OPENMP", "openmp"),
             self.define_from_variant("MOM6_ASYMMETRIC", "asymmetric_mem"),
             self.define_from_variant("MOM6_ACCESS3", "access3"),
-            self.define_from_variant("MOM6_CESMCOUPLED", "cesmcoupled"),
         ]
 
         return args
