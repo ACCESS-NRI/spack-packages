@@ -18,7 +18,7 @@ class Issm(AutotoolsPackage):
 
     #version("4.24", sha256="c71d870e63f0ce3ae938d6a669e80dc2cecef827084db31a4b2cfc3a26a44820")
     
-    version("main", branch="main", git="https://github.com/ACCESS-NRI/ISSM.git")
+    version("main", branch="main")
     version("access-development", branch="access-development", git="https://github.com/ACCESS-NRI/ISSM.git")
 
     variant("wrappers", default=False,
