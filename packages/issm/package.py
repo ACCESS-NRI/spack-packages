@@ -122,7 +122,7 @@ class Issm(AutotoolsPackage):
         super().install(spec, prefix)
 
         # Copy only the examples directory directly into the prefix directory
-        examples_src = os.path.join(self.stage.source_path, 'examples')
-        examples_dst = os.path.join(prefix, 'examples')
+        examples_src = join_path(self.stage.source_path, 'examples')
+        examples_dst = join_path(prefix, 'examples')
         install_tree(examples_src, examples_dst)
 
