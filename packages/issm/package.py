@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # Copyright 2023 Angus Gibson
+# Modified by Justin Kin Jun Hew, 2025
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -16,6 +17,8 @@ class Issm(AutotoolsPackage):
 
     version("develop")
     version("4.24", sha256="0487bd025f37be4a39dfd48b047de6a6423e310dfe5281dbd9a52aa35b26151a")
+    
+    maintainers("justinh2002")
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
@@ -26,8 +29,10 @@ class Issm(AutotoolsPackage):
     depends_on("petsc+metis+mumps+scalapack")
     depends_on("m1qn3")
 
+    conflicts("%gcc@14:", msg="ISSM cannot be built with GCC versions above 13")
+
     def url_for_version(self, version):
-        return "https://github.com/ISSMteam/ISSM/tarball/v{0}".format(version)
+        return "https://github.com/ISSMteam/ISSM/archive/refs/tags/v{0}.tar.gz".format(version)
 
     def autoreconf(self, spec, prefix):
         autoreconf("--install", "--verbose", "--force")
