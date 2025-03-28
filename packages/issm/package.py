@@ -16,7 +16,7 @@ class Issm(AutotoolsPackage):
     git = "https://github.com/ISSMteam/ISSM.git"
 
     version("develop")
-    version("4.24", sha256="c71d870e63f0ce3ae938d6a669e80dc2cecef827084db31a4b2cfc3a26a44820")
+    version("4.24", sha256="0487bd025f37be4a39dfd48b047de6a6423e310dfe5281dbd9a52aa35b26151a")
     
     maintainers("justinh2002")
 
@@ -32,7 +32,7 @@ class Issm(AutotoolsPackage):
     conflicts("%gcc@14:", msg="ISSM cannot be built with GCC versions above 13")
 
     def url_for_version(self, version):
-        return "https://github.com/ISSMteam/ISSM/tarball/v{0}".format(version)
+        return "https://github.com/ISSMteam/ISSM/archive/refs/tags/v{0}.tar.gz".format(version)
 
     def autoreconf(self, spec, prefix):
         autoreconf("--install", "--verbose", "--force")
