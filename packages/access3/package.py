@@ -15,7 +15,7 @@ KNOWN_CONF = (
     "MOM6-CICE6-WW3",
 )
 
-class Access3Exe(CMakePackage):
+class Access3(CMakePackage):
     """Executable build for ACCESS version 3 climate models. The exectuable is 
     defined in Community Mediator for Earth Prediction Systems (CMEPS). Currently 
     implemented for ACCESS-OM3, and in the future may support ACCESS-CM3 and 
