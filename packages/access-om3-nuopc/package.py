@@ -11,7 +11,7 @@ class AccessOm3Nuopc(CMakePackage):
     homepage = "https://www.github.com/COSIMA/access-om3"
     git = "https://github.com/COSIMA/access-om3.git"
     submodules = True
-    maintainers = ["micaeljtoliveira", "aekiss"]
+    maintainers("micaeljtoliveira", "aekiss")
 
     version("main", branch="main", submodules=True)
 

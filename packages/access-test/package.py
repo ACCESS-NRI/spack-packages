@@ -18,9 +18,9 @@ class AccessTest(BundlePackage):
 
     version("latest")
 
-    variant("deterministic", default=False, description="Deterministic build.")
+    variant("mpi", default=True, description="MPI build")
 
-    depends_on("oasis3-mct+deterministic", when="+deterministic", type="run")
-    depends_on("oasis3-mct~deterministic", when="~deterministic", type="run")
+    depends_on("access-test-component+mpi", when="+mpi", type="run")
+    depends_on("access-test-component~mpi", when="~mpi", type="run")
 
     # There is no need for install() since there is no code.
