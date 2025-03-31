@@ -12,7 +12,7 @@ class AccessWw3(CMakePackage):
     homepage = "https://github.com/noaa-emc/ww3/"
     git = "https://github.com/ACCESS-NRI/WW3"
     maintainers("anton-seaice", "harshula")
-    license("LGPL-3.0", checked_by="anton-seaice")
+    license("LGPL-3.0-only", checked_by="anton-seaice")
 
     variant("openmp", default=False, description="Enable OpenMP")
     variant("access3", default=True, description="Install CICE as library for Access3 models") 

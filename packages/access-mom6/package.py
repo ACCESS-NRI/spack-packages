@@ -17,7 +17,7 @@ class AccessMom6(CMakePackage):
     maintainers("minghangli-uni", "harshula")
 
     # see license file in https://github.com/ACCESS-NRI/MOM6/blob/e92c971084e185cfd3902f18072320b45d583a54/LICENSE.md
-    license("LGPL-3.0", checked_by="minghangli-uni")
+    license("LGPL-3.0-only", checked_by="minghangli-uni")
 
     variant("openmp", default=False, description="Enable OpenMP")
     variant("asymmetric_mem", default=False, description="Use asymmetric memory in MOM6")
@@ -29,7 +29,6 @@ class AccessMom6(CMakePackage):
     depends_on("mpi")
     depends_on("netcdf-fortran@4.6.0:")
     depends_on("fms@2021.03: precision=64 +large_file ~gfs_phys ~quad_precision")
-    depends_on("fms build_type==RelWithDebInfo", when="%intel")
     depends_on("fms +openmp", when="+openmp")
     depends_on("fms ~openmp", when="~openmp")
 

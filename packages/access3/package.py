@@ -19,7 +19,7 @@ class Access3(CMakePackage):
     """Executable build for ACCESS version 3 climate models. The exectuable is 
     defined in Community Mediator for Earth Prediction Systems (CMEPS). Currently 
     implemented for ACCESS-OM3, and in the future may support ACCESS-CM3 and 
-    ACCESS-ESM3. This is a companion pacakge to Access3Share which builds the 
+    ACCESS-ESM3. This is a companion package to Access3Share which builds the 
     shared libraries."""
 
     homepage = "https://github.com/ACCESS-NRI/access3-share"
@@ -33,7 +33,11 @@ class Access3(CMakePackage):
         values=(*KNOWN_CONF, 'none'),
         default='none',
         multi=True,
-        description="ACCESS-OM3 configurations to build",
+        description=(
+            "ACCESS-OM3 configurations to build. When a model component "
+            "is not included in a configuration, that component is replaced by "
+            "a CDEPS data component."
+        )
         sticky=True  # force concretizer to not pick alternative variants
     )
 
@@ -46,7 +50,7 @@ class Access3(CMakePackage):
     depends_on("cmake@3.18:", type="build")
     depends_on("mpi")
     depends_on("access3-share")
-    depends_on("esmf@8.3.0:")
+    depends_on("esmf@8.7.0:")
 
     for conf in KNOWN_CONF:
         if "CICE6" in conf:
@@ -63,6 +67,7 @@ class Access3(CMakePackage):
 
         args = [
             self.define("BuildConfigurations", buildConf),
+            self.define("ACCESS3_LIB_INSTALL", False),
         ]
 
         return args
