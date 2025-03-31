@@ -15,7 +15,7 @@ class Issm(AutotoolsPackage):
     homepage = "https://issm.jpl.nasa.gov/"
     git = "https://github.com/ISSMteam/ISSM.git"
 
-    version("develop")
+    version("develop", branch="main")
     version("4.24", sha256="0487bd025f37be4a39dfd48b047de6a6423e310dfe5281dbd9a52aa35b26151a")
     
     maintainers("justinh2002")
