@@ -91,9 +91,9 @@ LDFLAGS    := $(FFLAGS)
         # Based on https://github.com/coecms/access-esm-build-gadi/blob/master/patch/Macros.Linux.raijin.nci.org.au-mct
         config["intel"] = """
 ifeq ($(DEBUG), yes)
-    FFLAGS     := -r8 -i4 -O0 -g -align all -w -ftz -convert big_endian -assume byterecl -no-vec -xCORE-AVX2 -fp-model precise
+    FFLAGS     := -r8 -i4 -O0 -g -align all -traceback -w -ftz -convert big_endian -assume byterecl -no-vec -xCORE-AVX2 -fp-model precise
 else
-    FFLAGS     := -r8 -i4 -O2 -align all -w -ftz -convert big_endian -assume byterecl -no-vec -xCORE-AVX512 -fp-model precise
+    FFLAGS     := -r8 -i4 -O2 -align all -traceback -w -ftz -convert big_endian -assume byterecl -no-vec -xCORE-AVX512 -fp-model precise
 endif
 LDFLAGS    := $(FFLAGS) -v -static-intel 
 """
