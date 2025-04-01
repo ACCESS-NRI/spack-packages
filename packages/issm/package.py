@@ -17,11 +17,10 @@ class Issm(AutotoolsPackage):
 
     maintainers("justinh2002")
 
-    version("4.24", sha256="c71d870e63f0ce3ae938d6a669e80dc2cecef827084db31a4b2cfc3a26a44820")
-    #version("4.24", sha256="c71d870e63f0ce3ae938d6a669e80dc2cecef827084db31a4b2cfc3a26a44820")
+    version("upstream", branch="main", git="https://github.com/ISSMteam/ISSM.git")
     
     version("main", branch="main", git="https://github.com/ACCESS-NRI/ISSM.git")
-    version("access-development", branch="access-development", git="https://github.com/ACCESS-NRI/ISSM.git")
+    version("access-development", branch="access-development", git="https://github.com/ACCESS-NRI/ISSM.git", preferred=True)
 
     variant("wrappers", default=False,
             description="Enable building with MPI wrappers")
