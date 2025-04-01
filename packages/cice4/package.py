@@ -96,6 +96,7 @@ else
     FFLAGS     := -r8 -i4 -O2 -align all -traceback -w -ftz -convert big_endian -assume byterecl -no-vec -xCORE-AVX512 -fp-model precise
 endif
 LDFLAGS    := $(FFLAGS) -v -static-intel 
+CPP        := ifort -preprocess-only
 """
 
         # Add support for the ifx compiler
