@@ -37,7 +37,7 @@ class Access3(CMakePackage):
             "ACCESS-OM3 configurations to build. When a model component "
             "is not included in a configuration, that component is replaced by "
             "a CDEPS data component."
-        )
+        ),
         sticky=True  # force concretizer to not pick alternative variants
     )
 
