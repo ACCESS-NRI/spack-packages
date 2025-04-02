@@ -5,7 +5,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import BundlePackage, version, depends_on
+from spack.package import BundlePackage, maintainers, version, depends_on
 
 
 class AccessIssm(BundlePackage):
@@ -18,10 +18,9 @@ class AccessIssm(BundlePackage):
     """
 
     homepage = "https://www.access-nri.org.au"
-
     git = "https://github.com/ACCESS-NRI/ACCESS-ISSM.git"
 
-    maintainers = ["harshula", "justinh2002"]
+    maintainers("harshula", "justinh2002")
 
     version("latest")
 
