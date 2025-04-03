@@ -124,6 +124,19 @@ class Issm(AutotoolsPackage):
         # args.append('--with-python-numpy-dir={0}'.format(numpy_prefix))
         
         return args
+    
+    def build(self, spec, prefix):
+        """Force serial build only if +wrappers is enabled."""
+        if "+wrappers" in self.spec:
+            old_parallel = self.parallel
+            try:
+                self.parallel = False  # force single job for 'make'
+                super().build(spec, prefix)
+            finally:
+                self.parallel = old_parallel
+        else:
+            # Normal parallel build
+            super().build(spec, prefix)
 
     def install(self, spec, prefix):
         # Run the normal Autotools install logic
