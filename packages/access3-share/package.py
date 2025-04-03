@@ -27,11 +27,11 @@ class Access3Share(CMakePackage):
     depends_on("esmf fflags='-fp-model precise'", when="%intel") # for consistency with access-om3-nuopc builds, e.g. https://github.com/ACCESS-NRI/spack-packages/blob/e2bdb46e56af8ac14183e7ed25da9235486c973a/packages/access-om3-nuopc/package.py#L58
     depends_on("fortranxml@4.1.2:")
 
-    depends_on("parallelio@2.5.10:")
+    depends_on("parallelio@2.5.3:")
     depends_on(("parallelio "
                 "fflags='-qno-opt-dynamic-align -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model precise' "
                 "cflags='-qno-opt-dynamic-align -fp-model precise -std=gnu99'"),
-                when="%intel")
+                when="%intel") # consistency with access-om3-nuopc builds, e.g. https://github.com/ACCESS-NRI/spack-packages/blob/e2bdb46e56af8ac14183e7ed25da9235486c973a/packages/access-om3-nuopc/package.py#L65
 
     def cmake_args(self):
         args = [
