@@ -113,15 +113,7 @@ class Issm(AutotoolsPackage):
         # e.g. "prefix.lib" or "prefix" depending on the configure logic:
         #
         args.append("--with-m1qn3-dir={0}".format(self.spec["m1qn3"].prefix.lib))
-        
-
-        # args.append("--with-python-version=3.9")
-        # args.append("--with-python-dir=/apps/python3/3.9.2")
-        # numpy_core_dir = "/apps/python3/3.9.2/lib/python3.9/site-packages/numpy-1.20.0-py3.9-linux-x86_64.egg/numpy"
-        # args.append("--with-python-numpy-dir={0}".format(numpy_core_dir))
-        
-        # numpy_prefix = self.spec['py-numpy'].prefix
-        # args.append('--with-python-numpy-dir={0}'.format(numpy_prefix))
+    
         
         return args
     
