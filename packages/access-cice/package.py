@@ -6,9 +6,10 @@ from spack.package import *
 
 
 class AccessCice(CMakePackage):
-    """CICE is a computationally efficient model for simulating the growth, melting, 
-    and movement of polar sea ice. CICE is maintained and developed by the CICE-Consortium. 
-    This package builds using the Access3Share common libraries for ACCESS 3 models."""
+    """CICE is a computationally efficient model for simulating the growth,
+    melting, and movement of polar sea ice. CICE is maintained and developed by
+    the CICE-Consortium. This package builds using the Access3Share common
+    libraries for ACCESS3 models."""
 
     homepage = "https://github.com/CICE-Consortium/CICE"
     git = "https://github.com/ACCESS-NRI/CICE"
@@ -19,7 +20,11 @@ class AccessCice(CMakePackage):
     license("LicenseRef-CICE", checked_by="anton-seaice")
 
     variant("openmp", default=False, description="Enable OpenMP")
-    variant("access3", default=True, description="Install CICE as library for Access3 models") 
+    variant(
+        "access3",
+        default=True,
+        description="Install CICE as library for Access3 models"
+    )
 
     variant("io_type", 
         default="NetCDF",

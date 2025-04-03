@@ -16,11 +16,11 @@ KNOWN_CONF = (
 )
 
 class Access3(CMakePackage):
-    """Executable build for ACCESS version 3 climate models. The exectuable is 
-    defined in Community Mediator for Earth Prediction Systems (CMEPS). Currently 
-    implemented for ACCESS-OM3, and in the future may support ACCESS-CM3 and 
-    ACCESS-ESM3. This is a companion package to Access3Share which builds the 
-    shared libraries."""
+    """Executable build for ACCESS version 3 climate models. The exectuable is
+    defined in Community Mediator for Earth Prediction Systems (CMEPS).
+    Currently implemented for ACCESS-OM3, and in the future may support
+    ACCESS-CM3 and ACCESS-ESM3. This is a companion package to Access3Share
+    which builds the shared libraries."""
 
     homepage = "https://github.com/ACCESS-NRI/access3-share"
     git = "https://github.com/ACCESS-NRI/access3-share"
@@ -61,7 +61,6 @@ class Access3(CMakePackage):
             depends_on("access-ww3+access3", when=f"configurations={conf}")
 
     def cmake_args(self):
-
         # make configurations a cmake argument
         buildConf = ";".join(self.spec.variants["configurations"].value)
 

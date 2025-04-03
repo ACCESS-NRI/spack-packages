@@ -6,10 +6,12 @@ from spack.package import *
 
 
 class AccessMom6(CMakePackage):
-    """The Modular Ocean Model (MOM) describes the numerical ocean models originating from NOAA/GFDL. 
-    They are used to simulate ocean currents at both regional and global scales, 
-    enabling scientists to answer fundamental questions about the role of the ocean in the dynamics of the global climate.
-    This package builds using the Access3Share common libraries for ACCESS 3 models."""
+    """The Modular Ocean Model (MOM) describes the numerical ocean models
+    originating from NOAA/GFDL. They are used to simulate ocean currents at both
+    regional and global scales, enabling scientists to answer fundamental
+    questions about the role of the ocean in the dynamics of the global climate.
+    This package builds using the Access3Share common libraries for ACCESS3
+    models."""
 
     homepage = "https://github.com/ACCESS-NRI/MOM6"
     git = "https://github.com/ACCESS-NRI/MOM6.git"
@@ -21,10 +23,13 @@ class AccessMom6(CMakePackage):
 
     variant("openmp", default=False, description="Enable OpenMP")
     variant("asymmetric_mem", default=False, description="Use asymmetric memory in MOM6")
-    variant("access3", default=True, description="Building MOM6 library with Access3share")
+    variant(
+        "access3",
+        default=True,
+        description="Install MOM6 as library for Access3 models"
+    )
 
     depends_on("access3-share", when="+access3")
-
     depends_on("cmake@3.18:", type="build")
     depends_on("mpi")
     depends_on("netcdf-fortran@4.6.0:")

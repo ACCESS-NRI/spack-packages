@@ -6,16 +6,16 @@ from spack.package import *
 
 
 class Access3Share(CMakePackage):
-    """Shared coupler/mediator libraries used by the ACCESS version 3 climate models. This 
-    package includes the Community Mediator for Earth Prediction Systems (CMEPS) and Community 
-    Data models for Earth Prediction Systems (CDEPS) as used in ACCESS-OM3 (and the future 
-    ACCESS-CM3 and ACCESS-ESM3 etc). See Access3 package to produce executable programs."""
+    """Shared coupler/mediator libraries used by the ACCESS version 3 climate
+    models. This package includes the Community Mediator for Earth Prediction
+    Systems (CMEPS) and Community Data models for Earth Prediction Systems
+    (CDEPS) as used in ACCESS-OM3 (and the future ACCESS-CM3 and ACCESS-ESM3 etc
+    ). See Access3 package to produce executable programs."""
 
     homepage = "https://github.com/ACCESS-NRI/access3-share"
     git = "https://github.com/ACCESS-NRI/access3-share"
     submodules = True
     maintainers("anton-seaice", "harshula", "micaeljtoliveira")
-
     license("Apache-2.0", checked_by="anton-seaice")
 
     variant("openmp", default=False, description="Enable OpenMP")
