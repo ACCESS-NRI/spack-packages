@@ -46,7 +46,6 @@ class Issm(AutotoolsPackage):
 
     def url_for_version(self, version):
         # Example of how you might form a URL for a particular version:
-        #branch = "access-development"
         return "https://github.com/ACCESS-NRI/ISSM/archive/refs/heads/{0}.tar.gz".format(version)
 
     def autoreconf(self, spec, prefix):
@@ -73,8 +72,9 @@ class Issm(AutotoolsPackage):
             args.append("--with-wrappers=yes")        
             args.append("--with-parmetis-dir={0}".format(self.spec["parmetis"].prefix))
             args.append("--with-triangle-dir={0}".format(self.spec["access-triangle"].prefix))
-            python_version = "{0}.{1}".format(sys.version_info.major, sys.version_info.minor)
-            python_prefix = self.spec['python'].prefix
+            python_spec = self.spec["python"]
+            python_version = python_spec.version.up_to(2)
+            python_prefix = self.spec["python"].prefix
 
             args.append("--with-python-version={0}".format(python_version))
             args.append("--with-python-dir={0}".format(python_prefix))
