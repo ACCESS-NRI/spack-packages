@@ -80,7 +80,8 @@ class Issm(AutotoolsPackage):
             args.append("--with-python-dir={0}".format(python_prefix))
 
             numpy_prefix = self.spec['py-numpy'].prefix
-            args.append("--with-python-numpy-dir={0}".format(numpy_prefix))
+            numpy_include_dir = join_path(self.spec['py-numpy'].prefix, 'lib', 'python{0}'.format(self.spec['python'].version.up_to(2)), 'site-packages', 'numpy')
+            args.append("--with-python-numpy-dir={0}".format(numpy_include_dir))
         else:
             args.append("--with-wrappers=no")
 
