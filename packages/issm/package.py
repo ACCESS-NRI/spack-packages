@@ -1,12 +1,11 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # Copyright 2023 Angus Gibson
-# Modified by Justin Kin Jun Hew, 2025
+# Justin Kin Jun Hew, 2025
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
-import sys
 
 
 class Issm(AutotoolsPackage):
@@ -45,7 +44,6 @@ class Issm(AutotoolsPackage):
     depends_on("py-numpy", when="+wrappers", type=("build", "run"))
 
     def url_for_version(self, version):
-        # Example of how you might form a URL for a particular version:
         return "https://github.com/ACCESS-NRI/ISSM/archive/refs/heads/{0}.tar.gz".format(version)
 
     def autoreconf(self, spec, prefix):
@@ -104,16 +102,11 @@ class Issm(AutotoolsPackage):
         args.append("--with-petsc-dir={0}".format(self.spec["petsc"].prefix))
         args.append("--with-metis-dir={0}".format(self.spec["metis"].prefix))
         args.append("--with-mumps-dir={0}".format(self.spec["mumps"].prefix))
+        args.append("--with-m1qn3-dir={0}".format(self.spec["m1qn3"].prefix.lib))
         # If you rely on sca/lapack from PETSc, these lines might 
         # not be strictly necessary. If ISSM's configure script 
         # checks them individually, add them:
         args.append("--with-scalapack-dir={0}".format(self.spec["scalapack"].prefix))
-
-        # Some codes want the actual library subdir for m1qn3, 
-        # e.g. "prefix.lib" or "prefix" depending on the configure logic:
-        #
-        args.append("--with-m1qn3-dir={0}".format(self.spec["m1qn3"].prefix.lib))
-    
         
         return args
     
