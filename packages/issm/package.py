@@ -117,22 +117,9 @@ class Issm(AutotoolsPackage):
         
         return args
     
-    def build(self, spec, prefix):
-        """Force serial build only if +wrappers is enabled."""
-        if "+wrappers" in self.spec:
-            old_parallel = self.parallel
-            try:
-                self.parallel = False  # force single job for 'make'
-                super().build(spec, prefix)
-            finally:
-                self.parallel = old_parallel
-        else:
-            # Normal parallel build
-            super().build(spec, prefix)
-
     def install(self, spec, prefix):
         # Run the normal Autotools install logic
-        super().install(spec, prefix)
+        make("install", parallel=False)
 
         # Copy only the examples directory directly into the prefix directory
         examples_src = join_path(self.stage.source_path, 'examples')
