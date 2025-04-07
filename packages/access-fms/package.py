@@ -21,9 +21,8 @@ class AccessFms(CMakePackage):
 
     maintainers("harshula")
 
-    version("master", branch="master")
-    # TODO: Needs to be changed once changes to build system enter master.
-    version("development", branch="development", preferred=True)
+    version("main", branch="main")
+    version("mom5", branch="mom5", preferred=True)
 
     variant("gfs_phys", default=True, description="Use GFS Physics")
     variant("large_file", default=False, description="Enable compiler definition -Duse_LARGEFILE.")
