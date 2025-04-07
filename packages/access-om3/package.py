@@ -1,7 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
-#
-# Copyright 2024 ACCESS-NRI
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -25,4 +22,4 @@ class AccessOm3(BundlePackage):
 
     version("latest")
 
-    depends_on("access-om3-nuopc")
+    depends_on("access3") 
