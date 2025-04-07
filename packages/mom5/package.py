@@ -18,22 +18,16 @@ class Mom5(MakefilePackage):
     maintainers("harshula", "penguian")
 
     version("access-om2", branch="master", preferred=True)
+    version("access-om2-bgc-legacy", branch="master")
     version("access-esm1.5", branch="access-esm1.5")
     version("access-esm1.6", branch="master")
 
     variant("restart_repro", default=True, description="Reproducible restart build.")
-    variant("access-gtracers", default=False, description="Use ACCESS-NRI's fork of GFDL-generic-tracers.")
     # The following two variants are not applicable when version is "access-esm1.5":
     variant("deterministic", default=False, description="Deterministic build.")
     variant("optimisation_report", default=False, description="Generate optimisation reports.")
-    variant("type", default="ACCESS-OM",
-        values=("ACCESS-CM", "ACCESS-ESM", "ACCESS-OM", "ACCESS-OM-BGC", "MOM_solo"),
-        multi=False,
-        description="Build MOM5 to support a particular use case.")
 
-    depends_on("access-fms", when="+access-gtracers")
-    depends_on("access-generic-tracers", when="+access-gtracers")
-
+    # else case. Includes access-om2
     with when("@:access-esm0,access-esm2:"):
         depends_on("netcdf-c@4.7.4:")
         depends_on("netcdf-fortran@4.5.2:")
@@ -44,6 +38,10 @@ class Mom5(MakefilePackage):
         depends_on("oasis3-mct~deterministic", when="~deterministic")
         depends_on("libaccessom2+deterministic", when="+deterministic")
         depends_on("libaccessom2~deterministic", when="~deterministic")
+        depends_on("access-fms")
+        depends_on("access-generic-tracers")
+
+    # access-esm1.5 and access-esm1.6
     with when("@access-esm1.5:access-esm1.6"):
         depends_on("netcdf-c@4.7.1:")
         depends_on("netcdf-fortran@4.5.1:")
@@ -51,9 +49,23 @@ class Mom5(MakefilePackage):
         depends_on("openmpi")
         depends_on("oasis3-mct")
 
+    with when("@access-esm1.6"):
+        depends_on("access-fms")
+        depends_on("access-generic-tracers")
+
     phases = ["edit", "build", "install"]
 
-    _platform = "spack"
+    __builds = {
+        "access-om2": {"type": "ACCESS-OM", "gtracers": True},
+        "access-om2-bgc-legacy": {"type": "ACCESS-OM-BGC", "gtracers": False},
+        "access-esm1.5": {"type": "ACCESS-CM", "gtracers": False},
+        "access-esm1.6": {"type": "ACCESS-ESM", "gtracers": True}
+    }
+    # These two variables should be set correctly in edit():
+    __type = "INVALID"
+    __gtracers = "INVALID"
+
+    __platform = "spack"
 
     def url_for_version(self, version):
         return "https://github.com/ACCESS-NRI/mom5/tarball/{0}".format(version)
@@ -63,6 +75,20 @@ class Mom5(MakefilePackage):
         srcdir = self.stage.source_path
         makeinc_path = join_path(srcdir, "bin", "mkmf.template.spack")
         config = {}
+
+        for buildname in self.__builds.keys():
+            if (self.spec.satisfies("@" + buildname)):
+                self.__type = self.__builds[buildname]["type"]
+                self.__gtracers = self.__builds[buildname]["gtracers"]
+                print("INFO: version=" + buildname +
+                        " type=" + self.__type +
+                        " gtracers=" + str(self.__gtracers))
+
+        if self.__type == "INVALID":
+            print("ERROR: version=" + str(self.spec.version))
+            print("ERROR: The RHS of the version must be selected from: " + ", ".join(self.__builds.keys()))
+            raise ValueError
+
 
         # NOTE: The order of the libraries matters during the linking step!
         if self.spec.satisfies("@access-esm1.5:access-esm1.6"):
@@ -82,11 +108,12 @@ class Mom5(MakefilePackage):
             # TODO: https://github.com/ACCESS-NRI/ACCESS-OM/issues/12
             FFLAGS_OPT = "-g3 -O2 -xCORE-AVX2 -debug all -check none -traceback"
             CFLAGS_OPT = "-O2 -debug minimal -xCORE-AVX2"
-            if "+deterministic" in self.spec:
+            if self.spec.satisfies("+deterministic"):
                 FFLAGS_OPT = "-g0 -O0 -xCORE-AVX2 -debug none -check none"
                 CFLAGS_OPT = "-O0 -debug none -xCORE-AVX2"
+                print("INFO: +deterministic applied")
 
-        if self.spec.satisfies("+access-gtracers"):
+        if self.__gtracers:
             ideps.extend(["access-fms", "access-generic-tracers"])
             ldeps.extend(["access-fms", "access-generic-tracers"])
 
@@ -497,10 +524,12 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
         # ./MOM_compile.csh --type $mom_type --platform spack
         with working_dir(join_path(self.stage.source_path, "exp")):
             build = Executable("./MOM_compile.csh")
-            if "+restart_repro" in self.spec:
-                build.add_default_env("REPRO", "true")
 
-            if self.spec.satisfies("+access-gtracers"):
+            if self.spec.satisfies("+restart_repro"):
+                build.add_default_env("REPRO", "true")
+                print("INFO: +restart_repro applied")
+
+            if self.__gtracers:
                 build.add_default_env("SPACK_GTRACERS_EXTERNAL", "true")
 
             if not self.spec.satisfies("@access-esm1.5"):
@@ -508,13 +537,15 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
                 # requires the --no_version switch to avoid git hashes being
                 # embedded in the binary.
                 build.add_default_arg("--no_version")
-                if "+optimisation_report" in self.spec:
+                if self.spec.satisfies("+optimisation_report"):
                     build.add_default_env("REPORT", "true")
+                    print("INFO: +optimisation_report applied")
+
             build(
                 "--type",
-                self.spec.variants["type"].value,
+                self.__type,
                 "--platform",
-                self._platform,
+                self.__platform,
                 "--no_environ"
             )
 
@@ -524,10 +555,10 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
         install(
             join_path(
                 "exec",
-                self._platform,
-                self.spec.variants["type"].value,
-                "fms_" + self.spec.variants["type"].value + ".x"
+                self.__platform,
+                self.__type,
+                "fms_" + self.__type + ".x"
             ),
             prefix.bin
         )
-        install(join_path("bin", "mppnccombine." + self._platform), prefix.bin)
+        install(join_path("bin", "mppnccombine." + self.__platform), prefix.bin)
