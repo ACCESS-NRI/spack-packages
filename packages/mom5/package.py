@@ -26,10 +26,6 @@ class Mom5(MakefilePackage):
     # The following two variants are not applicable when version is "access-esm1.5":
     variant("deterministic", default=False, description="Deterministic build.")
     variant("optimisation_report", default=False, description="Generate optimisation reports.")
-    variant("type", default="ACCESS-OM",
-        values=("ACCESS-CM", "ACCESS-ESM", "ACCESS-OM", "ACCESS-OM-BGC", "MOM_solo"),
-        multi=False,
-        description="Build MOM5 to support a particular use case.")
 
     depends_on("access-fms", when="+access-gtracers")
     depends_on("access-generic-tracers", when="+access-gtracers")
@@ -44,6 +40,7 @@ class Mom5(MakefilePackage):
         depends_on("oasis3-mct~deterministic", when="~deterministic")
         depends_on("libaccessom2+deterministic", when="+deterministic")
         depends_on("libaccessom2~deterministic", when="~deterministic")
+        __type = "ACCESS-OM"
     with when("@access-esm1.5:access-esm1.6"):
         depends_on("netcdf-c@4.7.1:")
         depends_on("netcdf-fortran@4.5.1:")
@@ -51,9 +48,14 @@ class Mom5(MakefilePackage):
         depends_on("openmpi")
         depends_on("oasis3-mct")
 
+    with when("@access-esm1.5"):
+        __type = "ACCESS-CM"
+    with when("@access-esm1.6"):
+        __type = "ACCESS-ESM"
+
     phases = ["edit", "build", "install"]
 
-    _platform = "spack"
+    __platform = "spack"
 
     def url_for_version(self, version):
         return "https://github.com/ACCESS-NRI/mom5/tarball/{0}".format(version)
@@ -512,9 +514,9 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
                     build.add_default_env("REPORT", "true")
             build(
                 "--type",
-                self.spec.variants["type"].value,
+                self.__type,
                 "--platform",
-                self._platform,
+                self.__platform,
                 "--no_environ"
             )
 
@@ -524,10 +526,10 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
         install(
             join_path(
                 "exec",
-                self._platform,
-                self.spec.variants["type"].value,
-                "fms_" + self.spec.variants["type"].value + ".x"
+                self.__platform,
+                self.__type,
+                "fms_" + self.__type + ".x"
             ),
             prefix.bin
         )
-        install(join_path("bin", "mppnccombine." + self._platform), prefix.bin)
+        install(join_path("bin", "mppnccombine." + self.__platform), prefix.bin)
