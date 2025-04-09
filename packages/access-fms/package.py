@@ -31,6 +31,10 @@ class AccessFms(CMakePackage):
         default=True,
         description="Enable compiler definition -DINTERNAL_FILE_NML.",
     )
+    variant("pic", default=False, description="Build with position independent code")
+    variant("shared", default=False, description="Build shared/dynamic libraries")
+    # To build a shared/dynamic library, both `pic` and `shared` are required:
+    requires("+pic", when="+shared", msg="The +shared variant requires +pic")
 
     depends_on("netcdf-c")
     depends_on("netcdf-fortran")
@@ -57,6 +61,8 @@ class AccessFms(CMakePackage):
             self.define_from_variant("GFS_PHYS"),
             self.define_from_variant("LARGEFILE", "large_file"),
             self.define_from_variant("INTERNAL_FILE_NML"),
+            self.define_from_variant("FPIC", "pic"),
+            self.define_from_variant("SHARED_LIBS", "shared"),
         ]
 
         return args
