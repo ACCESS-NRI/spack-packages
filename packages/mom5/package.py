@@ -22,15 +22,13 @@ class Mom5(MakefilePackage):
     version("access-esm1.6", branch="master")
 
     variant("restart_repro", default=True, description="Reproducible restart build.")
-    variant("access-gtracers", default=False, description="Use ACCESS-NRI's fork of GFDL-generic-tracers.")
     # The following two variants are not applicable when version is "access-esm1.5":
     variant("deterministic", default=False, description="Deterministic build.")
     variant("optimisation_report", default=False, description="Generate optimisation reports.")
 
-    depends_on("access-fms", when="+access-gtracers")
-    depends_on("access-generic-tracers", when="+access-gtracers")
-
     with when("@:access-esm0,access-esm2:"):
+        __type = "ACCESS-OM"
+        __gtracers = True
         depends_on("netcdf-c@4.7.4:")
         depends_on("netcdf-fortran@4.5.2:")
         # Depend on virtual package "mpi".
@@ -40,18 +38,30 @@ class Mom5(MakefilePackage):
         depends_on("oasis3-mct~deterministic", when="~deterministic")
         depends_on("libaccessom2+deterministic", when="+deterministic")
         depends_on("libaccessom2~deterministic", when="~deterministic")
-        __type = "ACCESS-OM"
-    with when("@access-esm1.5:access-esm1.6"):
+        depends_on("access-fms")
+        depends_on("access-generic-tracers")
+        depends_on("access-mocsy")
+
+    with when("@access-esm1.5"):
+        __type = "ACCESS-CM"
+        __gtracers = False
         depends_on("netcdf-c@4.7.1:")
         depends_on("netcdf-fortran@4.5.1:")
         # Depend on "openmpi".
         depends_on("openmpi")
         depends_on("oasis3-mct")
 
-    with when("@access-esm1.5"):
-        __type = "ACCESS-CM"
     with when("@access-esm1.6"):
         __type = "ACCESS-ESM"
+        __gtracers = True
+        depends_on("netcdf-c@4.7.1:")
+        depends_on("netcdf-fortran@4.5.1:")
+        # Depend on "openmpi".
+        depends_on("openmpi")
+        depends_on("oasis3-mct")
+        depends_on("access-fms")
+        depends_on("access-generic-tracers")
+        depends_on("access-mocsy")
 
     phases = ["edit", "build", "install"]
 
@@ -88,7 +98,7 @@ class Mom5(MakefilePackage):
                 FFLAGS_OPT = "-g0 -O0 -xCORE-AVX2 -debug none -check none"
                 CFLAGS_OPT = "-O0 -debug none -xCORE-AVX2"
 
-        if self.spec.satisfies("+access-gtracers"):
+        if self.__gtracers:
             ideps.extend(["access-fms", "access-generic-tracers"])
             ldeps.extend(["access-fms", "access-generic-tracers"])
 
@@ -502,7 +512,7 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
             if "+restart_repro" in self.spec:
                 build.add_default_env("REPRO", "true")
 
-            if self.spec.satisfies("+access-gtracers"):
+            if self.__gtracers:
                 build.add_default_env("SPACK_GTRACERS_EXTERNAL", "true")
 
             if not self.spec.satisfies("@access-esm1.5"):
