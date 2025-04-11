@@ -22,19 +22,13 @@ class Mom5(MakefilePackage):
     version("access-esm1.6", branch="master")
 
     variant("restart_repro", default=True, description="Reproducible restart build.")
-    variant("access-gtracers", default=False, description="Use ACCESS-NRI's fork of GFDL-generic-tracers.")
     # The following two variants are not applicable when version is "access-esm1.5":
     variant("deterministic", default=False, description="Deterministic build.")
     variant("optimisation_report", default=False, description="Generate optimisation reports.")
-    variant("type", default="ACCESS-OM",
-        values=("ACCESS-CM", "ACCESS-ESM", "ACCESS-OM", "ACCESS-OM-BGC", "MOM_solo"),
-        multi=False,
-        description="Build MOM5 to support a particular use case.")
-
-    depends_on("access-fms", when="+access-gtracers")
-    depends_on("access-generic-tracers", when="+access-gtracers")
 
     with when("@:access-esm0,access-esm2:"):
+        __type = "ACCESS-OM"
+        __gtracers = True
         depends_on("netcdf-c@4.7.4:")
         depends_on("netcdf-fortran@4.5.2:")
         # Depend on virtual package "mpi".
@@ -44,16 +38,34 @@ class Mom5(MakefilePackage):
         depends_on("oasis3-mct~deterministic", when="~deterministic")
         depends_on("libaccessom2+deterministic", when="+deterministic")
         depends_on("libaccessom2~deterministic", when="~deterministic")
-    with when("@access-esm1.5:access-esm1.6"):
+        depends_on("access-fms")
+        depends_on("access-generic-tracers")
+        depends_on("access-mocsy")
+
+    with when("@access-esm1.5"):
+        __type = "ACCESS-CM"
+        __gtracers = False
         depends_on("netcdf-c@4.7.1:")
         depends_on("netcdf-fortran@4.5.1:")
         # Depend on "openmpi".
         depends_on("openmpi")
         depends_on("oasis3-mct")
 
+    with when("@access-esm1.6"):
+        __type = "ACCESS-ESM"
+        __gtracers = True
+        depends_on("netcdf-c@4.7.1:")
+        depends_on("netcdf-fortran@4.5.1:")
+        # Depend on "openmpi".
+        depends_on("openmpi")
+        depends_on("oasis3-mct")
+        depends_on("access-fms")
+        depends_on("access-generic-tracers")
+        depends_on("access-mocsy")
+
     phases = ["edit", "build", "install"]
 
-    _platform = "spack"
+    __platform = "spack"
 
     def url_for_version(self, version):
         return "https://github.com/ACCESS-NRI/mom5/tarball/{0}".format(version)
@@ -86,7 +98,7 @@ class Mom5(MakefilePackage):
                 FFLAGS_OPT = "-g0 -O0 -xCORE-AVX2 -debug none -check none"
                 CFLAGS_OPT = "-O0 -debug none -xCORE-AVX2"
 
-        if self.spec.satisfies("+access-gtracers"):
+        if self.__gtracers:
             ideps.extend(["access-fms", "access-generic-tracers"])
             ldeps.extend(["access-fms", "access-generic-tracers"])
 
@@ -500,7 +512,7 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
             if "+restart_repro" in self.spec:
                 build.add_default_env("REPRO", "true")
 
-            if self.spec.satisfies("+access-gtracers"):
+            if self.__gtracers:
                 build.add_default_env("SPACK_GTRACERS_EXTERNAL", "true")
 
             if not self.spec.satisfies("@access-esm1.5"):
@@ -512,9 +524,9 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
                     build.add_default_env("REPORT", "true")
             build(
                 "--type",
-                self.spec.variants["type"].value,
+                self.__type,
                 "--platform",
-                self._platform,
+                self.__platform,
                 "--no_environ"
             )
 
@@ -524,10 +536,10 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
         install(
             join_path(
                 "exec",
-                self._platform,
-                self.spec.variants["type"].value,
-                "fms_" + self.spec.variants["type"].value + ".x"
+                self.__platform,
+                self.__type,
+                "fms_" + self.__type + ".x"
             ),
             prefix.bin
         )
-        install(join_path("bin", "mppnccombine." + self._platform), prefix.bin)
+        install(join_path("bin", "mppnccombine." + self.__platform), prefix.bin)
