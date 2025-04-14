@@ -1,13 +1,15 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
+# Copyright 2025 ACCESS-NRI
+#
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import BundlePackage, version, depends_on
+from spack.package import BundlePackage, maintainers, version, depends_on
 
 
-class AccessOm3(BundlePackage):
+class AccessIssm(BundlePackage):
     """
-    ACCESS-OM3 bundle containing the ACCESS-OM3 Package.
+    ACCESS-ISSM bundle containing the issm Package.
 
     This is used to version the entirety of a released deployment, including
     the package, it's dependencies, and the version of
@@ -15,11 +17,10 @@ class AccessOm3(BundlePackage):
     """
 
     homepage = "https://www.access-nri.org.au"
+    git = "https://github.com/ACCESS-NRI/ACCESS-ISSM.git"
 
-    git = "https://github.com/ACCESS-NRI/ACCESS-OM3.git"
-
-    maintainers("harshula")
+    maintainers("harshula", "justinh2002")
 
     version("latest")
 
-    depends_on("access3") 
+    depends_on("issm")
