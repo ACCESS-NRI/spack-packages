@@ -23,6 +23,9 @@ class Issm(AutotoolsPackage):
 
     variant("wrappers", default=False,
             description="Enable building with MPI wrappers")
+    
+    variant("examples", default=False,
+            description="Build examples")
     #
     # Build dependencies
     #
@@ -112,9 +115,10 @@ class Issm(AutotoolsPackage):
     def install(self, spec, prefix):
         # Run the normal Autotools install logic
         make("install", parallel=False)
-
-        # Copy only the examples directory directly into the prefix directory
-        examples_src = join_path(self.stage.source_path, 'examples')
-        examples_dst = join_path(prefix, 'examples')
-        install_tree(examples_src, examples_dst)
+        
+        if "+examples" in self.spec:
+            # Copy the examples directory directly into the prefix directory
+            examples_src = join_path(self.stage.source_path, 'examples')
+            examples_dst = join_path(prefix, 'examples')
+            install_tree(examples_src, examples_dst)
 
