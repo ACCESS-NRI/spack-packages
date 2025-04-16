@@ -22,13 +22,12 @@ class Mom5(MakefilePackage):
     version("access-esm1.6", branch="master")
 
     variant("restart_repro", default=True, description="Reproducible restart build.")
-    # The following two variants are not applicable when version is "access-esm1.5":
+    # The following three variants are not applicable when version is not "access-om2":
     variant("deterministic", default=False, description="Deterministic build.")
     variant("optimisation_report", default=False, description="Generate optimisation reports.")
+    variant("legacy_bgc", default=False, description="Build with legacy WOMBAT BGC.")
 
     with when("@:access-esm0,access-esm2:"):
-        __type = "ACCESS-OM"
-        __gtracers = True
         depends_on("netcdf-c@4.7.4:")
         depends_on("netcdf-fortran@4.5.2:")
         # Depend on virtual package "mpi".
@@ -38,13 +37,11 @@ class Mom5(MakefilePackage):
         depends_on("oasis3-mct~deterministic", when="~deterministic")
         depends_on("libaccessom2+deterministic", when="+deterministic")
         depends_on("libaccessom2~deterministic", when="~deterministic")
-        depends_on("access-fms")
-        depends_on("access-generic-tracers")
-        depends_on("access-mocsy")
+        depends_on("access-fms", when="~legacy_bgc")
+        depends_on("access-generic-tracers", when="~legacy_bgc")
+        depends_on("access-mocsy", when="~legacy_bgc")
 
     with when("@access-esm1.5"):
-        __type = "ACCESS-CM"
-        __gtracers = False
         depends_on("netcdf-c@4.7.1:")
         depends_on("netcdf-fortran@4.5.1:")
         # Depend on "openmpi".
@@ -52,8 +49,6 @@ class Mom5(MakefilePackage):
         depends_on("oasis3-mct")
 
     with when("@access-esm1.6"):
-        __type = "ACCESS-ESM"
-        __gtracers = True
         depends_on("netcdf-c@4.7.1:")
         depends_on("netcdf-fortran@4.5.1:")
         # Depend on "openmpi".
@@ -63,12 +58,28 @@ class Mom5(MakefilePackage):
         depends_on("access-generic-tracers")
         depends_on("access-mocsy")
 
-    phases = ["edit", "build", "install"]
+    phases = ["set_type", "edit", "build", "install"]
 
     __platform = "spack"
 
     def url_for_version(self, version):
         return "https://github.com/ACCESS-NRI/mom5/tarball/{0}".format(version)
+
+    def set_type(self, spec, prefix):
+
+        if self.spec.satisfies("@access-esm1.5"):
+            self.__type = "ACCESS-CM"
+            self.__gtracers = False
+        elif self.spec.satisfies("@access-esm1.6"):
+            self.__type = "ACCESS-ESM"
+            self.__gtracers = True
+        else:
+            if "+legacy_bgc" in self.spec:
+                self.__type = "ACCESS-OM-BGC"
+                self.__gtracers = False
+            else:
+                self.__type = "ACCESS-OM"
+                self.__gtracers = True
 
     def edit(self, spec, prefix):
 
@@ -515,7 +526,7 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
             if self.__gtracers:
                 build.add_default_env("SPACK_GTRACERS_EXTERNAL", "true")
 
-            if not self.spec.satisfies("@access-esm1.5"):
+            if self.spec.satisfies("@access-om2"):
                 # The MOM5 commit d7ba13a3f364ce130b6ad0ba813f01832cada7a2
                 # requires the --no_version switch to avoid git hashes being
                 # embedded in the binary.
