@@ -38,11 +38,6 @@ class AccessEsm1p6(BundlePackage):
         multi=False,
     )
     variant(
-        "generic-tracers",
-        default=True,
-        description="Enable generic tracers.",
-    )
-    variant(
         "um",
         default="access-esm1.6",
         description="Choose the branch of um7.",
@@ -52,18 +47,7 @@ class AccessEsm1p6(BundlePackage):
 
     depends_on("cice4@access-esm1.5", type="run", when="cice=4")
     depends_on("cice5@access-esm1.6", type="run", when="cice=5")
-    # TODO: Use the access-esm1.6 branch when it has been confirmed that
-    #       MOM5 master supports building with generic tracers disabled.
-    depends_on(
-        "mom5@access-esm1.5 type=ACCESS-CM",
-        type="run",
-        when="~generic-tracers",
-    )
-    depends_on(
-        "mom5@access-esm1.6 type=ACCESS-ESM",
-        type="run",
-        when="+generic-tracers",
-    )
+    depends_on("mom5@access-esm1.6", type="run")
     # um7 is in a private repository
     depends_on("um7@access-esm1.5", type="run", when="um=access-esm1.5")
     depends_on("um7@access-esm1.6", type="run", when="um=access-esm1.6")
