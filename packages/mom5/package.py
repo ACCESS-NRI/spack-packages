@@ -18,17 +18,19 @@ class Mom5(MakefilePackage):
     maintainers("harshula", "penguian")
 
     version("access-om2", branch="master", preferred=True)
-    version("access-om2-bgc-legacy", branch="master")
+    version("legacy-access-om2-bgc", branch="master")
     version("access-esm1.5", branch="access-esm1.5")
     version("access-esm1.6", branch="master")
 
     variant("restart_repro", default=True, description="Reproducible restart build.")
-    # The following two variants are not applicable when version is "access-esm1.5":
-    variant("deterministic", default=False, description="Deterministic build.")
-    variant("optimisation_report", default=False, description="Generate optimisation reports.")
 
-    # else case. Includes access-om2
-    with when("@:access-esm0,access-esm2:"):
+    with when("@access-om2"):
+        variant("deterministic",
+                default=False,
+                description="Deterministic build.")
+        variant("optimisation_report",
+                default=False,
+                description="Generate optimisation reports.")
         depends_on("netcdf-c@4.7.4:")
         depends_on("netcdf-fortran@4.5.2:")
         # Depend on virtual package "mpi".
@@ -40,6 +42,23 @@ class Mom5(MakefilePackage):
         depends_on("libaccessom2~deterministic", when="~deterministic")
         depends_on("access-fms")
         depends_on("access-generic-tracers")
+
+    with when("@legacy-access-om2-bgc"):
+        variant("deterministic",
+                default=False,
+                description="Deterministic build.")
+        variant("optimisation_report",
+                default=False,
+                description="Generate optimisation reports.")
+        depends_on("netcdf-c@4.7.4:")
+        depends_on("netcdf-fortran@4.5.2:")
+        # Depend on virtual package "mpi".
+        depends_on("mpi")
+        depends_on("datetime-fortran")
+        depends_on("oasis3-mct+deterministic", when="+deterministic")
+        depends_on("oasis3-mct~deterministic", when="~deterministic")
+        depends_on("libaccessom2+deterministic", when="+deterministic")
+        depends_on("libaccessom2~deterministic", when="~deterministic")
 
     # access-esm1.5 and access-esm1.6
     with when("@access-esm1.5:access-esm1.6"):
@@ -57,7 +76,7 @@ class Mom5(MakefilePackage):
 
     __builds = {
         "access-om2": {"type": "ACCESS-OM", "gtracers": True},
-        "access-om2-bgc-legacy": {"type": "ACCESS-OM-BGC", "gtracers": False},
+        "legacy-access-om2-bgc": {"type": "ACCESS-OM-BGC", "gtracers": False},
         "access-esm1.5": {"type": "ACCESS-CM", "gtracers": False},
         "access-esm1.6": {"type": "ACCESS-ESM", "gtracers": True}
     }
