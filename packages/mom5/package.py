@@ -6,6 +6,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import install, join_path, mkdirp
+from spack.version.version_types import GitVersion, StandardVersion
 
 # https://spack.readthedocs.io/en/latest/build_systems/makefilepackage.html
 class Mom5(MakefilePackage):
@@ -53,7 +54,7 @@ class Mom5(MakefilePackage):
         depends_on("access-fms")
         depends_on("access-generic-tracers")
 
-    phases = ["edit", "build", "install"]
+    phases = ["setup", "edit", "build", "install"]
 
     __builds = {
         "access-om2": {"type": "ACCESS-OM", "gtracers": True},
@@ -61,14 +62,30 @@ class Mom5(MakefilePackage):
         "access-esm1.5": {"type": "ACCESS-CM", "gtracers": False},
         "access-esm1.6": {"type": "ACCESS-ESM", "gtracers": True}
     }
-    # These two variables should be set correctly in edit():
-    __type = "INVALID"
-    __gtracers = "INVALID"
-
+    __version = "INVALID"
     __platform = "spack"
 
     def url_for_version(self, version):
         return "https://github.com/ACCESS-NRI/mom5/tarball/{0}".format(version)
+
+    def setup(self, spec, prefix):
+
+        if isinstance(self.spec.version, GitVersion):
+            self.__version = self.spec.version.ref_version.string
+        elif isinstance(self.spec.version, StandardVersion):
+            self.__version = self.spec.version.string
+        else:
+            print("ERROR: version=" + self.spec.version.string)
+            raise ValueError
+
+        if self.__version not in self.__builds.keys():
+            print("ERROR: The version must be selected from: " +
+                    ", ".join(self.__builds.keys()))
+            raise ValueError
+
+        print("INFO: version=" + self.__version +
+                " type=" + self.__builds[self.__version]["type"] +
+                " gtracers=" + str(self.__builds[self.__version]["gtracers"]))
 
     def edit(self, spec, prefix):
 
@@ -76,22 +93,8 @@ class Mom5(MakefilePackage):
         makeinc_path = join_path(srcdir, "bin", "mkmf.template.spack")
         config = {}
 
-        for buildname in self.__builds.keys():
-            if (self.spec.satisfies("@" + buildname)):
-                self.__type = self.__builds[buildname]["type"]
-                self.__gtracers = self.__builds[buildname]["gtracers"]
-                print("INFO: version=" + buildname +
-                        " type=" + self.__type +
-                        " gtracers=" + str(self.__gtracers))
-
-        if self.__type == "INVALID":
-            print("ERROR: version=" + str(self.spec.version))
-            print("ERROR: The RHS of the version must be selected from: " + ", ".join(self.__builds.keys()))
-            raise ValueError
-
-
         # NOTE: The order of the libraries matters during the linking step!
-        if self.spec.satisfies("@access-esm1.5:access-esm1.6"):
+        if self.__version in ["access-esm1.5", "access-esm1.6"]:
             istr = " ".join([
                     join_path((spec["oasis3-mct"].headers).cpp_flags, "psmile.MPI1"),
                     join_path((spec["oasis3-mct"].headers).cpp_flags, "mct")])
@@ -113,7 +116,7 @@ class Mom5(MakefilePackage):
                 CFLAGS_OPT = "-O0 -debug none -xCORE-AVX2"
                 print("INFO: +deterministic applied")
 
-        if self.__gtracers:
+        if self.__builds[self.__version]["gtracers"]:
             ideps.extend(["access-fms", "access-generic-tracers"])
             ldeps.extend(["access-fms", "access-generic-tracers"])
 
@@ -202,7 +205,7 @@ LDFLAGS += $(LIBS)
 """
 
         # Copied from bin/mkmf.template.nci
-        if self.spec.satisfies("@access-esm1.5:access-esm1.6"):
+        if self.__version in ["access-esm1.5", "access-esm1.6"]:
             config["intel"] = f"""
 ifeq ($(VTRACE), yes)
     FC = mpifort-vt
@@ -338,7 +341,7 @@ LDFLAGS += $(LIBS)
         # The `.replace()` apparently doesn't modify the object.
         config["oneapi"] = config["intel"].replace("CFLAGS_REPRO := -fp-model precise -fp-model source", "CFLAGS_REPRO := -fp-model precise")
 
-        if self.spec.satisfies("@access-esm1.5:access-esm1.6"):
+        if self.__version in ["access-esm1.5", "access-esm1.6"]:
             config["post"] = """
 # you should never need to change any lines below.
 
@@ -529,10 +532,10 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
                 build.add_default_env("REPRO", "true")
                 print("INFO: +restart_repro applied")
 
-            if self.__gtracers:
+            if self.__builds[self.__version]["gtracers"]:
                 build.add_default_env("SPACK_GTRACERS_EXTERNAL", "true")
 
-            if not self.spec.satisfies("@access-esm1.5"):
+            if self.__version != "access-esm1.5":
                 # The MOM5 commit d7ba13a3f364ce130b6ad0ba813f01832cada7a2
                 # requires the --no_version switch to avoid git hashes being
                 # embedded in the binary.
@@ -543,7 +546,7 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
 
             build(
                 "--type",
-                self.__type,
+                self.__builds[self.__version]["type"],
                 "--platform",
                 self.__platform,
                 "--no_environ"
@@ -556,8 +559,8 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
             join_path(
                 "exec",
                 self.__platform,
-                self.__type,
-                "fms_" + self.__type + ".x"
+                self.__builds[self.__version]["type"],
+                "fms_" + self.__builds[self.__version]["type"] + ".x"
             ),
             prefix.bin
         )
