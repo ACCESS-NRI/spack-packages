@@ -45,6 +45,12 @@ class Access3(CMakePackage):
         ),
         sticky=True  # force concretizer to not pick alternative variants
     )
+    variant("cm3",
+            default=False,
+            description=(
+                "Build for ACCESS-CM3. Builds additional dependencies when True."
+            )
+            )
 
     # force user to supply a build combination
     conflicts(
@@ -56,6 +62,7 @@ class Access3(CMakePackage):
     depends_on("mpi")
     depends_on("access3-share")
     depends_on("esmf@8.7.0:")
+    depends_on("gcom@8.0", when="+cm3")
 
     for conf in KNOWN_CONF:
         if "CICE6" in conf:
