@@ -51,6 +51,7 @@ class Access3(CMakePackage):
     depends_on("mpi")
     depends_on("access3-share")
     depends_on("esmf@8.7.0:")
+    depends_on("gcom@8.0", when="+cm3")
 
     for conf in KNOWN_CONF:
         if "CICE6" in conf:
