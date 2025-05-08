@@ -24,7 +24,7 @@ class AccessFms(CMakePackage):
     version("main", branch="main")
     version("mom5", branch="mom5", preferred=True)
 
-    variant("gfs_phys", default=True, description="Use GFS Physics")
+    variant("gfs_phys", default=False, description="Use GFS Physics")
     variant("large_file", default=False, description="Enable compiler definition -Duse_LARGEFILE.")
     variant(
         "internal_file_nml",
