@@ -25,12 +25,12 @@ class AccessOm2Bgc(BundlePackage):
     depends_on("cice5+deterministic", when="+deterministic", type="run")
     depends_on("cice5~deterministic", when="~deterministic", type="run")
     depends_on(
-        "mom5@legacy-access-om2-bgc+deterministic",
+        "mom5@access-om2-bgc-legacy+deterministic",
         when="+deterministic",
         type="run"
     )
     depends_on(
-        "mom5@legacy-access-om2-bgc~deterministic",
+        "mom5@access-om2-bgc-legacy~deterministic",
         when="~deterministic",
         type="run"
     )

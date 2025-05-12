@@ -3,9 +3,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+from spack.build_systems import cmake, makefile
 from spack.version.version_types import GitVersion, StandardVersion
 
-class Mom5(CMakePackage):
+class Mom5(CMakePackage, MakefilePackage):
     """MOM is a numerical ocean model based on the hydrostatic primitive equations."""
 
     homepage = "https://www.access-nri.org.au"
@@ -19,67 +20,78 @@ class Mom5(CMakePackage):
     version("mom_solo", branch="master", preferred=True)
     version("mom_sis", branch="master")
     version("access-om2", branch="master")
-    version("legacy-access-om2-bgc", branch="master")
+    version("access-om2-bgc-legacy", branch="master")
+    version("access-esm1.5", branch="access-esm1.5")
     version("access-esm1.6", branch="master")
 
-    variant("build_type", default="RelWithDebInfo",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo")
+    build_system(
+        conditional("makefile", when="@access-esm1.5"),
+        "cmake",
+        default="makefile",
     )
-    variant("deterministic", default=False, description="Deterministic build")
 
-    depends_on("cmake@3.18:", type="build")
-    depends_on("mpi")
-    depends_on("netcdf-c@4.7.4:")
-    depends_on("netcdf-fortran@4.5.2:")
+    with when("build_system=cmake"):
+        variant("build_type", default="RelWithDebInfo",
+            description="CMake build type",
+            values=("Debug", "Release", "RelWithDebInfo")
+        )
+        variant("deterministic", default=False, description="Deterministic build")
 
-    with when("@access-om2,access-esm1.6,legacy-access-om2-bgc"):
-        depends_on("datetime-fortran")
-        depends_on("libaccessom2+deterministic", when="+deterministic")
-        depends_on("libaccessom2~deterministic", when="~deterministic")
+        depends_on("mpi")
+        depends_on("netcdf-c@4.7.4:")
+        depends_on("netcdf-fortran@4.5.2:")
+
+    # NOTE: when("@access-om2") matches version "access-om2-bgc-legacy"
+    with when("@access-om2,access-esm1.6"):
         depends_on("oasis3-mct+deterministic", when="+deterministic")
         depends_on("oasis3-mct~deterministic", when="~deterministic")
         depends_on("access-fms")
         depends_on("access-generic-tracers")
 
+    with when("@access-om2"):
+        depends_on("datetime-fortran")
+        depends_on("libaccessom2+deterministic", when="+deterministic")
+        depends_on("libaccessom2~deterministic", when="~deterministic")
+
+    with when("@access-esm1.5"):
+        variant("restart_repro", default=True, description="Reproducible restart build.")
+
+        depends_on("openmpi")
+        depends_on("netcdf-c@4.7.1:")
+        depends_on("netcdf-fortran@4.5.1:")
+        depends_on("oasis3-mct@access-esm1.5")
+
+    def url_for_version(self, version):
+        return "https://github.com/ACCESS-NRI/mom5/tarball/{0}".format(version)
+
+
+class CMakeBuilder(cmake.CMakeBuilder):
     root_cmakelists_dir = "cmake/"
 
-    phases = ["setup", "cmake", "build", "install"]
+    phases = ("setup", "cmake", "build", "install")
 
-    # NOTE: The keys in the __types variable are required to check whether
-    #       a valid version was passed in by the user.
     __types = {
         "mom_solo": "MOM5_SOLO",
         "mom_sis": "MOM5_SIS",
         "access-om2": "MOM5_ACCESS_OM",
         "access-esm1.6": "MOM5_ACCESS_ESM",
-        "legacy-access-om2-bgc": "MOM5_ACCESS_OM_BGC"
+        "access-om2-bgc-legacy": "MOM5_ACCESS_OM_BGC"
     }
     __version = "INVALID"
 
-    def url_for_version(self, version):
-        return "https://github.com/ACCESS-NRI/mom5/tarball/{0}".format(version)
-    
-    def setup(self, spec, prefix):
-
-        if isinstance(self.version, GitVersion):
-            self.__version = self.version.ref_version.string
-        elif isinstance(self.version, StandardVersion):
-            self.__version = self.version.string
+    def setup(self, pkg, spec, prefix):
+        if isinstance(pkg.version, GitVersion):
+            self.__version = pkg.version.ref_version.string
+        elif isinstance(pkg.version, StandardVersion):
+            self.__version = pkg.version.string
         else:
-            print("ERROR: version=" + self.version.string)
-            raise ValueError
+            raise ValueError("version=" + pkg.version.string)
 
-        # The rest of the checks are only required if a __types member
-        # variable exists
         if self.__version not in self.__types.keys():
-            print("ERROR: The version must be selected from: " +
-                    ", ".join(self.__types.keys()))
-            raise ValueError
-
-        print("INFO: version=" + self.__version +
-            " type=" + self.__types[self.__version]
-        )
+            raise ValueError(
+                "The version must be selected from: " +
+                ", ".join(self.__types.keys())
+            )
 
     def cmake_args(self):
         args = [
@@ -87,3 +99,303 @@ class Mom5(CMakePackage):
             self.define_from_variant("MOM5_DETERMINISTIC", "deterministic"),
         ]
         return args
+
+
+class MakefileBuilder(makefile.MakefileBuilder):
+    phases = ("edit", "build", "install")
+
+    __type = "ACCESS-CM"  # Building mom5@access-esm1.5
+    __platform = "spack"
+
+    def edit(self, pkg, spec, prefix):
+
+        srcdir = pkg.stage.source_path
+        makeinc_path = join_path(srcdir, "bin", "mkmf.template.spack")
+        config = {}
+
+        # NOTE: The order of the libraries matters during the linking step!
+        istr = " ".join([
+                join_path((spec["oasis3-mct"].headers).cpp_flags, "psmile.MPI1"),
+                join_path((spec["oasis3-mct"].headers).cpp_flags, "mct")])
+        ideps = ["netcdf-fortran"]
+        ldeps = ["oasis3-mct", "netcdf-c", "netcdf-fortran"]
+        FFLAGS_OPT = "-O3 -debug minimal -xCORE-AVX512 -align array64byte"
+        CFLAGS_OPT = "-O2 -debug minimal -no-vec"
+
+        incs = " ".join([istr] + [(spec[d].headers).cpp_flags for d in ideps])
+        libs = " ".join([(spec[d].libs).ld_flags for d in ldeps])
+
+        # Copied from bin/mkmf.template.ubuntu
+        config["gcc"] = f"""
+FC = mpifort
+CC = gcc
+LD = $(FC)
+#########
+# flags #
+#########
+DEBUG =
+REPRO =
+VERBOSE =
+OPENMP =
+
+MAKEFLAGS += --jobs=$(shell grep '^processor' /proc/cpuinfo | wc -l)
+
+FPPFLAGS :=
+
+FFLAGS := -fcray-pointer -fdefault-real-8 -ffree-line-length-none -fno-range-check -Waliasing -Wampersand -Warray-bounds -Wcharacter-truncation -Wconversion -Wline-truncation -Wintrinsics-std -Wsurprising -Wno-tabs -Wunderflow -Wunused-parameter -Wintrinsic-shadow -Wno-align-commons -fallow-argument-mismatch -fallow-invalid-boz
+FFLAGS += {incs}
+FFLAGS += -DGFORTRAN
+
+#
+FFLAGS_OPT = -O2
+FFLAGS_REPRO =
+FFLAGS_DEBUG = -O0 -g -W -fbounds-check
+FFLAGS_OPENMP = -fopenmp
+FFLAGS_VERBOSE =
+
+CFLAGS := -D__IFC {incs}
+CFLAGS += $(shell nc-config --cflags)
+CFLAGS_OPT = -O2
+CFLAGS_OPENMP = -fopenmp
+CFLAGS_DEBUG = -O0 -g
+
+# Optional Testing compile flags.  Mutually exclusive from DEBUG, REPRO, and OPT
+# *_TEST will match the production if no new option(s) is(are) to be tested.
+FFLAGS_TEST = -O2
+CFLAGS_TEST = -O2
+
+LDFLAGS :=
+LDFLAGS_OPENMP := -fopenmp
+LDFLAGS_VERBOSE :=
+
+ifneq ($(REPRO),)
+CFLAGS += $(CFLAGS_REPRO)
+FFLAGS += $(FFLAGS_REPRO)
+endif
+ifneq ($(DEBUG),)
+CFLAGS += $(CFLAGS_DEBUG)
+FFLAGS += $(FFLAGS_DEBUG)
+else ifneq ($(TEST),)
+CFLAGS += $(CFLAGS_TEST)
+FFLAGS += $(FFLAGS_TEST)
+else
+CFLAGS += $(CFLAGS_OPT)
+FFLAGS += $(FFLAGS_OPT)
+endif
+
+ifneq ($(OPENMP),)
+CFLAGS += $(CFLAGS_OPENMP)
+FFLAGS += $(FFLAGS_OPENMP)
+LDFLAGS += $(LDFLAGS_OPENMP)
+endif
+
+ifneq ($(VERBOSE),)
+CFLAGS += $(CFLAGS_VERBOSE)
+FFLAGS += $(FFLAGS_VERBOSE)
+LDFLAGS += $(LDFLAGS_VERBOSE)
+endif
+
+ifeq ($(NETCDF),3)
+  # add the use_LARGEFILE cppdef
+  ifneq ($(findstring -Duse_netCDF,$(CPPDEFS)),)
+    CPPDEFS += -Duse_LARGEFILE
+  endif
+endif
+
+LIBS := {libs}
+LDFLAGS += $(LIBS)
+"""
+
+        # Copied from bin/mkmf.template.nci
+        config["intel"] = f"""
+ifeq ($(VTRACE), yes)
+    FC = mpifort-vt
+    LD = mpifort-vt
+else
+    FC = mpifort
+    LD = mpifort
+endif
+
+CC = mpicc
+
+REPRO =
+VERBOSE =
+OPT = on
+
+MAKEFLAGS += --jobs=4
+
+INCLUDE = {incs}
+
+FPPFLAGS := -fpp -Wp,-w $(INCLUDE)
+FFLAGS := -fno-alias -safe-cray-ptr -fpe0 -ftz -assume byterecl -i4 -r8 -traceback -nowarn -check noarg_temp_created -assume buffered_io -convert big_endian
+FFLAGS_OPT = {FFLAGS_OPT}
+FFLAGS_DEBUG = -g -O0 -debug all -check -check noarg_temp_created -check nopointer -warn -warn noerrors -ftrapuv
+FFLAGS_REPRO = -O2 -debug minimal -no-vec -fp-model precise
+FFLAGS_VERBOSE = -v -V -what
+
+CFLAGS := -D__IFC $(INCLUDE)
+CFLAGS_OPT = {CFLAGS_OPT}
+CFLAGS_DEBUG = -O0 -g -ftrapuv -traceback
+
+LDFLAGS :=
+LDFLAGS_VERBOSE := -Wl,-V,--verbose,-cref,-M
+
+ifneq ($(REPRO),)
+CFLAGS += $(CFLAGS_REPRO)
+FFLAGS += $(FFLAGS_REPRO)
+endif
+
+ifneq ($(DEBUG),)
+CFLAGS += $(CFLAGS_DEBUG)
+FFLAGS += $(FFLAGS_DEBUG)
+else
+CFLAGS += $(CFLAGS_OPT)
+FFLAGS += $(FFLAGS_OPT)
+endif
+
+ifneq ($(VERBOSE),)
+CFLAGS += $(CFLAGS_VERBOSE)
+FFLAGS += $(FFLAGS_VERBOSE)
+LDFLAGS += $(LDFLAGS_VERBOSE)
+endif
+
+LIBS := {libs}
+
+LDFLAGS += $(LIBS)
+"""
+
+        # Add support for the ifx compiler
+        # TODO: `.replace() is a temporary workaround for:
+        # icx: error: unsupported argument 'source' to option '-ffp-model='
+        # The `.replace()` apparently doesn't modify the object.
+        config["oneapi"] = config["intel"].replace("CFLAGS_REPRO := -fp-model precise -fp-model source", "CFLAGS_REPRO := -fp-model precise")
+
+        config["post"] = """
+# you should never need to change any lines below.
+
+# see the MIPSPro F90 manual for more details on some of the file extensions
+# discussed here.
+# this makefile template recognizes fortran sourcefiles with extensions
+# .f, .f90, .F, .F90. Given a sourcefile <file>.<ext>, where <ext> is one of
+# the above, this provides a number of default actions:
+
+# make <file>.opt	create an optimization report
+# make <file>.o		create an object file
+# make <file>.s		create an assembly listing
+# make <file>.x		create an executable file, assuming standalone
+#			source
+# make <file>.i		create a preprocessed file (for .F)
+# make <file>.i90	create a preprocessed file (for .F90)
+
+# The macro TMPFILES is provided to slate files like the above for removal.
+
+RM = rm -f
+SHELL = /bin/csh -f
+TMPFILES = .*.m *.B *.L *.i *.i90 *.l *.s *.mod *.opt
+
+.SUFFIXES: .F .F90 .H .L .T .f .f90 .h .i .i90 .l .o .s .opt .x
+
+.f.L:
+	$(FC) $(FFLAGS) -c -listing $*.f
+.f.opt:
+	$(FC) $(FFLAGS) -c -opt_report_level max -opt_report_phase all -opt_report_file $*.opt $*.f
+.f.l:
+	$(FC) $(FFLAGS) -c $(LIST) $*.f
+.f.T:
+	$(FC) $(FFLAGS) -c -cif $*.f
+.f.o:
+	$(FC) $(FFLAGS) -c $*.f
+.f.s:
+	$(FC) $(FFLAGS) -S $*.f
+.f.x:
+	$(FC) $(FFLAGS) -o $*.x $*.f *.o $(LDFLAGS)
+.f90.L:
+	$(FC) $(FFLAGS) -c -listing $*.f90
+.f90.opt:
+	$(FC) $(FFLAGS) -c -opt_report_level max -opt_report_phase all -opt_report_file $*.opt $*.f90
+.f90.l:
+	$(FC) $(FFLAGS) -c $(LIST) $*.f90
+.f90.T:
+	$(FC) $(FFLAGS) -c -cif $*.f90
+.f90.o:
+	$(FC) $(FFLAGS) -c $*.f90
+.f90.s:
+	$(FC) $(FFLAGS) -c -S $*.f90
+.f90.x:
+	$(FC) $(FFLAGS) -o $*.x $*.f90 *.o $(LDFLAGS)
+.F.L:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -listing $*.F
+.F.opt:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -opt_report_level max -opt_report_phase all -opt_report_file $*.opt $*.F
+.F.l:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c $(LIST) $*.F
+.F.T:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -cif $*.F
+.F.f:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) -EP $*.F > $*.f
+.F.i:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) -P $*.F
+.F.o:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c $*.F
+.F.s:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -S $*.F
+.F.x:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -o $*.x $*.F *.o $(LDFLAGS)
+.F90.L:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -listing $*.F90
+.F90.opt:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -opt_report_level max -opt_report_phase all -opt_report_file $*.opt $*.F90
+.F90.l:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c $(LIST) $*.F90
+.F90.T:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -cif $*.F90
+.F90.f90:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) -EP $*.F90 > $*.f90
+.F90.i90:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) -P $*.F90
+.F90.o:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c $*.F90
+.F90.s:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -S $*.F90
+.F90.x:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -o $*.x $*.F90 *.o $(LDFLAGS)
+"""
+
+        fullconfig = config[pkg.compiler.name] + config["post"]
+        print(fullconfig)
+        with open(makeinc_path, "w") as makeinc:
+            makeinc.write(fullconfig)
+
+    def build(self, pkg, spec, prefix):
+
+        # cd ${ACCESS_OM_DIR}/src/mom/exp
+        # export mom_type=ACCESS-CM
+        # ./MOM_compile.csh --type $mom_type --platform spack
+        with working_dir(join_path(pkg.stage.source_path, "exp")):
+            build = Executable("./MOM_compile.csh")
+
+            if pkg.spec.satisfies("+restart_repro"):
+                build.add_default_env("REPRO", "true")
+                print("INFO: +restart_repro applied")
+
+            build(
+                "--type",
+                self.__type,
+                "--platform",
+                self.__platform,
+                "--no_environ"
+            )
+
+    def install(self, pkg, spec, prefix):
+
+        mkdirp(prefix.bin)
+        install(
+            join_path(
+                "exec",
+                self.__platform,
+                self.__type,
+                "fms_" + self.__type + ".x"
+            ),
+            prefix.bin
+        )
+        install(join_path("bin", "mppnccombine." + self.__platform), prefix.bin)
