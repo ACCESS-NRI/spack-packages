@@ -12,22 +12,23 @@ class Mom5(CMakePackage, MakefilePackage):
     homepage = "https://www.access-nri.org.au"
     git = "https://github.com/ACCESS-NRI/mom5.git"
 
-    maintainers("dougiesquire", "harshula")
+    maintainers("dougiesquire", "harshula", "penguian")
 
     # https://github.com/ACCESS-NRI/MOM5#LGPL-3.0-1-ov-file
     license("LGPL-3.0-only", checked_by="dougiesquire")
 
-    version("mom_solo", branch="master", preferred=True)
+    version("mom_solo", branch="master")
     version("mom_sis", branch="master")
-    version("access-om2", branch="master")
-    version("access-om2-bgc-legacy", branch="master")
+    version("access-om2", branch="master", preferred=True)
+    version("legacy-access-om2-bgc", branch="master")
     version("access-esm1.5", branch="access-esm1.5")
     version("access-esm1.6", branch="master")
 
+    # NOTE: @mom matches both mom_solo and mom_sis
     build_system(
-        conditional("makefile", when="@access-esm1.5"),
-        "cmake",
-        default="makefile",
+        conditional("makefile", when="@access-om2,legacy-access-om2-bgc,access-esm1.5"),
+        conditional("cmake", when="@mom,access-om2,legacy-access-om2-bgc,access-esm1.6"),
+        default="cmake",
     )
 
     with when("build_system=cmake"):
@@ -37,28 +38,47 @@ class Mom5(CMakePackage, MakefilePackage):
         )
         variant("deterministic", default=False, description="Deterministic build")
 
-        depends_on("mpi")
+    with when("build_system=makefile"):
+        variant("restart_repro", default=True, description="Reproducible restart build.")
+        variant(
+            "deterministic",
+            default=False,
+            description="Deterministic build",
+            when="@access-om2,legacy-access-om2-bgc,access-esm1.6"
+        )
+        variant(
+            "optimisation_report",
+            default=False,
+            description="Generate optimisation reports",
+            when="@access-om2,legacy-access-om2-bgc,access-esm1.6"
+        )
+
+    with when("@mom,access-om2,legacy-access-om2-bgc,access-esm1.6"):
         depends_on("netcdf-c@4.7.4:")
         depends_on("netcdf-fortran@4.5.2:")
+        depends_on("mpi")
 
-    # NOTE: when("@access-om2") matches version "access-om2-bgc-legacy"
-    with when("@access-om2,access-esm1.6"):
+    with when("@access-om2,legacy-access-om2-bgc,access-esm1.6"):
         depends_on("oasis3-mct+deterministic", when="+deterministic")
         depends_on("oasis3-mct~deterministic", when="~deterministic")
-        depends_on("access-fms")
-        depends_on("access-generic-tracers")
 
-    with when("@access-om2"):
+    with when("@access-om2,legacy-access-om2-bgc"):
         depends_on("datetime-fortran")
         depends_on("libaccessom2+deterministic", when="+deterministic")
         depends_on("libaccessom2~deterministic", when="~deterministic")
 
-    with when("@access-esm1.5"):
-        variant("restart_repro", default=True, description="Reproducible restart build.")
+    with when("@access-om2,access-esm1.6"):
+        depends_on("access-fms")
+        depends_on("access-generic-tracers")
 
-        depends_on("openmpi")
+    with when("@legacy-access-om2-bgc"):
+        depends_on("access-fms", when="build_system=cmake")
+        depends_on("access-generic-tracers", when="build_system=cmake")
+
+    with when("@access-esm1.5"):
         depends_on("netcdf-c@4.7.1:")
         depends_on("netcdf-fortran@4.5.1:")
+        depends_on("openmpi")
         depends_on("oasis3-mct@access-esm1.5")
 
     def url_for_version(self, version):
@@ -75,7 +95,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
         "mom_sis": "MOM5_SIS",
         "access-om2": "MOM5_ACCESS_OM",
         "access-esm1.6": "MOM5_ACCESS_ESM",
-        "access-om2-bgc-legacy": "MOM5_ACCESS_OM_BGC"
+        "legacy-access-om2-bgc": "MOM5_ACCESS_OM_BGC"
     }
     __version = "INVALID"
 
@@ -89,8 +109,8 @@ class CMakeBuilder(cmake.CMakeBuilder):
 
         if self.__version not in self.__types.keys():
             raise ValueError(
-                "The version must be selected from: " +
-                ", ".join(self.__types.keys())
+                f"CMakeBuilder doesn't support version {self.__version}. The version must "
+                "be selected from: " + ", ".join(self.__types.keys())
             )
 
     def cmake_args(self):
@@ -102,10 +122,29 @@ class CMakeBuilder(cmake.CMakeBuilder):
 
 
 class MakefileBuilder(makefile.MakefileBuilder):
-    phases = ("edit", "build", "install")
+    phases = ("setup", "edit", "build", "install")
 
-    __type = "ACCESS-CM"  # Building mom5@access-esm1.5
+    __types = {
+        "access-om2": "ACCESS-OM",
+        "legacy-access-om2-bgc": "ACCESS-OM-BGC",
+        "access-esm1.5": "ACCESS-CM"
+    }
+    __version = "INVALID"
     __platform = "spack"
+
+    def setup(self, pkg, spec, prefix):
+        if isinstance(pkg.version, GitVersion):
+            self.__version = pkg.version.ref_version.string
+        elif isinstance(pkg.version, StandardVersion):
+            self.__version = pkg.version.string
+        else:
+            raise ValueError("version=" + pkg.version.string)
+
+        if self.__version not in self.__types.keys():
+            raise ValueError(
+                f"MakefileBuilder doesn't support version {self.__version}. The version must "
+                "be selected from: " + ", ".join(self.__types.keys())
+            )
 
     def edit(self, pkg, spec, prefix):
 
@@ -114,13 +153,27 @@ class MakefileBuilder(makefile.MakefileBuilder):
         config = {}
 
         # NOTE: The order of the libraries matters during the linking step!
-        istr = " ".join([
-                join_path((spec["oasis3-mct"].headers).cpp_flags, "psmile.MPI1"),
-                join_path((spec["oasis3-mct"].headers).cpp_flags, "mct")])
-        ideps = ["netcdf-fortran"]
-        ldeps = ["oasis3-mct", "netcdf-c", "netcdf-fortran"]
-        FFLAGS_OPT = "-O3 -debug minimal -xCORE-AVX512 -align array64byte"
-        CFLAGS_OPT = "-O2 -debug minimal -no-vec"
+        if self.__version == "access-esm1.5":
+            istr = " ".join([
+                    join_path((spec["oasis3-mct"].headers).cpp_flags, "psmile.MPI1"),
+                    join_path((spec["oasis3-mct"].headers).cpp_flags, "mct")])
+            ideps = ["netcdf-fortran"]
+            ldeps = ["oasis3-mct", "netcdf-c", "netcdf-fortran"]
+            FFLAGS_OPT = "-O3 -debug minimal -xCORE-AVX512 -align array64byte"
+            CFLAGS_OPT = "-O2 -debug minimal -no-vec"
+        else:
+            istr = join_path((spec["oasis3-mct"].headers).cpp_flags, "psmile.MPI1")
+            ideps = ["oasis3-mct", "libaccessom2", "netcdf-fortran"]
+            # NOTE: datetime-fortran is a dependency of libaccessom2.
+            ldeps = ["oasis3-mct", "libaccessom2", "netcdf-c", "netcdf-fortran", "datetime-fortran"]
+
+            # TODO: https://github.com/ACCESS-NRI/ACCESS-OM/issues/12
+            FFLAGS_OPT = "-g3 -O2 -xCORE-AVX2 -debug all -check none -traceback"
+            CFLAGS_OPT = "-O2 -debug minimal -xCORE-AVX2"
+            if self.spec.satisfies("+deterministic"):
+                FFLAGS_OPT = "-g0 -O0 -xCORE-AVX2 -debug none -check none"
+                CFLAGS_OPT = "-O0 -debug none -xCORE-AVX2"
+                print("INFO: +deterministic applied")
 
         incs = " ".join([istr] + [(spec[d].headers).cpp_flags for d in ideps])
         libs = " ".join([(spec[d].libs).ld_flags for d in ldeps])
@@ -207,7 +260,8 @@ LDFLAGS += $(LIBS)
 """
 
         # Copied from bin/mkmf.template.nci
-        config["intel"] = f"""
+        if self.__version == "access-esm1.5":
+            config["intel"] = f"""
 ifeq ($(VTRACE), yes)
     FC = mpifort-vt
     LD = mpifort-vt
@@ -263,6 +317,78 @@ LIBS := {libs}
 
 LDFLAGS += $(LIBS)
 """
+        else:
+            config["intel"] = f"""
+ifeq ($(VTRACE), yes)
+    FC := mpifort-vt
+    LD := mpifort-vt
+else
+    FC := mpifort
+    LD := mpifort
+endif
+
+CC := mpicc
+
+VERBOSE :=
+OPT := on
+
+MAKEFLAGS += -j
+
+INCLUDE   := {incs}
+
+FPPFLAGS := -fpp -Wp,-w $(INCLUDE)
+FFLAGS := -fno-alias -safe-cray-ptr -fpe0 -ftz -assume byterecl -i4 -r8 -nowarn -check noarg_temp_created -assume nobuffered_io -convert big_endian -grecord-gcc-switches -align all
+FFLAGS_OPT := {FFLAGS_OPT}
+FFLAGS_REPORT := -qopt-report=5 -qopt-report-annotate
+FFLAGS_DEBUG := -g3 -O0 -debug all -check -check noarg_temp_created -check nopointer -warn -warn noerrors -ftrapuv -traceback
+FFLAGS_REPRO := -fp-model precise -fp-model source -align all
+FFLAGS_VERBOSE := -v -V -what
+
+CFLAGS := -D__IFC $(INCLUDE)
+CFLAGS_OPT := {CFLAGS_OPT}
+CFLAGS_REPORT := -qopt-report=5 -qopt-report-annotate
+CFLAGS_DEBUG := -O0 -g -ftrapuv -traceback
+CFLAGS_REPRO := -fp-model precise -fp-model source
+
+LDFLAGS :=
+LDFLAGS_VERBOSE := -Wl,-V,--verbose,-cref,-M
+
+ifneq ($(REPRO),)
+CFLAGS += $(CFLAGS_REPRO)
+FFLAGS += $(FFLAGS_REPRO)
+endif
+
+ifneq ($(DEBUG),)
+CFLAGS += $(CFLAGS_DEBUG)
+FFLAGS += $(FFLAGS_DEBUG)
+else
+CFLAGS += $(CFLAGS_OPT)
+FFLAGS += $(FFLAGS_OPT)
+endif
+
+ifneq ($(VERBOSE),)
+CFLAGS += $(CFLAGS_VERBOSE)
+FFLAGS += $(FFLAGS_VERBOSE)
+LDFLAGS += $(LDFLAGS_VERBOSE)
+endif
+
+ifneq ($(REPORT),)
+CFLAGS += $(CFLAGS_REPORT)
+FFLAGS += $(FFLAGS_REPORT)
+endif
+
+LIBS := {libs}
+
+ifneq ($(OASIS_ROOT),)
+LIBS += -L$(OASIS_ROOT)/Linux/lib -lpsmile.MPI1 -lmct -lmpeu -lscrip
+endif
+
+ifneq ($(LIBACCESSOM2_ROOT),)
+LIBS += -L$(LIBACCESSOM2_ROOT)/build/lib -laccessom2
+endif
+
+LDFLAGS += $(LIBS)
+"""
 
         # Add support for the ifx compiler
         # TODO: `.replace() is a temporary workaround for:
@@ -270,7 +396,8 @@ LDFLAGS += $(LIBS)
         # The `.replace()` apparently doesn't modify the object.
         config["oneapi"] = config["intel"].replace("CFLAGS_REPRO := -fp-model precise -fp-model source", "CFLAGS_REPRO := -fp-model precise")
 
-        config["post"] = """
+        if self.__version == "access-esm1.5":
+            config["post"] = """
 # you should never need to change any lines below.
 
 # see the MIPSPro F90 manual for more details on some of the file extensions
@@ -360,6 +487,88 @@ TMPFILES = .*.m *.B *.L *.i *.i90 *.l *.s *.mod *.opt
 .F90.x:
 	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -o $*.x $*.F90 *.o $(LDFLAGS)
 """
+        else:
+            # Copied from bin/mkmf.template.t90
+            # TODO: Why from `mkmf.template.t90`? Copy bin/mkmf.template.nci.
+            config["post"] = """
+# you should never need to change any lines below.
+
+# see the CF90 manual for more details on some of the file extensions
+# discussed here.
+# this makefile template recognizes fortran sourcefiles with extensions
+# .f, .f90, .F, .F90. Given a sourcefile <file>.<ext>, where <ext> is one of
+# the above, this provides a number of default actions:
+
+# make <file>.T		create a CIF file
+# make <file>.lst	create a compiler listing
+# make <file>.o		create an object file
+# make <file>.s		create an assembly listing
+# make <file>.x		create an executable file, assuming standalone
+#			source
+
+# make <file>.i		create a preprocessed file (only for .F and .F90
+#			extensions)
+
+# make <file>.hpm	produce hpm output from <file>.x
+# make <file>.proc	produce procstat output from <file>.x
+
+# The macro TMPFILES is provided to slate files like the above for removal.
+
+RM = rm -f
+SHELL = /bin/csh
+TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
+
+.SUFFIXES: .F .F90 .H .T .f .F90 .h .hpm .i .lst .proc .o .s .x
+
+.f.T:
+	$(FC) $(FFLAGS) -c -Ca $*.f
+.f.lst:
+	$(FC) $(FFLAGS) $(LIST) -c $*.f
+.f.o:
+	$(FC) $(FFLAGS) -c     $*.f
+.f.s:
+	$(FC) $(FFLAGS) -eS    $*.f
+.f.x:
+	$(FC) $(FFLAGS) $(LDFLAGS) -o $*.x $*.f
+.f90.T:
+	$(FC) $(FFLAGS) -c -Ca $*.f90
+.f90.lst:
+	$(FC) $(FFLAGS) $(LIST) -c $*.f90
+.f90.o:
+	$(FC) $(FFLAGS) -c     $*.f90
+.f90.s:
+	$(FC) $(FFLAGS) -c -eS $*.f90
+.f90.x:
+	$(FC) $(FFLAGS) $(LDFLAGS) -o $*.x $*.f90
+.F.T:
+	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c -Ca $*.F
+.F.i:
+	$(FC) $(CPPDEFS) $(CPPFLAGS) -eP $*.F
+.F.lst:
+	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) $(LIST) -c $*.F
+.F.o:
+	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c     $*.F
+.F.s:
+	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c -eS $*.F
+.F.x:
+	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) $(LDFLAGS) -o $*.x $*.F
+.F90.T:
+	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c -Ca $*.F90
+.F90.i:
+	$(FC) $(CPPDEFS) $(CPPFLAGS) -eP $*.F90
+.F90.lst:
+	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) $(LIST) -c $*.F90
+.F90.o:
+	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c     $*.F90
+.F90.s:
+	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c -eS $*.F90
+.F90.x:
+	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) $(LDFLAGS) -o $*.x $*.F90
+.x.proc:
+	procstat -R $*.proc $*.x
+.x.hpm:
+	hpm -r -o $*.hpm $*.x
+"""
 
         fullconfig = config[pkg.compiler.name] + config["post"]
         print(fullconfig)
@@ -369,7 +578,7 @@ TMPFILES = .*.m *.B *.L *.i *.i90 *.l *.s *.mod *.opt
     def build(self, pkg, spec, prefix):
 
         # cd ${ACCESS_OM_DIR}/src/mom/exp
-        # export mom_type=ACCESS-CM
+        # export mom_type=ACCESS-OM
         # ./MOM_compile.csh --type $mom_type --platform spack
         with working_dir(join_path(pkg.stage.source_path, "exp")):
             build = Executable("./MOM_compile.csh")
@@ -378,9 +587,18 @@ TMPFILES = .*.m *.B *.L *.i *.i90 *.l *.s *.mod *.opt
                 build.add_default_env("REPRO", "true")
                 print("INFO: +restart_repro applied")
 
+            if self.__version != "access-esm1.5":
+                # The MOM5 commit d7ba13a3f364ce130b6ad0ba813f01832cada7a2
+                # requires the --no_version switch to avoid git hashes being
+                # embedded in the binary.
+                build.add_default_arg("--no_version")
+                if pkg.spec.satisfies("+optimisation_report"):
+                    build.add_default_env("REPORT", "true")
+                    print("INFO: +optimisation_report applied")
+
             build(
                 "--type",
-                self.__type,
+                self.__types[self.__version],
                 "--platform",
                 self.__platform,
                 "--no_environ"
@@ -393,8 +611,8 @@ TMPFILES = .*.m *.B *.L *.i *.i90 *.l *.s *.mod *.opt
             join_path(
                 "exec",
                 self.__platform,
-                self.__type,
-                "fms_" + self.__type + ".x"
+                self.__types[self.__version],
+                "fms_" + self.__types[self.__version] + ".x"
             ),
             prefix.bin
         )
