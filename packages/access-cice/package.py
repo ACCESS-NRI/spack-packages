@@ -40,6 +40,8 @@ class AccessCice(CMakePackage):
 
     root_cmakelists_dir = "configuration/scripts/cmake"
 
+    flag_handler = build_system_flags
+
     def cmake_args(self):
         args = [
             self.define_from_variant("CICE_OPENMP", "openmp"),

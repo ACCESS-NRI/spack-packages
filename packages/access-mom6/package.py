@@ -37,6 +37,7 @@ class AccessMom6(CMakePackage):
     depends_on("fms +openmp", when="+openmp")
     depends_on("fms ~openmp", when="~openmp")
 
+    flag_handler = build_system_flags
 
     def cmake_args(self):
         args = [

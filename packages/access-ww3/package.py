@@ -27,6 +27,8 @@ class AccessWw3(CMakePackage):
     depends_on("mpi")
     depends_on("netcdf-fortran@4.6.0:")
 
+    flag_handler = build_system_flags
+
     def cmake_args(self):
         args = [
             self.define_from_variant("WW3_OPENMP", "openmp"),
