@@ -41,6 +41,8 @@ class DatetimeFortran(AutotoolsPackage):
 
     patch("0001-Enable-deterministic-builds-using-D-flag-for-ar.patch", when="@1.7.0")
 
+    flag_handler = build_system_flags
+
     def url_for_version(self, version):
         return "https://github.com/wavebitscientific/datetime-fortran/releases/download/v{0}/datetime-fortran-{0}.tar.gz".format(version)
 

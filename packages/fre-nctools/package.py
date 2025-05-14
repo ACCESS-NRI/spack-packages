@@ -46,6 +46,8 @@ class FreNctools(AutotoolsPackage):
     depends_on("mpi", when="+mpi")
     depends_on("nco", when="@2024.05:")
 
+    flag_handler = build_system_flags
+
     def url_for_version(self, version):
         return "https://github.com/NOAA-GFDL/FRE-NCtools/archive/{0}.tar.gz".format(version)
 

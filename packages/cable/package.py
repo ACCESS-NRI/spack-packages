@@ -46,6 +46,8 @@ class Cable(CMakePackage):
     depends_on("netcdf-fortran@4.5.2:")
     depends_on("mpi", when="+mpi")
 
+    flag_handler = build_system_flags
+
     def cmake_args(self):
         args = []
         args.append(self.define_from_variant("CABLE_MPI", "mpi"))
