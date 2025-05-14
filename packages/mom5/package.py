@@ -1,8 +1,10 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
+# Copyright ACCESS-NRI
+#
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack.package import install, join_path, mkdirp
 from spack.build_systems import cmake, makefile
 from spack.version.version_types import GitVersion, StandardVersion
 
@@ -67,6 +69,8 @@ class Mom5(CMakePackage, MakefilePackage):
         depends_on("libaccessom2+deterministic", when="+deterministic")
         depends_on("libaccessom2~deterministic", when="~deterministic")
 
+    # NOTE: Spack will also match "access-om2-legacy-bgc" here, that's why
+    #       it has been renamed to "legacy-access-om2-bgc".
     with when("@access-om2,access-esm1.6"):
         depends_on("access-fms")
         depends_on("access-generic-tracers")
@@ -90,7 +94,9 @@ class CMakeBuilder(cmake.CMakeBuilder):
 
     phases = ("setup", "cmake", "build", "install")
 
-    __types = {
+    # NOTE: The keys in the __builds variable are required to check whether
+    #       a valid version was passed in by the user.
+    __builds = {
         "mom_solo": "MOM5_SOLO",
         "mom_sis": "MOM5_SIS",
         "access-om2": "MOM5_ACCESS_OM",
@@ -99,6 +105,9 @@ class CMakeBuilder(cmake.CMakeBuilder):
     }
     __version = "INVALID"
 
+    # NOTE: This functionality will hopefully be implemented in the Spack core
+    #       in the future. Till then, this approach can be used in other SPRs
+    #       where this functionality is required.
     def setup(self, pkg, spec, prefix):
         if isinstance(pkg.version, GitVersion):
             self.__version = pkg.version.ref_version.string
@@ -107,15 +116,20 @@ class CMakeBuilder(cmake.CMakeBuilder):
         else:
             raise ValueError("version=" + pkg.version.string)
 
-        if self.__version not in self.__types.keys():
+        # The rest of the checks are only required if a __builds member
+        # variable exists
+        if self.__version not in self.__builds.keys():
             raise ValueError(
                 f"CMakeBuilder doesn't support version {self.__version}. The version must "
-                "be selected from: " + ", ".join(self.__types.keys())
+                "be selected from: " + ", ".join(self.__builds.keys())
             )
+
+        print("INFO: version=" + self.__version +
+                " type=" + self.__builds[self.__version])
 
     def cmake_args(self):
         args = [
-            self.define("MOM5_TYPE", self.__types[self.__version]),
+            self.define("MOM5_TYPE", self.__builds[self.__version]),
             self.define_from_variant("MOM5_DETERMINISTIC", "deterministic"),
         ]
         return args
@@ -124,7 +138,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
 class MakefileBuilder(makefile.MakefileBuilder):
     phases = ("setup", "edit", "build", "install")
 
-    __types = {
+    __builds = {
         "access-om2": "ACCESS-OM",
         "legacy-access-om2-bgc": "ACCESS-OM-BGC",
         "access-esm1.5": "ACCESS-CM"
@@ -132,6 +146,9 @@ class MakefileBuilder(makefile.MakefileBuilder):
     __version = "INVALID"
     __platform = "spack"
 
+    # NOTE: This functionality will hopefully be implemented in the Spack core
+    #       in the future. Till then, this approach can be used in other SPRs
+    #       where this functionality is required.
     def setup(self, pkg, spec, prefix):
         if isinstance(pkg.version, GitVersion):
             self.__version = pkg.version.ref_version.string
@@ -140,11 +157,16 @@ class MakefileBuilder(makefile.MakefileBuilder):
         else:
             raise ValueError("version=" + pkg.version.string)
 
-        if self.__version not in self.__types.keys():
+        # The rest of the checks are only required if a __builds member
+        # variable exists
+        if self.__version not in self.__builds.keys():
             raise ValueError(
                 f"MakefileBuilder doesn't support version {self.__version}. The version must "
-                "be selected from: " + ", ".join(self.__types.keys())
+                "be selected from: " + ", ".join(self.__builds.keys())
             )
+
+        print("INFO: version=" + self.__version +
+                " type=" + self.__builds[self.__version])
 
     def edit(self, pkg, spec, prefix):
 
@@ -193,7 +215,7 @@ OPENMP =
 
 MAKEFLAGS += --jobs=$(shell grep '^processor' /proc/cpuinfo | wc -l)
 
-FPPFLAGS :=
+FPPFLAGS := 
 
 FFLAGS := -fcray-pointer -fdefault-real-8 -ffree-line-length-none -fno-range-check -Waliasing -Wampersand -Warray-bounds -Wcharacter-truncation -Wconversion -Wline-truncation -Wintrinsics-std -Wsurprising -Wno-tabs -Wunderflow -Wunused-parameter -Wintrinsic-shadow -Wno-align-commons -fallow-argument-mismatch -fallow-invalid-boz
 FFLAGS += {incs}
@@ -201,16 +223,16 @@ FFLAGS += -DGFORTRAN
 
 #
 FFLAGS_OPT = -O2
-FFLAGS_REPRO =
-FFLAGS_DEBUG = -O0 -g -W -fbounds-check
+FFLAGS_REPRO = 
+FFLAGS_DEBUG = -O0 -g -W -fbounds-check 
 FFLAGS_OPENMP = -fopenmp
-FFLAGS_VERBOSE =
+FFLAGS_VERBOSE = 
 
 CFLAGS := -D__IFC {incs}
 CFLAGS += $(shell nc-config --cflags)
 CFLAGS_OPT = -O2
 CFLAGS_OPENMP = -fopenmp
-CFLAGS_DEBUG = -O0 -g
+CFLAGS_DEBUG = -O0 -g 
 
 # Optional Testing compile flags.  Mutually exclusive from DEBUG, REPRO, and OPT
 # *_TEST will match the production if no new option(s) is(are) to be tested.
@@ -219,7 +241,7 @@ CFLAGS_TEST = -O2
 
 LDFLAGS :=
 LDFLAGS_OPENMP := -fopenmp
-LDFLAGS_VERBOSE :=
+LDFLAGS_VERBOSE := 
 
 ifneq ($(REPRO),)
 CFLAGS += $(CFLAGS_REPRO)
@@ -598,7 +620,7 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
 
             build(
                 "--type",
-                self.__types[self.__version],
+                self.__builds[self.__version],
                 "--platform",
                 self.__platform,
                 "--no_environ"
@@ -611,8 +633,8 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
             join_path(
                 "exec",
                 self.__platform,
-                self.__types[self.__version],
-                "fms_" + self.__types[self.__version] + ".x"
+                self.__builds[self.__version],
+                "fms_" + self.__builds[self.__version] + ".x"
             ),
             prefix.bin
         )
