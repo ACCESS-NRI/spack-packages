@@ -29,7 +29,7 @@ class AccessGenericTracers(CMakePackage):
 
     depends_on("access-mocsy")
     depends_on("access-fms", when="+use_access_fms")
-    depends_on("fms", when="~use_access_fms")
+    depends_on("fms@2025.02:", when="~use_access_fms")
     depends_on("mpi")
 
     flag_handler = build_system_flags
