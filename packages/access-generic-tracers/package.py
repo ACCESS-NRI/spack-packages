@@ -21,8 +21,15 @@ class AccessGenericTracers(CMakePackage):
     # TODO: Needs to be changed once changes to build system enter master.
     version("development", branch="development", preferred=True)
 
+    variant(
+        "use_access_fms",
+        default=True,
+        description="If True, depend on access-fms, otherwise depend on fms"
+    )
+
     depends_on("access-mocsy")
-    depends_on("access-fms")
+    depends_on("access-fms", when="+use_access_fms")
+    depends_on("fms", when="~use_access_fms")
     depends_on("mpi")
 
     flag_handler = build_system_flags
