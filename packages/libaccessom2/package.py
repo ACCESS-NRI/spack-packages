@@ -35,6 +35,8 @@ class Libaccessom2(CMakePackage):
     depends_on("json-fortran")
     depends_on("netcdf-fortran@4.5.2:")
 
+    flag_handler = build_system_flags
+
     def url_for_version(self, version):
         return "https://github.com/ACCESS-NRI/libaccessom2/tarball/{0}".format(version)
 

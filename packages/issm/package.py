@@ -46,6 +46,8 @@ class Issm(AutotoolsPackage):
     depends_on("python@3.9.2:", when="+wrappers", type=("build", "run"))
     depends_on("py-numpy", when="+wrappers", type=("build", "run"))
 
+    flag_handler = build_system_flags
+
     def url_for_version(self, version):
         if version == Version("upstream"):
             return "https://github.com/ISSMteam/ISSM/archive/refs/heads/main.tar.gz"
