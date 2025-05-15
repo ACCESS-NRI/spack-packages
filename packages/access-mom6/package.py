@@ -36,6 +36,7 @@ class AccessMom6(CMakePackage):
     depends_on("fms@2023.02: precision=64 +large_file ~gfs_phys ~quad_precision")
     depends_on("fms +openmp", when="+openmp")
     depends_on("fms ~openmp", when="~openmp")
+    depends_on("access-generic-tracers ~use_access_fms")
 
     flag_handler = build_system_flags
 
