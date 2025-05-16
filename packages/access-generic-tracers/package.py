@@ -21,6 +21,8 @@ class AccessGenericTracers(CMakePackage):
     # TODO: Needs to be changed once changes to build system enter master.
     version("development", branch="development", preferred=True)
 
+    # NOTE: access-fms@mom5 should be used in OM2, ESM1.5 and ESM1.6 to preserve
+    # answers with previous releases
     variant(
         "use_access_fms",
         default=True,
@@ -29,7 +31,7 @@ class AccessGenericTracers(CMakePackage):
 
     depends_on("access-mocsy")
     depends_on("access-fms", when="+use_access_fms")
-    depends_on("fms", when="~use_access_fms")
+    depends_on("fms@2025.02:", when="~use_access_fms")
     depends_on("mpi")
 
     flag_handler = build_system_flags
