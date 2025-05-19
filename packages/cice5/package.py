@@ -13,6 +13,7 @@ class Cice5(MakefilePackage):
 
     homepage = "https://www.access-nri.org.au"
     git = "https://github.com/ACCESS-NRI/cice5.git"
+    license("BSD-3-Clause", checked_by="anton-seaice")
 
     maintainers("harshula", "anton-seaice")
 

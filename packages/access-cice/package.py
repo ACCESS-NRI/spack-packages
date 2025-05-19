@@ -16,8 +16,7 @@ class AccessCice(CMakePackage):
     submodules = True
     maintainers("anton-seaice", "harshula")
 
-    # see license file at https://github.com/CICE-Consortium/CICE
-    license("LicenseRef-CICE", checked_by="anton-seaice")
+    license("BSD-3-Clause", checked_by="anton-seaice")
 
     variant("openmp", default=False, description="Enable OpenMP")
     variant(
