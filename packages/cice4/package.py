@@ -15,9 +15,9 @@ class Cice4(MakefilePackage):
 
     homepage = "https://www.access-nri.org.au"
     git = "https://github.com/ACCESS-NRI/cice4.git"
-    license("BSD-3-Clause", checked_by="anton-seaice")
 
     maintainers("penguian")
+    license("BSD-3-Clause", checked_by="anton-seaice")
 
     version("access-esm1.5", branch="access-esm1.5")
 
