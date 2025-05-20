@@ -37,7 +37,7 @@ class AccessMom6(CMakePackage):
     depends_on("mpi")
     depends_on("netcdf-fortran@4.6.0:")
     depends_on("fms@2023.02: precision=64 +large_file ~gfs_phys ~quad_precision")
-    depends_on("fms +openmp", when="+openmp")
+    depends_on("fms@2025.02: +openmp", when="+openmp")
     depends_on("fms ~openmp", when="~openmp")
     depends_on("access-generic-tracers ~use_access_fms", when="@2025.02.001:")
 
