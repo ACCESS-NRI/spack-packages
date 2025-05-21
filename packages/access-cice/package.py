@@ -18,6 +18,9 @@ class AccessCice(CMakePackage):
 
     license("BSD-3-Clause", checked_by="anton-seaice")
 
+    version("CICE6.6.0-3", commit="2c444bd")
+    version("CICE6.6.0-1", commit="964a445")
+
     variant("openmp", default=False, description="Enable OpenMP")
     variant(
         "access3",

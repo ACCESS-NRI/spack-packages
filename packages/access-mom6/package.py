@@ -21,6 +21,9 @@ class AccessMom6(CMakePackage):
     # see license file in https://github.com/ACCESS-NRI/MOM6/blob/e92c971084e185cfd3902f18072320b45d583a54/LICENSE.md
     license("LGPL-3.0-only", checked_by="minghangli-uni")
 
+    version("2025.02.001", commit="a5f4397")
+    version("2025.02.000", commit="e088c8b")
+
     variant("openmp", default=False, description="Enable OpenMP")
     variant("asymmetric_mem", default=False, description="Use asymmetric memory in MOM6")
     variant(
@@ -34,9 +37,9 @@ class AccessMom6(CMakePackage):
     depends_on("mpi")
     depends_on("netcdf-fortran@4.6.0:")
     depends_on("fms@2023.02: precision=64 +large_file ~gfs_phys ~quad_precision")
-    depends_on("fms +openmp", when="+openmp")
+    depends_on("fms@2025.02: +openmp", when="+openmp")
     depends_on("fms ~openmp", when="~openmp")
-    depends_on("access-generic-tracers ~use_access_fms")
+    depends_on("access-generic-tracers ~use_access_fms", when="@2025.02.001:")
 
     flag_handler = build_system_flags
 

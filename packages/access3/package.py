@@ -28,6 +28,9 @@ class Access3(CMakePackage):
     maintainers("anton-seaice", "harshula", "micaeljtoliveira")
     license("Apache-2.0", checked_by="anton-seaice")
 
+    version("2025.03.1", commit="d28d8b3")
+    version("2025.03.0", commit="d61a88a")
+
     variant(
         "configurations",
         values=(*KNOWN_CONF, 'none'),
@@ -54,11 +57,11 @@ class Access3(CMakePackage):
 
     for conf in KNOWN_CONF:
         if "CICE6" in conf:
-            depends_on("access-cice+access3", when=f"configurations={conf}")
+            depends_on("access-cice@CICE6.6.0-1: +access3", when=f"configurations={conf}")
         if "MOM6" in conf:
-            depends_on("access-mom6+access3", when=f"configurations={conf}")
+            depends_on("access-mom6@2025.02.000: +access3", when=f"configurations={conf}")
         if "WW3" in conf:
-            depends_on("access-ww3+access3", when=f"configurations={conf}")
+            depends_on("access-ww3@2025.03.0: +access3", when=f"configurations={conf}")
 
     flag_handler = build_system_flags
 
