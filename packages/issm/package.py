@@ -100,6 +100,7 @@ class Issm(AutotoolsPackage):
             python_version = python_spec.version.up_to(2)
             python_prefix = self.spec["python"].prefix
 
+
             args.append("--with-python-version={0}".format(python_version))
             args.append("--with-python-dir={0}".format(python_prefix))
 
@@ -108,7 +109,6 @@ class Issm(AutotoolsPackage):
             args.append("--with-python-numpy-dir={0}".format(numpy_include_dir))
         else:
             args.append("--with-wrappers=no")
-
         
         return args
     
