@@ -1,7 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # Copyright 2023 Angus Gibson
-# Justin Kin Jun Hew, 2025
+# Justin Kin Jun Hew, 2025 – AD‑enabled flavour
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -9,118 +9,178 @@ from spack.package import *
 
 
 class Issm(AutotoolsPackage):
-    """Ice-sheet and Sea-Level System Model"""
+    """Ice‑sheet and Sea‑Level System Model.
+
+    This recipe supports two distinct build flavours:
+
+    * **Classic** (default) – links against PETSc for linear algebra.
+    * **Automatic Differentiation** (+ad) – uses CoDiPack + MediPack and
+      **excludes PETSc** (ISSM’s AD implementation is not PETSc‑compatible).
+    """
 
     homepage = "https://issm.jpl.nasa.gov/"
-    git = "https://github.com/ACCESS-NRI/ISSM.git"
+    git      = "https://github.com/ACCESS-NRI/ISSM.git"
 
     maintainers("justinh2002")
 
+    # ──────────────────────────────────────────────────────────────────────
+    # Versions
+    # ──────────────────────────────────────────────────────────────────────
     version("upstream", branch="main", git="https://github.com/ISSMteam/ISSM.git")
-    
-    version("main", branch="main", git="https://github.com/ACCESS-NRI/ISSM.git")
-    version("access-development", branch="access-development", git="https://github.com/ACCESS-NRI/ISSM.git", preferred=True)
+    version("main",     branch="main")
+    version(
+        "access-development",
+        branch="access-development",
+        preferred=True,
+    )
 
-    variant("wrappers", default=False,
-            description="Enable building with MPI wrappers")
-    
-    variant("examples", default=False,
-            description="Build examples")
-    #
-    # Build dependencies
-    #
+    # ──────────────────────────────────────────────────────────────────────
+    # Variants
+    # ──────────────────────────────────────────────────────────────────────
+    variant(
+        "wrappers",
+        default=False,
+        description="Enable building ISSM Python/C wrappers",
+    )
+
+    variant(
+        "examples",
+        default=False,
+        description="Install the examples tree under <prefix>/examples",
+    )
+
+    variant(
+        "ad",
+        default=False,
+        description="Build with CoDiPack automatic differentiation (drops PETSc)",
+    )
+
+    # ──────────────────────────────────────────────────────────────────────
+    # Dependencies
+    # ──────────────────────────────────────────────────────────────────────
+    # Build‑time tools
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool",  type="build")
     depends_on("m4",       type="build")
+
+    # Core runtime deps
     depends_on("mpi")
-    depends_on("petsc+metis+mumps+scalapack")
+
+    # Linear‑algebra stack – only for the *non‑AD* flavour
+    depends_on("petsc+metis+mumps+scalapack", when="~ad")
+
+    # Optimiser
     depends_on("m1qn3")
 
+    # Automatic‑differentiation libraries
+    depends_on("codipack", when="+ad")
+    depends_on("medipack", when="+ad")
+
+    # Optional extras controlled by +wrappers
+    depends_on("access-triangle", when="+wrappers")
+    depends_on("parmetis",        when="+wrappers")
+    depends_on("python@3.9.2:",   when="+wrappers", type=("build", "run"))
+    depends_on("py-numpy",        when="+wrappers", type=("build", "run"))
+
+    # GCC 14 breaks on several C++17 constructs used in ISSM
     conflicts("%gcc@14:", msg="ISSM cannot be built with GCC versions above 13")
-    #
-    # Optional libraries
-    #
-    depends_on('access-triangle', when='+wrappers')
-    depends_on("parmetis",  when="+wrappers")
-    depends_on("python@3.9.2:", when="+wrappers", type=("build", "run"))
-    depends_on("py-numpy", when="+wrappers", type=("build", "run"))
 
-    flag_handler = build_system_flags
-
+    # ──────────────────────────────────────────────────────────────────────
+    # Helper functions
+    # ──────────────────────────────────────────────────────────────────────
     def url_for_version(self, version):
+        """Tarball URL for Spack‑generated versions."""
         if version == Version("upstream"):
             return "https://github.com/ISSMteam/ISSM/archive/refs/heads/main.tar.gz"
-        else:
-            return "https://github.com/ACCESS-NRI/ISSM/archive/refs/heads/{0}.tar.gz".format(version)
+        return f"https://github.com/ACCESS-NRI/ISSM/archive/refs/heads/{version}.tar.gz"
 
+    # ──────────────────────────────────────────────────────────────────────
+    # Build environment – inject AD compiler flags when needed
+    # ──────────────────────────────────────────────────────────────────────
+    def setup_build_environment(self, env):
+        if "+ad" in self.spec:
+            # CoDiPack’s performance tips: force inlining & keep full symbols
+            env.append_flags(
+                "CXXFLAGS",
+                f"-g -O3 -fPIC {self.compiler.cxx11_flag} -DCODI_ForcedInlines",
+            )
+
+    # ──────────────────────────────────────────────────────────────────────
+    # Autoreconf hook
+    # ──────────────────────────────────────────────────────────────────────
     def autoreconf(self, spec, prefix):
-        # If the repo has an Autotools build system, run autoreconf:
         autoreconf("--install", "--verbose", "--force")
-        
+
+    # ──────────────────────────────────────────────────────────────────────
+    # Configure phase – construct ./configure arguments
+    # ──────────────────────────────────────────────────────────────────────
     def configure_args(self):
-        """Populate configure arguments, including optional flags to mimic 
-        your manual `./configure` invocation on Gadi."""
         args = [
             "--enable-debugging",
             "--enable-development",
             "--enable-shared",
             "--without-kriging",
         ]
-        #
-        # PETSc, MUMPS, METIS, SCALAPACK, etc.
-        # (Spack typically puts these in the compiler/link environment,
-        #  but if the ISSM configure script looks for explicit --with-* 
-        #  flags, we pass them.)
-        #
-        args.append("--with-petsc-dir={0}".format(self.spec["petsc"].prefix))
-        args.append("--with-metis-dir={0}".format(self.spec["metis"].prefix))
-        args.append("--with-mumps-dir={0}".format(self.spec["mumps"].prefix))
-        args.append("--with-m1qn3-dir={0}".format(self.spec["m1qn3"].prefix.lib))
-        #
-        # MPI: Even if we use Spack's MPI wrappers, the build system may 
-        # want explicit mention of MPI includes and compilers:
-        #
-        args.append("--with-mpi-include={0}".format(self.spec["mpi"].prefix.include))
-        args.append("CC=" + self.spec["mpi"].mpicc)
-        args.append("CXX=" + self.spec["mpi"].mpicxx)
-        args.append("FC=" + self.spec["mpi"].mpifc)
-        args.append("F77=" + self.spec["mpi"].mpif77)
-        
-        # If you rely on sca/lapack from PETSc, these lines might 
-        # not be strictly necessary. If ISSM's configure script 
-        # checks them individually, add them:
-        args.append("--with-scalapack-dir={0}".format(self.spec["scalapack"].prefix))
-        #
-        # Wrappers
-        #
+
+        # ── Linear‑algebra backend ───────────────────────────────────────
+        if "+ad" in self.spec:
+            # AD build: *exclude* PETSc and point at CoDiPack/MediPack
+            args += [
+                f"--with-codipack-dir={self.spec['codipack'].prefix}",
+                f"--with-medipack-dir={self.spec['medipack'].prefix}",
+            ]
+        else:
+            # Classic build with PETSc
+            args += [
+                f"--with-petsc-dir={self.spec['petsc'].prefix}",
+                f"--with-metis-dir={self.spec['metis'].prefix}",
+                f"--with-mumps-dir={self.spec['mumps'].prefix}",
+                f"--with-scalapack-dir={self.spec['scalapack'].prefix}",
+            ]
+
+        # Optimiser
+        args.append(f"--with-m1qn3-dir={self.spec['m1qn3'].prefix.lib}")
+
+        # ── MPI compilers & headers ──────────────────────────────────────
+        mpi = self.spec["mpi"]
+        args += [
+            f"--with-mpi-include={mpi.prefix.include}",
+            f"CC={mpi.mpicc}",
+            f"CXX={mpi.mpicxx}",
+            f"FC={mpi.mpifc}",
+            f"F77={mpi.mpif77}",
+        ]
+
+        # ── Optional wrappers ────────────────────────────────────────────
         if "+wrappers" in self.spec:
-            args.append("--with-wrappers=yes")        
-            args.append("--with-parmetis-dir={0}".format(self.spec["parmetis"].prefix))
-            args.append("--with-triangle-dir={0}".format(self.spec["access-triangle"].prefix))
-            python_spec = self.spec["python"]
-            python_version = python_spec.version.up_to(2)
-            python_prefix = self.spec["python"].prefix
+            args.append("--with-wrappers=yes")
+            args.append(f"--with-parmetis-dir={self.spec['parmetis'].prefix}")
+            args.append(f"--with-triangle-dir={self.spec['access-triangle'].prefix}")
 
-            args.append("--with-python-version={0}".format(python_version))
-            args.append("--with-python-dir={0}".format(python_prefix))
+            py_ver = self.spec["python"].version.up_to(2)
+            py_pref = self.spec["python"].prefix
+            np_pref = self.spec["py-numpy"].prefix
+            np_inc  = join_path(np_pref, "lib", f"python{py_ver}", "site-packages", "numpy")
 
-            numpy_prefix = self.spec['py-numpy'].prefix
-            numpy_include_dir = join_path(numpy_prefix, 'lib', 'python{0}'.format(python_version), 'site-packages', 'numpy')
-            args.append("--with-python-numpy-dir={0}".format(numpy_include_dir))
+            args += [
+                f"--with-python-version={py_ver}",
+                f"--with-python-dir={py_pref}",
+                f"--with-python-numpy-dir={np_inc}",
+            ]
         else:
             args.append("--with-wrappers=no")
 
-        
         return args
-    
+
+    # ──────────────────────────────────────────────────────────────────────
+    # Install phase – delegate to standard make install & copy examples
+    # ──────────────────────────────────────────────────────────────────────
     def install(self, spec, prefix):
-        # Run the normal Autotools install logic
         make("install", parallel=False)
-        
+
         if "+examples" in self.spec:
-            # Copy the examples directory directly into the prefix directory
-            examples_src = join_path(self.stage.source_path, 'examples')
-            examples_dst = join_path(prefix, 'examples')
+            examples_src = join_path(self.stage.source_path, "examples")
+            examples_dst = join_path(prefix, "examples")
             install_tree(examples_src, examples_dst)
 
