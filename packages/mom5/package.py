@@ -46,23 +46,28 @@ class Mom5(CMakePackage, MakefilePackage):
             "deterministic",
             default=False,
             description="Deterministic build",
-            when="@access-om2,legacy-access-om2-bgc,access-esm1.6"
+            when="@access-om2,legacy-access-om2-bgc"
         )
         variant(
             "optimisation_report",
             default=False,
             description="Generate optimisation reports",
-            when="@access-om2,legacy-access-om2-bgc,access-esm1.6"
+            when="@access-om2,legacy-access-om2-bgc"
         )
 
     with when("@mom,access-om2,legacy-access-om2-bgc,access-esm1.6"):
         depends_on("netcdf-c@4.7.4:")
         depends_on("netcdf-fortran@4.5.2:")
+        # Depend on virtual package "mpi".
         depends_on("mpi")
 
-    with when("@access-om2,legacy-access-om2-bgc,access-esm1.6"):
+    with when("@access-om2,legacy-access-om2-bgc"):
         depends_on("oasis3-mct+deterministic", when="+deterministic")
         depends_on("oasis3-mct~deterministic", when="~deterministic")
+
+    with when("@access-esm1.6"):
+        depends_on("oasis3-mct@access-esm1.5+deterministic", when="+deterministic")
+        depends_on("oasis3-mct@access-esm1.5~deterministic", when="~deterministic")
 
     with when("@access-om2,legacy-access-om2-bgc"):
         depends_on("datetime-fortran")
@@ -75,6 +80,8 @@ class Mom5(CMakePackage, MakefilePackage):
         depends_on("access-fms")
         depends_on("access-generic-tracers")
 
+    # legacy-access-om2-bgc builds with access-generic-tracers but it
+    # is not configured for use in ACCESS-OM2-BGC configurations.
     with when("@legacy-access-om2-bgc"):
         depends_on("access-fms", when="build_system=cmake")
         depends_on("access-generic-tracers", when="build_system=cmake")
@@ -639,3 +646,4 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
             prefix.bin
         )
         install(join_path("bin", "mppnccombine." + self.__platform), prefix.bin)
+
