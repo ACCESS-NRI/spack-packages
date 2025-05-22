@@ -1,7 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # Copyright 2023 Angus Gibson
-# Justin Kin Jun Hew, 2025 – AD‑enabled flavour
+# Justin Kin Jun Hew, 2025 – Wrappers, Examples, Versioning, AD‑enabled flavour
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
