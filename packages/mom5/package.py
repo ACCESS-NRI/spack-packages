@@ -5,114 +5,182 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import install, join_path, mkdirp
+from spack.build_systems import cmake, makefile
 from spack.version.version_types import GitVersion, StandardVersion
 
-# https://spack.readthedocs.io/en/latest/build_systems/makefilepackage.html
-class Mom5(MakefilePackage):
+class Mom5(CMakePackage, MakefilePackage):
     """MOM is a numerical ocean model based on the hydrostatic primitive equations."""
 
     homepage = "https://www.access-nri.org.au"
     git = "https://github.com/ACCESS-NRI/mom5.git"
-    submodules = True
 
-    maintainers("harshula", "penguian")
+    maintainers("dougiesquire", "harshula", "penguian")
 
+    # https://github.com/ACCESS-NRI/MOM5#LGPL-3.0-1-ov-file
+    license("LGPL-3.0-only", checked_by="dougiesquire")
+
+    version("mom_solo", branch="master")
+    version("mom_sis", branch="master")
     version("access-om2", branch="master", preferred=True)
     version("legacy-access-om2-bgc", branch="master")
     version("access-esm1.5", branch="access-esm1.5")
     version("access-esm1.6", branch="master")
 
-    variant("restart_repro", default=True, description="Reproducible restart build.")
+    # NOTE: @mom matches both mom_solo and mom_sis
+    build_system(
+        conditional("makefile", when="@access-om2,legacy-access-om2-bgc,access-esm1.5"),
+        conditional("cmake", when="@mom,access-om2,legacy-access-om2-bgc,access-esm1.6"),
+        default="cmake",
+    )
 
-    with when("@access-esm1.6,access-om2,legacy-access-om2-bgc"):
-        variant("deterministic",
-                default=False,
-                description="Deterministic build.")
-        variant("optimisation_report",
-                default=False,
-                description="Generate optimisation reports.")
+    with when("build_system=cmake"):
+        variant("build_type", default="RelWithDebInfo",
+            description="CMake build type",
+            values=("Debug", "Release", "RelWithDebInfo")
+        )
+        variant("deterministic", default=False, description="Deterministic build")
 
-    with when("@access-om2,legacy-access-om2-bgc"):
+    with when("build_system=makefile"):
+        variant("restart_repro", default=True, description="Reproducible restart build.")
+        variant(
+            "deterministic",
+            default=False,
+            description="Deterministic build",
+            when="@access-om2,legacy-access-om2-bgc"
+        )
+        variant(
+            "optimisation_report",
+            default=False,
+            description="Generate optimisation reports",
+            when="@access-om2,legacy-access-om2-bgc"
+        )
+
+    with when("@mom,access-om2,legacy-access-om2-bgc,access-esm1.6"):
         depends_on("netcdf-c@4.7.4:")
         depends_on("netcdf-fortran@4.5.2:")
         # Depend on virtual package "mpi".
         depends_on("mpi")
+
+    with when("@access-om2,legacy-access-om2-bgc"):
         depends_on("datetime-fortran")
         depends_on("oasis3-mct+deterministic", when="+deterministic")
         depends_on("oasis3-mct~deterministic", when="~deterministic")
         depends_on("libaccessom2+deterministic", when="+deterministic")
         depends_on("libaccessom2~deterministic", when="~deterministic")
 
-    # NOTE: Spack will also match "access-om2-legacy-bgc" here, that's why
-    #       it has been renamed to "legacy-access-om2-bgc".
-    with when("@access-om2"):
-        depends_on("access-fms")
-        depends_on("access-generic-tracers")
-
-    # access-esm1.5 and access-esm1.6
-    with when("@access-esm1.5:access-esm1.6"):
-        depends_on("netcdf-c@4.7.1:")
-        depends_on("netcdf-fortran@4.5.1:")
-        # Depend on "openmpi".
-        depends_on("openmpi")
-
-    with when("@access-esm1.5"):
-        depends_on("oasis3-mct@access-esm1.5")
-
     with when("@access-esm1.6"):
         depends_on("oasis3-mct@access-esm1.5+deterministic", when="+deterministic")
         depends_on("oasis3-mct@access-esm1.5~deterministic", when="~deterministic")
+
+    # NOTE: Spack will also match "access-om2-legacy-bgc" here, that's why
+    #       it has been renamed to "legacy-access-om2-bgc".
+    with when("@access-om2,access-esm1.6"):
         depends_on("access-fms")
         depends_on("access-generic-tracers")
 
-    phases = ["setup", "edit", "build", "install"]
+    # legacy-access-om2-bgc builds with access-generic-tracers but it
+    # is not configured for use in ACCESS-OM2-BGC configurations.
+    with when("@legacy-access-om2-bgc"):
+        depends_on("access-fms", when="build_system=cmake")
+        depends_on("access-generic-tracers", when="build_system=cmake")
 
-    # NOTE: The keys in the __builds variable are required to check whether
-    #       a valid version was passed in by the user.
-    __builds = {
-        "access-om2": {"type": "ACCESS-OM", "gtracers": True},
-        "legacy-access-om2-bgc": {"type": "ACCESS-OM-BGC", "gtracers": False},
-        "access-esm1.5": {"type": "ACCESS-CM", "gtracers": False},
-        "access-esm1.6": {"type": "ACCESS-ESM", "gtracers": True}
-    }
-    __version = "INVALID"
-    __platform = "spack"
+    with when("@access-esm1.5"):
+        depends_on("netcdf-c@4.7.1:")
+        depends_on("netcdf-fortran@4.5.1:")
+        depends_on("openmpi")
+        depends_on("oasis3-mct@access-esm1.5")
 
     def url_for_version(self, version):
         return "https://github.com/ACCESS-NRI/mom5/tarball/{0}".format(version)
 
+
+class CMakeBuilder(cmake.CMakeBuilder):
+    root_cmakelists_dir = "cmake/"
+
+    phases = ("setup", "cmake", "build", "install")
+
+    # NOTE: The keys in the __builds variable are required to check whether
+    #       a valid version was passed in by the user.
+    __builds = {
+        "mom_solo": "MOM5_SOLO",
+        "mom_sis": "MOM5_SIS",
+        "access-om2": "MOM5_ACCESS_OM",
+        "access-esm1.6": "MOM5_ACCESS_ESM",
+        "legacy-access-om2-bgc": "MOM5_ACCESS_OM_BGC"
+    }
+    __version = "INVALID"
+
     # NOTE: This functionality will hopefully be implemented in the Spack core
     #       in the future. Till then, this approach can be used in other SPRs
     #       where this functionality is required.
-    def setup(self, spec, prefix):
-
-        if isinstance(self.version, GitVersion):
-            self.__version = self.version.ref_version.string
-        elif isinstance(self.version, StandardVersion):
-            self.__version = self.version.string
+    def setup(self, pkg, spec, prefix):
+        if isinstance(pkg.version, GitVersion):
+            self.__version = pkg.version.ref_version.string
+        elif isinstance(pkg.version, StandardVersion):
+            self.__version = pkg.version.string
         else:
-            print("ERROR: version=" + self.version.string)
-            raise ValueError
+            raise ValueError("version=" + pkg.version.string)
 
         # The rest of the checks are only required if a __builds member
         # variable exists
         if self.__version not in self.__builds.keys():
-            print("ERROR: The version must be selected from: " +
-                    ", ".join(self.__builds.keys()))
-            raise ValueError
+            raise ValueError(
+                f"CMakeBuilder doesn't support version {self.__version}. The version must "
+                "be selected from: " + ", ".join(self.__builds.keys())
+            )
 
         print("INFO: version=" + self.__version +
-                " type=" + self.__builds[self.__version]["type"] +
-                " gtracers=" + str(self.__builds[self.__version]["gtracers"]))
+                " type=" + self.__builds[self.__version])
 
-    def edit(self, spec, prefix):
+    def cmake_args(self):
+        args = [
+            self.define("MOM5_TYPE", self.__builds[self.__version]),
+            self.define_from_variant("MOM5_DETERMINISTIC", "deterministic"),
+        ]
+        return args
 
-        srcdir = self.stage.source_path
+
+class MakefileBuilder(makefile.MakefileBuilder):
+    phases = ("setup", "edit", "build", "install")
+
+    __builds = {
+        "access-om2": "ACCESS-OM",
+        "legacy-access-om2-bgc": "ACCESS-OM-BGC",
+        "access-esm1.5": "ACCESS-CM"
+    }
+    __version = "INVALID"
+    __platform = "spack"
+
+    # NOTE: This functionality will hopefully be implemented in the Spack core
+    #       in the future. Till then, this approach can be used in other SPRs
+    #       where this functionality is required.
+    def setup(self, pkg, spec, prefix):
+        if isinstance(pkg.version, GitVersion):
+            self.__version = pkg.version.ref_version.string
+        elif isinstance(pkg.version, StandardVersion):
+            self.__version = pkg.version.string
+        else:
+            raise ValueError("version=" + pkg.version.string)
+
+        # The rest of the checks are only required if a __builds member
+        # variable exists
+        if self.__version not in self.__builds.keys():
+            raise ValueError(
+                f"MakefileBuilder doesn't support version {self.__version}. The version must "
+                "be selected from: " + ", ".join(self.__builds.keys())
+            )
+
+        print("INFO: version=" + self.__version +
+                " type=" + self.__builds[self.__version])
+
+    def edit(self, pkg, spec, prefix):
+
+        srcdir = pkg.stage.source_path
         makeinc_path = join_path(srcdir, "bin", "mkmf.template.spack")
         config = {}
 
         # NOTE: The order of the libraries matters during the linking step!
-        if self.__version in ["access-esm1.5", "access-esm1.6"]:
+        if self.__version == "access-esm1.5":
             istr = " ".join([
                     join_path((spec["oasis3-mct"].headers).cpp_flags, "psmile.MPI1"),
                     join_path((spec["oasis3-mct"].headers).cpp_flags, "mct")])
@@ -133,10 +201,6 @@ class Mom5(MakefilePackage):
                 FFLAGS_OPT = "-g0 -O0 -xCORE-AVX2 -debug none -check none"
                 CFLAGS_OPT = "-O0 -debug none -xCORE-AVX2"
                 print("INFO: +deterministic applied")
-
-        if self.__builds[self.__version]["gtracers"]:
-            ideps.extend(["access-fms", "access-generic-tracers"])
-            ldeps.extend(["access-fms", "access-generic-tracers"])
 
         incs = " ".join([istr] + [(spec[d].headers).cpp_flags for d in ideps])
         libs = " ".join([(spec[d].libs).ld_flags for d in ldeps])
@@ -223,7 +287,7 @@ LDFLAGS += $(LIBS)
 """
 
         # Copied from bin/mkmf.template.nci
-        if self.__version in ["access-esm1.5", "access-esm1.6"]:
+        if self.__version == "access-esm1.5":
             config["intel"] = f"""
 ifeq ($(VTRACE), yes)
     FC = mpifort-vt
@@ -359,7 +423,7 @@ LDFLAGS += $(LIBS)
         # The `.replace()` apparently doesn't modify the object.
         config["oneapi"] = config["intel"].replace("CFLAGS_REPRO := -fp-model precise -fp-model source", "CFLAGS_REPRO := -fp-model precise")
 
-        if self.__version in ["access-esm1.5", "access-esm1.6"]:
+        if self.__version == "access-esm1.5":
             config["post"] = """
 # you should never need to change any lines below.
 
@@ -533,53 +597,51 @@ TMPFILES = .*.m *.T *.TT *.hpm *.i *.lst *.proc *.s
 	hpm -r -o $*.hpm $*.x
 """
 
-        fullconfig = config[self.compiler.name] + config["post"]
+        fullconfig = config[pkg.compiler.name] + config["post"]
         print(fullconfig)
         with open(makeinc_path, "w") as makeinc:
             makeinc.write(fullconfig)
 
-    def build(self, spec, prefix):
+    def build(self, pkg, spec, prefix):
 
         # cd ${ACCESS_OM_DIR}/src/mom/exp
         # export mom_type=ACCESS-OM
         # ./MOM_compile.csh --type $mom_type --platform spack
-        with working_dir(join_path(self.stage.source_path, "exp")):
+        with working_dir(join_path(pkg.stage.source_path, "exp")):
             build = Executable("./MOM_compile.csh")
 
-            if self.spec.satisfies("+restart_repro"):
+            if pkg.spec.satisfies("+restart_repro"):
                 build.add_default_env("REPRO", "true")
                 print("INFO: +restart_repro applied")
-
-            if self.__builds[self.__version]["gtracers"]:
-                build.add_default_env("SPACK_GTRACERS_EXTERNAL", "true")
 
             if self.__version != "access-esm1.5":
                 # The MOM5 commit d7ba13a3f364ce130b6ad0ba813f01832cada7a2
                 # requires the --no_version switch to avoid git hashes being
                 # embedded in the binary.
                 build.add_default_arg("--no_version")
-                if self.spec.satisfies("+optimisation_report"):
+                if pkg.spec.satisfies("+optimisation_report"):
                     build.add_default_env("REPORT", "true")
                     print("INFO: +optimisation_report applied")
 
             build(
                 "--type",
-                self.__builds[self.__version]["type"],
+                self.__builds[self.__version],
                 "--platform",
                 self.__platform,
                 "--no_environ"
             )
 
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
 
         mkdirp(prefix.bin)
         install(
             join_path(
                 "exec",
                 self.__platform,
-                self.__builds[self.__version]["type"],
-                "fms_" + self.__builds[self.__version]["type"] + ".x"
+                self.__builds[self.__version],
+                "fms_" + self.__builds[self.__version] + ".x"
             ),
             prefix.bin
         )
         install(join_path("bin", "mppnccombine." + self.__platform), prefix.bin)
+
