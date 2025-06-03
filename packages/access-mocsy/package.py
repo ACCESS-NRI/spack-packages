@@ -17,7 +17,9 @@ class AccessMocsy(MakefilePackage):
     maintainers("harshula")
 
     version("master", branch="master")
-    version("mom5", branch="mom5", preferred=True)
+    version("gtracers", branch="gtracers", preferred=True)
+    # TODO: Remove the 'mom5' version. The 'gtracers' version/branch is a copy of 'mom5'.
+    version("mom5", branch="mom5")
 
     # Need: self.spec["mpi"].mpifc
     depends_on("mpi")
