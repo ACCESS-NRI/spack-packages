@@ -68,7 +68,12 @@ class Issm(AutotoolsPackage):
     depends_on("mpi")
 
     # Linear‑algebra stack – only for the *non‑AD* flavour
-    depends_on("petsc+metis+mumps+scalapack", when="~ad")
+    depends_on("petsc", when="~ad")
+    depends_on("metis")
+    depends_on("mumps")
+    depends_on("scalapack")
+    # Note: ISSM’s MUMPS support is not compatible with the Spack‑provided
+    # MUMPS, so we use the one provided by the ISSM team.
 
     # Optimiser
     depends_on("m1qn3")
@@ -106,6 +111,9 @@ class Issm(AutotoolsPackage):
                 f"-g -O3 -fPIC {self.compiler.cxx11_flag} -DCODI_ForcedInlines",
             )
 
+        env.set("CMAKE_C_COMPILER",  self.spec["mpi"].mpicc)
+        env.set("CMAKE_CXX_COMPILER", self.spec["mpi"].mpicxx)
+
     # ──────────────────────────────────────────────────────────────────────
     # Autoreconf hook
     # ──────────────────────────────────────────────────────────────────────
@@ -121,6 +129,7 @@ class Issm(AutotoolsPackage):
             "--enable-development",
             "--enable-shared",
             "--without-kriging",
+            "--without-Love"
         ]
 
         # ── Linear‑algebra backend ───────────────────────────────────────
@@ -133,14 +142,14 @@ class Issm(AutotoolsPackage):
         else:
             # Classic build with PETSc
             args += [
-                f"--with-petsc-dir={self.spec['petsc'].prefix}",
-                f"--with-metis-dir={self.spec['metis'].prefix}",
-                f"--with-mumps-dir={self.spec['mumps'].prefix}",
-                f"--with-scalapack-dir={self.spec['scalapack'].prefix}",
+                f"--with-petsc-dir={self.spec['petsc'].prefix}"
             ]
 
+        args.append(f"--with-metis-dir={self.spec['metis'].prefix}")
+        args.append(f"--with-mumps-dir={self.spec['mumps'].prefix}")
         # Optimiser
         args.append(f"--with-m1qn3-dir={self.spec['m1qn3'].prefix.lib}")
+        args.append(f"--with-scalapack-dir={self.spec['scalapack'].prefix}")
 
         # ── MPI compilers & headers ──────────────────────────────────────
         mpi = self.spec["mpi"]
