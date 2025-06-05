@@ -19,7 +19,7 @@ class Issm(AutotoolsPackage):
     """
 
     homepage = "https://issm.jpl.nasa.gov/"
-    git      = "https://github.com/ACCESS-NRI/ISSM.git"
+    git = "https://github.com/ACCESS-NRI/ISSM.git"
 
     maintainers("justinh2002")
 
@@ -27,26 +27,16 @@ class Issm(AutotoolsPackage):
     # Versions
     # ──────────────────────────────────────────────────────────────────────
     version("upstream", branch="main", git="https://github.com/ISSMteam/ISSM.git")
-    version("main",     branch="main")
-    version(
-        "access-development",
-        branch="access-development",
-        preferred=True,
-    )
+    version("main", branch="main")
+    version("access-development", branch="access-development", preferred=True)
 
     # ──────────────────────────────────────────────────────────────────────
     # Variants
     # ──────────────────────────────────────────────────────────────────────
-    variant(
-        "wrappers",
-        default=False,
-        description="Enable building ISSM Python/C wrappers",
-    )
+    variant("wrappers", default=False, description="Enable building ISSM Python/C wrappers")
 
     variant(
-        "examples",
-        default=False,
-        description="Install the examples tree under <prefix>/examples",
+        "examples", default=False, description="Install the examples tree under <prefix>/examples"
     )
 
     variant(
@@ -61,8 +51,8 @@ class Issm(AutotoolsPackage):
     # Build‑time tools
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
-    depends_on("libtool",  type="build")
-    depends_on("m4",       type="build")
+    depends_on("libtool", type="build")
+    depends_on("m4", type="build")
 
     # Core runtime deps
     depends_on("mpi")
@@ -84,9 +74,9 @@ class Issm(AutotoolsPackage):
 
     # Optional extras controlled by +wrappers
     depends_on("access-triangle", when="+wrappers")
-    depends_on("parmetis",        when="+wrappers")
-    depends_on("python@3.9.2:",   when="+wrappers", type=("build", "run"))
-    depends_on("py-numpy",        when="+wrappers", type=("build", "run"))
+    depends_on("parmetis", when="+wrappers")
+    depends_on("python@3.9.2:", when="+wrappers", type=("build", "run"))
+    depends_on("py-numpy", when="+wrappers", type=("build", "run"))
 
     # GCC 14 breaks on several C++17 constructs used in ISSM
     conflicts("%gcc@14:", msg="ISSM cannot be built with GCC versions above 13")
@@ -107,11 +97,10 @@ class Issm(AutotoolsPackage):
         if "+ad" in self.spec:
             # CoDiPack’s performance tips: force inlining & keep full symbols
             env.append_flags(
-                "CXXFLAGS",
-                f"-g -O3 -fPIC {self.compiler.cxx11_flag} -DCODI_ForcedInlines",
+                "CXXFLAGS", f"-g -O3 -fPIC {self.compiler.cxx11_flag} -DCODI_ForcedInlines"
             )
 
-        env.set("CMAKE_C_COMPILER",  self.spec["mpi"].mpicc)
+        env.set("CMAKE_C_COMPILER", self.spec["mpi"].mpicc)
         env.set("CMAKE_CXX_COMPILER", self.spec["mpi"].mpicxx)
 
     # ──────────────────────────────────────────────────────────────────────
@@ -129,7 +118,7 @@ class Issm(AutotoolsPackage):
             "--enable-development",
             "--enable-shared",
             "--without-kriging",
-            "--without-Love"
+            "--without-Love",
         ]
 
         # ── Linear‑algebra backend ───────────────────────────────────────
@@ -141,9 +130,7 @@ class Issm(AutotoolsPackage):
             ]
         else:
             # Classic build with PETSc
-            args += [
-                f"--with-petsc-dir={self.spec['petsc'].prefix}"
-            ]
+            args += [f"--with-petsc-dir={self.spec['petsc'].prefix}"]
 
         args.append(f"--with-metis-dir={self.spec['metis'].prefix}")
         args.append(f"--with-mumps-dir={self.spec['mumps'].prefix}")
@@ -170,7 +157,7 @@ class Issm(AutotoolsPackage):
             py_ver = self.spec["python"].version.up_to(2)
             py_pref = self.spec["python"].prefix
             np_pref = self.spec["py-numpy"].prefix
-            np_inc  = join_path(np_pref, "lib", f"python{py_ver}", "site-packages", "numpy")
+            np_inc = join_path(np_pref, "lib", f"python{py_ver}", "site-packages", "numpy")
 
             args += [
                 f"--with-python-version={py_ver}",
@@ -192,4 +179,3 @@ class Issm(AutotoolsPackage):
             examples_src = join_path(self.stage.source_path, "examples")
             examples_dst = join_path(prefix, "examples")
             install_tree(examples_src, examples_dst)
-
