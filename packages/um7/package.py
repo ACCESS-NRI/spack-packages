@@ -10,6 +10,7 @@
 
 from spack.package import *
 
+
 class Um7(Package):
     """
     UM is a numerical weather prediction and climate modelling software package.
@@ -41,8 +42,10 @@ class Um7(Package):
     variant("optim", default="high", description="Optimization level",
             values=("high", "debug"), multi=False)
 
-    phases = ["edit", "build", "install"]
+    with when("@access-esm1.6"):
+        depends_on("cable", type=("build", "link"))
 
+    phases = ["edit", "build", "install"]
 
     def setup_build_environment(self, env):
         """
@@ -50,9 +53,13 @@ class Um7(Package):
         """
         env.prepend_path("PATH", self.spec["fcm"].prefix.bin)
         oasis3_incs = [
-                join_path(self.spec["oasis3-mct"].prefix.include, subdir)
-                for subdir in ["psmile.MPI1", "mct"]]
+            join_path(self.spec["oasis3-mct"].prefix.include, subdir)
+            for subdir in ["psmile.MPI1", "mct"]
+        ]
         ideps = ["gcom4", "netcdf-fortran"]
+        with when("@access-esm1.6"):
+            ideps.append("cable")
+
         incs = [self.spec[d].prefix.include for d in ideps] + oasis3_incs
         for ipath in incs:
             env.prepend_path("CPATH", ipath)
@@ -60,13 +67,11 @@ class Um7(Package):
         # therefore must be statically linked.
         env.prepend_path("LIBRARY_PATH", self.spec["gcom4"].prefix.lib)
 
-
     # The path to the build directory.
     _bld_path = "ummodel_hg3"
 
     # The path to the build configuration.
     _bld_cfg_path = join_path(_bld_path, "cfg", "bld-hadgem3-spack.cfg")
-
 
     def _exe_name(self, optim_value):
         """
@@ -77,17 +82,14 @@ class Um7(Package):
         else:
             return "um_hg3.exe"
 
-
     def _get_linker_args(self, spec, name):
         """
         The reason for the explicit -rpath is:
         https://github.com/ACCESS-NRI/spack-packages/issues/14#issuecomment-1653651447
         """
         return " ".join(
-                    [(spec[name].libs).ld_flags,
-                    "-Wl,-rpath=" + join_path(spec[name].prefix, "lib")]
-                   )
-
+            [(spec[name].libs).ld_flags, "-Wl,-rpath=" + join_path(spec[name].prefix, "lib")]
+        )
 
     def edit(self, spec, prefix):
         """
@@ -97,6 +99,9 @@ class Um7(Package):
         """
 
         ldeps = ["oasis3-mct", "netcdf-fortran", "dummygrib"]
+        with when("@access-esm1.6"):
+            ldeps.append("cable")
+
         libs = " ".join([self._get_linker_args(spec, d) for d in ldeps] + ["-lgcom"])
 
         opt_value = spec.variants["optim"].value
@@ -119,7 +124,8 @@ class Um7(Package):
             "C95_2A=c95_2a C96_1C=c96_1c C97_3A=c97_3a "
             "CABLE_17TILES=cable_17tiles "
             "CABLE_SOIL_LAYERS=cable_soil_layers "
-            "TIMER=timer")
+            "TIMER=timer"
+        )
         FFLAGS = "-ftz -what -fno-alias -stack-temps -safe-cray-ptr"
         if opt_value == "debug":
             FO = "-O0"
@@ -135,6 +141,47 @@ class Um7(Package):
             FG = ""
             FARCH = "-xCORE-AVX512"
             FOBLANK = ""
+
+        CABLE_excl_deps = ""
+        with when("@access-esm1.6"):
+            CABLE_excl_deps = """
+excl_dep                                           USE::cable_def_types_mod
+excl_dep                                           USE::cbl_masks_mod
+excl_dep                                           USE::cable_other_constants_mod
+excl_dep                                           USE::cable_math_constants_mod
+excl_dep                                           USE::cable_phys_constants_mod
+excl_dep                                           USE::cable_soil_params_mod
+excl_dep                                           USE::cable_common_module
+excl_dep                                           USE::cbl_init_radiation_module
+excl_dep                                           USE::grid_constants_mod_cbl
+excl_dep                                           USE::cable_surface_types_mod
+excl_dep                                           USE::cable_soil_type_mod
+excl_dep                                           USE::cable_veg_type_mod
+excl_dep                                           USE::cable_pft_params_mod
+excl_dep                                           USE::cbl_albedo_mod
+excl_dep                                           USE::cbl_soil_snow_main_module
+excl_dep                                           USE::cable_soil_snow_type_mod
+excl_dep                                           USE::cbl_lai_canopy_height_mod
+excl_dep                                           USE::cable_carbon_module
+excl_dep                                           USE::snow_aging_mod
+excl_dep                                           USE::cable_roughness_module
+excl_dep                                           USE::cable_air_module
+excl_dep                                           USE::cable_canopy_module
+excl_dep                                           USE::cable_canopy_type_mod
+excl_dep                                           USE::casadimension
+excl_dep                                           USE::casa_inout_module
+excl_dep                                           USE::casa_readbiome_module
+excl_dep                                           USE::cable_init_wetfac_mod
+excl_dep                                           USE::casavariable
+excl_dep                                           USE::casaparm
+excl_dep                                           USE::phenvariable
+excl_dep                                           USE::feedback_mod
+excl_dep                                           USE::bgcdriver_mod
+excl_dep                                           USE::sumcflux_mod
+excl_dep                                           USE::POP_TYPES
+excl_dep                                           USE::cable_runtime_opts_mod
+excl_dep                                           USE::landuse_mod
+            """
 
         config = f"""
 # ------------------------------------------------------------------------------
@@ -167,6 +214,7 @@ excl_dep                                           USE::mod_prism_grids_writing
 excl_dep                                           USE::mod_prism_def_partition_proto
 excl_dep                                           USE::mod_prism_put_proto
 excl_dep                                           USE::mod_prism_get_proto
+{CABLE_excl_deps}
 excl_dep::script                                   EXE
 exe_dep                                            portio2a.o pio_data_conv.o pio_io_timer.o
 exe_name::flumeMain                                {EXE_NAME}
@@ -197,7 +245,6 @@ tool::ldflags                                      {FOBLANK} -g -traceback {FDEB
         with open(self._bld_cfg_path, "w") as bld_cfg_file:
             bld_cfg_file.write(config)
 
-
     def build(self, spec, prefix):
         """
         Use FCM to build the executable.
@@ -207,7 +254,6 @@ tool::ldflags                                      {FOBLANK} -g -traceback {FDEB
             fcm("build", "-f", "-j", "4", self._bld_cfg_path)
         else:
             fcm("build", "-j", "4", self._bld_cfg_path)
-
 
     def install(self, spec, prefix):
         """
