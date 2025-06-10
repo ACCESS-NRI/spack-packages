@@ -64,7 +64,7 @@ class Issm(AutotoolsPackage):
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
 
-    # Core runtime deps
+    # Core build + runtime deps
     depends_on("mpi")
 
     # Linear-algebra stack - only for the *non-AD* flavour
@@ -110,9 +110,6 @@ class Issm(AutotoolsPackage):
                 "CXXFLAGS",
                 f"-g -O3 -fPIC {self.compiler.cxx11_flag} -DCODI_ForcedInlines",
             )
-
-        env.set("CMAKE_C_COMPILER", self.spec["mpi"].mpicc)
-        env.set("CMAKE_CXX_COMPILER", self.spec["mpi"].mpicxx)
 
     # --------------------------------------------------------------------
     # Autoreconf hook
