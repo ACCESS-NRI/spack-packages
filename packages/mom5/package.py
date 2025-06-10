@@ -8,6 +8,9 @@ from spack.package import install, join_path, mkdirp
 from spack.build_systems import cmake, makefile
 from spack.version.version_types import GitVersion, StandardVersion
 
+from spack.package import *
+
+
 class Mom5(CMakePackage, MakefilePackage):
     """MOM is a numerical ocean model based on the hydrostatic primitive equations."""
 
@@ -94,7 +97,32 @@ class Mom5(CMakePackage, MakefilePackage):
         return "https://github.com/ACCESS-NRI/mom5/tarball/{0}".format(version)
 
 
-class CMakeBuilder(cmake.CMakeBuilder):
+class BaseBuilder(metaclass=spack.builder.PhaseCallbacksMeta):
+
+    # NOTE: This functionality will hopefully be implemented in the Spack core
+    #       in the future. Till then, this approach can be used in other SPRs
+    #       where this functionality is required.
+    def setup(self, pkg, spec, prefix):
+        if isinstance(pkg.version, GitVersion):
+            self.__version = pkg.version.ref_version.string
+        elif isinstance(pkg.version, StandardVersion):
+            self.__version = pkg.version.string
+        else:
+            raise ValueError("version=" + pkg.version.string)
+
+        # The rest of the checks are only required if a __builds member
+        # variable exists
+        if self.__version not in self.__builds.keys():
+            raise ValueError(
+                f"AnyBuilder doesn't support version {self.__version}. The version must "
+                "be selected from: " + ", ".join(self.__builds.keys())
+            )
+
+        print("INFO: version=" + self.__version +
+                " type=" + self.__builds[self.__version])
+
+
+class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
     root_cmakelists_dir = "cmake/"
 
     phases = ("setup", "cmake", "build", "install")
@@ -110,27 +138,8 @@ class CMakeBuilder(cmake.CMakeBuilder):
     }
     __version = "INVALID"
 
-    # NOTE: This functionality will hopefully be implemented in the Spack core
-    #       in the future. Till then, this approach can be used in other SPRs
-    #       where this functionality is required.
     def setup(self, pkg, spec, prefix):
-        if isinstance(pkg.version, GitVersion):
-            self.__version = pkg.version.ref_version.string
-        elif isinstance(pkg.version, StandardVersion):
-            self.__version = pkg.version.string
-        else:
-            raise ValueError("version=" + pkg.version.string)
-
-        # The rest of the checks are only required if a __builds member
-        # variable exists
-        if self.__version not in self.__builds.keys():
-            raise ValueError(
-                f"CMakeBuilder doesn't support version {self.__version}. The version must "
-                "be selected from: " + ", ".join(self.__builds.keys())
-            )
-
-        print("INFO: version=" + self.__version +
-                " type=" + self.__builds[self.__version])
+        super.setup(self, pkg, spec, prefix)
 
     def cmake_args(self):
         args = [
@@ -140,7 +149,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
         return args
 
 
-class MakefileBuilder(makefile.MakefileBuilder):
+class MakefileBuilder(BaseBuilder, makefile.MakefileBuilder):
     phases = ("setup", "edit", "build", "install")
 
     __builds = {
@@ -151,27 +160,8 @@ class MakefileBuilder(makefile.MakefileBuilder):
     __version = "INVALID"
     __platform = "spack"
 
-    # NOTE: This functionality will hopefully be implemented in the Spack core
-    #       in the future. Till then, this approach can be used in other SPRs
-    #       where this functionality is required.
     def setup(self, pkg, spec, prefix):
-        if isinstance(pkg.version, GitVersion):
-            self.__version = pkg.version.ref_version.string
-        elif isinstance(pkg.version, StandardVersion):
-            self.__version = pkg.version.string
-        else:
-            raise ValueError("version=" + pkg.version.string)
-
-        # The rest of the checks are only required if a __builds member
-        # variable exists
-        if self.__version not in self.__builds.keys():
-            raise ValueError(
-                f"MakefileBuilder doesn't support version {self.__version}. The version must "
-                "be selected from: " + ", ".join(self.__builds.keys())
-            )
-
-        print("INFO: version=" + self.__version +
-                " type=" + self.__builds[self.__version])
+        super.setup(self, pkg, spec, prefix)
 
     def edit(self, pkg, spec, prefix):
 
