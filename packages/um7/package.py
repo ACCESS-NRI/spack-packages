@@ -32,6 +32,12 @@ class Um7(Package):
     depends_on("netcdf-fortran@4.5.2:", type=("build", "link"))
     depends_on("oasis3-mct", type=("build", "link"))
 
+    # https://metomi.github.io/fcm/doc/user_guide/build.html
+    variant(
+        "full",
+        default=True,
+        description="Full (fresh) build. Disable for incremental build"
+    )
     variant("optim", default="high", description="Optimization level",
             values=("high", "debug"), multi=False)
 
@@ -197,7 +203,10 @@ tool::ldflags                                      {FOBLANK} -g -traceback {FDEB
         Use FCM to build the executable.
         """
         fcm = which("fcm")
-        fcm("build", "-f", "-j", "4", self._bld_cfg_path)
+        if spec.satisfies("+full"):
+            fcm("build", "-f", "-j", "4", self._bld_cfg_path)
+        else:
+            fcm("build", "-j", "4", self._bld_cfg_path)
 
 
     def install(self, spec, prefix):
