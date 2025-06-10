@@ -87,6 +87,8 @@ class Issm(AutotoolsPackage):
     depends_on("parmetis", when="+wrappers")
     depends_on("python@3.9.2:", when="+wrappers", type=("build", "run"))
     depends_on("py-numpy", when="+wrappers", type=("build", "run"))
+    
+    flag_handler = build_system_flags
 
     # GCC 14 breaks on several C++17 constructs used in ISSM
     conflicts("%gcc@14:", msg="ISSM cannot be built with GCC versions above 13")
