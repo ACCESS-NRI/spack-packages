@@ -69,6 +69,7 @@ class Issm(AutotoolsPackage):
 
     # Linear-algebra stack - only for the *non-AD* flavour
     depends_on("petsc", when="~ad")
+    depends_on("parmetis")
     depends_on("metis")
     depends_on("mumps")
     depends_on("scalapack")
@@ -84,7 +85,6 @@ class Issm(AutotoolsPackage):
 
     # Optional extras controlled by +wrappers
     depends_on("access-triangle", when="+wrappers")
-    depends_on("parmetis", when="+wrappers")
     depends_on("python@3.9.2:", when="+wrappers", type=("build", "run"))
     depends_on("py-numpy", when="+wrappers", type=("build", "run"))
     
