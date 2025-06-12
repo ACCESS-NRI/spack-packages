@@ -68,7 +68,7 @@ class Issm(AutotoolsPackage):
     depends_on("mpi")
 
     # Linear-algebra stack - only for the *non-AD* flavour
-    depends_on("petsc", when="~ad")
+    depends_on("petsc+metis+mumps+scalapack", when="~ad")
     depends_on("parmetis")
     depends_on("metis")
     depends_on("mumps")
