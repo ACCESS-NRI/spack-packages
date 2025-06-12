@@ -143,7 +143,7 @@ class Issm(AutotoolsPackage):
             args += [
                 f"--with-petsc-dir={self.spec['petsc'].prefix}",
             ]
-
+        args.append(f"--with-parmetis-dir={self.spec['parmetis'].prefix}")
         args.append(f"--with-metis-dir={self.spec['metis'].prefix}")
         args.append(f"--with-mumps-dir={self.spec['mumps'].prefix}")
         # Optimiser
