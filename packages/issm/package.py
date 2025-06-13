@@ -68,7 +68,7 @@ class Issm(AutotoolsPackage):
     depends_on("mpi")
 
     # Linear-algebra stack - only for the *non-AD* flavour
-    depends_on("petsc+metis+mumps+scalapack", when="~ad")
+    depends_on("petsc~examples+metis+mumps+scalapack", when="~ad")
     depends_on("parmetis")
     depends_on("metis")
     depends_on("mumps")
@@ -123,13 +123,17 @@ class Issm(AutotoolsPackage):
     # Configure phase - construct ./configure arguments
     # --------------------------------------------------------------------
     def configure_args(self):
-        args = [
+        args = []
+        if "+ad" in self.spec:
+            args.append("--enable-ad")
+
+        args.extend([
             "--enable-debugging",
             "--enable-development",
             "--enable-shared",
             "--without-kriging",
             "--without-Love",
-        ]
+        ])
 
         # Linear-algebra backend
         if "+ad" in self.spec:
