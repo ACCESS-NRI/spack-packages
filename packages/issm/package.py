@@ -123,17 +123,13 @@ class Issm(AutotoolsPackage):
     # Configure phase - construct ./configure arguments
     # --------------------------------------------------------------------
     def configure_args(self):
-        args = []
-        if "+ad" in self.spec:
-            args.append("--enable-ad")
-
-        args.extend([
+        args = [
             "--enable-debugging",
             "--enable-development",
             "--enable-shared",
             "--without-kriging",
             "--without-Love",
-        ])
+        ]
 
         # Linear-algebra backend
         if "+ad" in self.spec:
