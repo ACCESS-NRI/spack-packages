@@ -77,7 +77,7 @@ class Issm(AutotoolsPackage):
     depends_on("petsc~examples+metis+mumps+scalapack", when="~ad")
     depends_on("parmetis")
     depends_on("metis")
-    depends_on("mumps")
+    depends_on("mumps~openmp", when="~openmp")
     depends_on("mumps+openmp", when="+openmp")
     depends_on("scalapack")
     # Note: ISSM's MUMPS support is not compatible with the Spack-provided
@@ -115,9 +115,8 @@ class Issm(AutotoolsPackage):
     def setup_build_environment(self, env):
         # OpenMP support
         if "+openmp" in self.spec:
-            omp_flag = self.compiler.openmp_flag  # e.g. "-fopenmp"
             for var in ("CFLAGS", "CXXFLAGS", "FFLAGS", "LDFLAGS"):
-                env.append_flags(var, omp_flag)
+                env.append_flags(var, self.compiler.openmp_flag)
 
         # Automatic Differentiation extras
         if "+ad" in self.spec:
