@@ -55,6 +55,12 @@ class Issm(AutotoolsPackage):
         description="Build with CoDiPack automatic differentiation (drops PETSc)",
     )
 
+    variant(
+        "openmp",
+        default=True,
+        description="Propagate OpenMP flags so threaded deps link cleanly",
+    )
+
     # --------------------------------------------------------------------
     # Dependencies
     # --------------------------------------------------------------------
@@ -71,7 +77,8 @@ class Issm(AutotoolsPackage):
     depends_on("petsc~examples+metis+mumps+scalapack", when="~ad")
     depends_on("parmetis")
     depends_on("metis")
-    depends_on("mumps")
+    depends_on("mumps~openmp", when="~openmp")
+    depends_on("mumps+openmp", when="+openmp")
     depends_on("scalapack")
     # Note: ISSM's MUMPS support is not compatible with the Spack-provided
     # MUMPS, so we use the one provided by the ISSM team.
@@ -103,9 +110,15 @@ class Issm(AutotoolsPackage):
         return f"https://github.com/ACCESS-NRI/ISSM/archive/refs/heads/{version}.tar.gz"
 
     # --------------------------------------------------------------------
-    # Build environment - inject AD compiler flags when needed
+    # Build environment - inject AD and/or OpenMP compiler flags when needed
     # --------------------------------------------------------------------
     def setup_build_environment(self, env):
+        # OpenMP support
+        if "+openmp" in self.spec:
+            for var in ("CFLAGS", "CXXFLAGS", "FFLAGS", "LDFLAGS"):
+                env.append_flags(var, self.compiler.openmp_flag)
+
+        # Automatic Differentiation extras
         if "+ad" in self.spec:
             # CoDiPack's performance tips: force inlining & keep full symbols
             env.append_flags(
