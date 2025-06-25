@@ -63,7 +63,7 @@ class Access3(CMakePackage):
         if "WW3" in conf:
             depends_on(
                 "access-ww3@2025.03.0: +access3", 
-                type=("build", "link", "run"),  #include run to add the ww3 utils to PATH
+                type=("build", "link", "run"),  # include run to add the ww3 utils to PATH
                 when=f"configurations={conf}"
             )
 
