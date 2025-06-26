@@ -21,6 +21,14 @@ class Cice5(MakefilePackage):
     version("access-esm1.6", branch="access-esm1.6")
 
     variant("deterministic", default=False, description="Deterministic build.")
+    # Support -fuse-ld=lld
+    # https://github.com/ACCESS-NRI/spack-packages/issues/255
+    variant(
+        "linker",
+        default="ld",
+        description="choose the linker program",
+        values=("ld", "lld"),
+    )
     variant("optimisation_report", default=False, description="Generate optimisation reports.")
 
     # Depend on virtual package "mpi".
@@ -47,6 +55,7 @@ class Cice5(MakefilePackage):
     __buildscript_path = join_path("bld", __buildscript)
 
     __deps = {"includes": "", "ldflags": ""}
+    __linkers = {"ld": "", "lld": "-fuse-ld=lld"}
     __targets = {}
 
     def url_for_version(self, version):
@@ -137,6 +146,7 @@ class Cice5(MakefilePackage):
         # TODO: https://github.com/ACCESS-NRI/ACCESS-OM/issues/12
         NCI_OPTIM_FLAGS = "-g3 -O2 -axCORE-AVX2 -debug all -check none -traceback -assume buffered_io"
         CFLAGS = "-c -O2"
+        LDFLAGS = self.__linkers[spec.variants["linker"].value]
         if "+deterministic" in self.spec:
             NCI_OPTIM_FLAGS = "-g0 -O0 -axCORE-AVX2 -debug none -check none -assume buffered_io"
             CFLAGS = "-c -g0"
@@ -182,10 +192,10 @@ endif
         config["oneapi"] = config["intel"]
 
         # Copied from bld/Macros.nci
-        config["post"] = """
+        config["post"] = f"""
 MOD_SUFFIX := mod
 LD         := $(FC)
-LDFLAGS    := $(FFLAGS) -v
+LDFLAGS    := $(FFLAGS) -v {LDFLAGS}
 
 CPPDEFS :=  $(CPPDEFS) -DNXGLOB=$(NXGLOB) -DNYGLOB=$(NYGLOB) \
             -DNUMIN=$(NUMIN) -DNUMAX=$(NUMAX) \

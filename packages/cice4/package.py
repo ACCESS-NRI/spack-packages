@@ -21,6 +21,15 @@ class Cice4(MakefilePackage):
 
     version("access-esm1.5", branch="access-esm1.5")
 
+    # Support -fuse-ld=lld
+    # https://github.com/ACCESS-NRI/spack-packages/issues/255
+    variant(
+        "linker",
+        default="ld",
+        description="choose the linker program",
+        values=("ld", "lld"),
+    )
+
     depends_on("netcdf-fortran@4.5.1:")
     depends_on("openmpi")
     depends_on("oasis3-mct")
@@ -29,6 +38,8 @@ class Cice4(MakefilePackage):
 
     _buildscript = "spack-build.sh"
     _buildscript_path = join_path("bld", _buildscript)
+
+    __linkers = {"ld": "", "lld": "-fuse-ld=lld"}
 
     # The integer represents environment variable NTASK
     __targets = {12: {}, }
@@ -65,6 +76,7 @@ class Cice4(MakefilePackage):
         libs = " ".join([lstr] + [self.get_linker_args(spec, d) for d in ldeps])
 
         CFLAGS = "-c -O2"
+        LDFLAGS = self.__linkers[spec.variants["linker"].value]
 
         # Based on https://github.com/coecms/access-esm-build-gadi/blob/master/patch/Macros.Linux.raijin.nci.org.au-mct
         config["pre"] = f"""
@@ -83,19 +95,19 @@ FREEFLAGS  :=
 
         # based on packages/cice5/package.py (FFLAGS)
         # and  https://github.com/coecms/access-esm-build-gadi/blob/master/patch/Macros.Linux.raijin.nci.org.au-mct (LDFLAGS)
-        config["gcc"] = """
+        config["gcc"] = f"""
 FFLAGS = -Wall -fdefault-real-8 -fdefault-double-8 -ffpe-trap=invalid,zero,overflow -fallow-argument-mismatch
-LDFLAGS    := $(FFLAGS)
+LDFLAGS    := $(FFLAGS) {LDFLAGS}
 """
 
         # Based on https://github.com/coecms/access-esm-build-gadi/blob/master/patch/Macros.Linux.raijin.nci.org.au-mct
-        config["intel"] = """
+        config["intel"] = f"""
 ifeq ($(DEBUG), yes)
     FFLAGS     := -r8 -i4 -O0 -g -align all -w -ftz -convert big_endian -assume byterecl -no-vec -xCORE-AVX2 -fp-model precise
 else
     FFLAGS     := -r8 -i4 -O2 -align all -w -ftz -convert big_endian -assume byterecl -no-vec -xCORE-AVX512 -fp-model precise
 endif
-LDFLAGS    := $(FFLAGS) -v -static-intel 
+LDFLAGS    := $(FFLAGS) -v -static-intel {LDFLAGS}
 """
 
         # Add support for the ifx compiler
