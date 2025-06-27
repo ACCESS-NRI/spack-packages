@@ -17,7 +17,7 @@ class Um7(Package):
     """
 
     homepage = "https://code.metoffice.gov.uk/trac/um"
-    git = "git@github.com:ACCESS-NRI/UM7.git"
+    git = "https://github.com/ACCESS-NRI/UM7.git"
 
     # https://code.metoffice.gov.uk/trac/um/wiki/PastReleases
     version("access-esm1.6", branch="dev-access-esm1.6", preferred=True)
@@ -219,4 +219,3 @@ tool::ldflags                                      {FOBLANK} -g -traceback {FDEB
         install(
             join_path(self._bld_path, "bin", um_exe),
             join_path(prefix.bin, um_exe))
-
