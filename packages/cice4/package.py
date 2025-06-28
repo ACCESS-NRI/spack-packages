@@ -24,10 +24,15 @@ class Cice4(MakefilePackage):
     # Support -fuse-ld=lld
     # https://github.com/ACCESS-NRI/spack-packages/issues/255
     variant(
-        "linker",
-        default="ld",
-        description="choose the linker program",
-        values=("ld", "lld"),
+        "ciceldflags",
+        default="none",
+        values=(
+            "none",
+            "lld",
+            conditional("flto", when="%oneapi"),
+        ),
+        multi=True,
+        description="choose none, one or multiple LDFLAGS",
     )
 
     depends_on("netcdf-fortran@4.5.1:")
@@ -39,7 +44,7 @@ class Cice4(MakefilePackage):
     _buildscript = "spack-build.sh"
     _buildscript_path = join_path("bld", _buildscript)
 
-    __linkers = {"ld": "", "lld": "-fuse-ld=lld"}
+    __ldflags = {"none": "", "lld": "-fuse-ld=lld", "flto": "-flto"}
 
     # The integer represents environment variable NTASK
     __targets = {12: {}, }
@@ -76,7 +81,7 @@ class Cice4(MakefilePackage):
         libs = " ".join([lstr] + [self.get_linker_args(spec, d) for d in ldeps])
 
         CFLAGS = "-c -O2"
-        LDFLAGS = self.__linkers[spec.variants["linker"].value]
+        LDFLAGS = " ".join([self.__ldflags[i] for i in spec.variants["ciceldflags"].value])
 
         # Based on https://github.com/coecms/access-esm-build-gadi/blob/master/patch/Macros.Linux.raijin.nci.org.au-mct
         config["pre"] = f"""
