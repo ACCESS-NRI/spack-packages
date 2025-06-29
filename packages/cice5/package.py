@@ -24,10 +24,15 @@ class Cice5(MakefilePackage):
     # Support -fuse-ld=lld
     # https://github.com/ACCESS-NRI/spack-packages/issues/255
     variant(
-        "linker",
-        default="ld",
-        description="choose the linker program",
-        values=("ld", "lld"),
+        "ciceldflags",
+        default="none",
+        values=(
+            "none",
+            "lld",
+            conditional("flto", when="%oneapi"),
+        ),
+        multi=True,
+        description="choose none, one or multiple LDFLAGS",
     )
     variant("optimisation_report", default=False, description="Generate optimisation reports.")
 
@@ -55,7 +60,7 @@ class Cice5(MakefilePackage):
     __buildscript_path = join_path("bld", __buildscript)
 
     __deps = {"includes": "", "ldflags": ""}
-    __linkers = {"ld": "", "lld": "-fuse-ld=lld"}
+    __ldflags = {"none": "", "lld": "-fuse-ld=lld", "flto": "-flto"}
     __targets = {}
 
     def url_for_version(self, version):
@@ -146,7 +151,7 @@ class Cice5(MakefilePackage):
         # TODO: https://github.com/ACCESS-NRI/ACCESS-OM/issues/12
         NCI_OPTIM_FLAGS = "-g3 -O2 -axCORE-AVX2 -debug all -check none -traceback -assume buffered_io"
         CFLAGS = "-c -O2"
-        LDFLAGS = self.__linkers[spec.variants["linker"].value]
+        LDFLAGS = " ".join([self.__ldflags[i] for i in spec.variants["ciceldflags"].value])
         if "+deterministic" in self.spec:
             NCI_OPTIM_FLAGS = "-g0 -O0 -axCORE-AVX2 -debug none -check none -assume buffered_io"
             CFLAGS = "-c -g0"
