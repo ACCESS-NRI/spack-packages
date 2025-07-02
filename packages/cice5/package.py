@@ -24,16 +24,12 @@ class Cice5(MakefilePackage):
     # Support -fuse-ld=lld
     # https://github.com/ACCESS-NRI/spack-packages/issues/255
     variant(
-        "ciceldflags",
+        "direct_ldflags",
         default="none",
-        values=(
-            "none",
-            "lld",
-            conditional("flto", when="%oneapi"),
-        ),
-        multi=True,
-        description="choose none, one or multiple LDFLAGS",
-    )
+        values="*",
+        multi=False,
+        description="Directly inject LDFLAGS into the Makefile",
+     )
     variant("optimisation_report", default=False, description="Generate optimisation reports.")
 
     # Depend on virtual package "mpi".
@@ -60,7 +56,6 @@ class Cice5(MakefilePackage):
     __buildscript_path = join_path("bld", __buildscript)
 
     __deps = {"includes": "", "ldflags": ""}
-    __ldflags = {"none": "", "lld": "-fuse-ld=lld", "flto": "-flto"}
     __targets = {}
 
     def url_for_version(self, version):
@@ -73,6 +68,11 @@ class Cice5(MakefilePackage):
                     [(spec[name].libs).ld_flags,
                     "-Wl,-rpath=" + join_path(spec[name].prefix, "lib")]
                    )
+
+    def get_variant_value(self, value):
+        if value == "none":
+            return ""
+        return value
 
     # The reason for the explicit -rpath is:
     # https://github.com/ACCESS-NRI/spack-packages/issues/14#issuecomment-1653651447
@@ -151,7 +151,7 @@ class Cice5(MakefilePackage):
         # TODO: https://github.com/ACCESS-NRI/ACCESS-OM/issues/12
         NCI_OPTIM_FLAGS = "-g3 -O2 -axCORE-AVX2 -debug all -check none -traceback -assume buffered_io"
         CFLAGS = "-c -O2"
-        LDFLAGS = " ".join([self.__ldflags[i] for i in spec.variants["ciceldflags"].value])
+        LDFLAGS = self.get_variant_value(spec.variants["direct_ldflags"].value)
         if "+deterministic" in self.spec:
             NCI_OPTIM_FLAGS = "-g0 -O0 -axCORE-AVX2 -debug none -check none -assume buffered_io"
             CFLAGS = "-c -g0"
