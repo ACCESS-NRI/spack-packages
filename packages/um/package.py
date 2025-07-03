@@ -182,8 +182,8 @@ class Um(Package):
         Set the built path into the environment.
         """
         # Add the built executables to the path
-        env.prepend_path(join_path(self.prefix, "build-atmos", "bin"))
-        env.prepend_path(join_path(self.prefix, "build-recon", "bin"))
+        env.prepend_path("PATH", join_path(self.prefix, "build-atmos", "bin"))
+        env.prepend_path("PATH", join_path(self.prefix, "build-recon", "bin"))
 
 
     def setup_build_environment(self, env):
