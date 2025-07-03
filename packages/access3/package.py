@@ -65,8 +65,6 @@ class Access3(CMakePackage):
         if "WW3" in conf:
             depends_on("access-ww3@2025.03.0: +access3", when=f"configurations={conf}")
 
-    flag_handler = build_system_flags
-
     def cmake_args(self):
         # make configurations a cmake argument
         buildConf = ";".join(self.spec.variants["configurations"].value)

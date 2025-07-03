@@ -45,7 +45,6 @@ class AccessMom6(CMakePackage):
     depends_on("fms ~openmp", when="~openmp")
     depends_on("access-generic-tracers ~use_access_fms", when="@2025.02.001:")
 
-    flag_handler = build_system_flags
 
     def cmake_args(self):
         args = [
