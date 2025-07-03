@@ -6,23 +6,53 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import find_libraries, install, join_path, mkdirp
+from spack.build_systems import cmake, makefile
 
-# https://spack.readthedocs.io/en/latest/build_systems/makefilepackage.html
-class AccessMocsy(MakefilePackage):
+
+class AccessMocsy(CMakePackage, MakefilePackage):
     """Routines to model ocean carbonate system thermodynamics. ACCESS NRI's fork."""
 
     homepage = "https://www.access-nri.org.au"
     git = "https://github.com/ACCESS-NRI/mocsy.git"
 
-    maintainers("harshula")
+    maintainers("harshula", "dougiesquire")
 
-    version("master", branch="master")
-    version("gtracers", branch="gtracers", preferred=True)
-    # TODO: Remove the 'mom5' version. The 'gtracers' version/branch is a copy of 'mom5'.
-    version("mom5", branch="mom5")
+    # https://github.com/ACCESS-NRI/mocsy/blob/master/LICENSE
+    license("MIT", checked_by="dougiesquire")
 
-    # Need: self.spec["mpi"].mpifc
+    version("gtracers", branch="gtracers")
+
+    build_system("makefile", "cmake", default="cmake")
+
+    with when("build_system=cmake"):
+        variant(
+            "build_type",
+            default="RelWithDebInfo",
+            description="CMake build type",
+            values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
+        )
+        variant(
+            "precision",
+            default="2",
+            description="Precision to use (1 or 2)",
+            values=("1", "2"),
+        )
+
     depends_on("mpi")
+
+    flag_handler = build_system_flags
+
+
+class CMakeBuilder(cmake.CMakeBuilder):
+
+    def cmake_args(self):
+        args = [
+            self.define_from_variant("MOCSY_PRECISION", "precision"),
+        ]
+        return args
+
+
+class MakefileBuilder(makefile.MakefileBuilder):
 
     _header = join_path("src", "mocsy_DNADHeaders.h")
     _libname = "libmocsy.a"
@@ -84,27 +114,27 @@ Fflags: -I${{includedir}}
         if nchars_written < len(text):
             raise OSError
 
-    def build(self, spec, prefix):
+    def build(self, pkg, spec, prefix):
         build = Executable("make")
         build(
             self._libname,
-            "FC=" + self.spec["mpi"].mpifc,
+            "FC=" + pkg.spec["mpi"].mpifc,
             # Copied from MOM5/bin/mkmf.template.nci
             "FCFLAGS=-fno-alias -safe-cray-ptr -fpe0 -ftz -assume byterecl -i4 -r8 -traceback -nowarn -check noarg_temp_created -assume nobuffered_io -convert big_endian -grecord-gcc-switches -align all -g3 -O2 -xCORE-AVX2 -debug all -check none",
-            "F90=" + self.spec["mpi"].mpifc
+            "F90=" + pkg.spec["mpi"].mpifc
         )
         self._create_pkgconf(spec, prefix)
 
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
 
         # Creates prefix.lib too
         pkgconfdir = join_path(prefix.lib, self._pkgdir)
         mkdirp(pkgconfdir)
         mkdirp(prefix.include)
 
-        install(join_path(self.stage.source_path, self._libname), prefix.lib)
-        install(join_path(self.stage.source_path, self._header), prefix.include)
+        install(join_path(pkg.stage.source_path, self._libname), prefix.lib)
+        install(join_path(pkg.stage.source_path, self._header), prefix.include)
         for f in self._modfiles:
-            install(join_path(self.stage.source_path, f), prefix.include)
-        install(join_path(self.stage.source_path, self._pcfile), pkgconfdir)
+            install(join_path(pkg.stage.source_path, f), prefix.include)
+        install(join_path(pkg.stage.source_path, self._pcfile), pkgconfdir)
 
