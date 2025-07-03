@@ -177,6 +177,15 @@ class Um(Package):
         return " ".join(ld_flags + rpaths)
 
 
+    def setup_run_environment(self, env):
+        """
+        Set the built path into the environment.
+        """
+        # Add the built executables to the path
+        env.prepend_path(join_path(self.prefix, "build-atmos", "bin"))
+        env.prepend_path(join_path(self.prefix, "build-recon", "bin"))
+
+
     def setup_build_environment(self, env):
         """
         Set environment variables to their required values.
