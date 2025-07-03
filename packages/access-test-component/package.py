@@ -28,7 +28,5 @@ class AccessTestComponent(CMakePackage):
 
     root_cmakelists_dir = "stub"
 
-    flag_handler = build_system_flags
-
     def url_for_version(self, version):
         return f"https://github.com/{self.githubrepo}/tarball/{version}"

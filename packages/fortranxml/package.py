@@ -19,7 +19,7 @@ class Fortranxml(AutotoolsPackage):
 
     version("4.1.2", sha256="1938725be45b8be5387a51fa0b25ee78ffee87ca8a497b82545ab870f33f8b88")
 
-    flag_handler = build_system_flags
+    flag_handler = AutotoolsPackage.build_system_flags
 
     def url_for_version(self, version):
         return "https://github.com/andreww/fox/tarball/{0}".format(version)

@@ -47,8 +47,6 @@ class FreNctools(AutotoolsPackage):
     depends_on("mpi", when="+mpi")
     depends_on("nco", when="@2024.05:")
 
-    flag_handler = build_system_flags
-
     def configure_args(self):
         spec = self.spec
         args = []

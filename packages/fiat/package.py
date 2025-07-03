@@ -45,8 +45,6 @@ class Fiat(CMakePackage):
     patch("intel_warnings_v110.patch", when="@0:1.1.0")
     patch("intel_warnings_v120.patch", when="@1.2.0:")
 
-    flag_handler = build_system_flags
-
     def cmake_args(self):
         args = [
             self.define_from_variant("ENABLE_OMP", "openmp"),
