@@ -34,8 +34,6 @@ class AccessGenericTracers(CMakePackage):
     depends_on("fms@2025.02:", when="~use_access_fms")
     depends_on("mpi")
 
-    flag_handler = build_system_flags
-
     def url_for_version(self, version):
         return "https://github.com/ACCESS-NRI/GFDL-generic-tracers/tarball/{0}".format(version)
 
