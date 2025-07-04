@@ -24,11 +24,12 @@ class Cice4(MakefilePackage):
     # Support -fuse-ld=lld
     # https://github.com/ACCESS-NRI/spack-packages/issues/255
     variant(
-        "linker",
-        default="ld",
-        description="choose the linker program",
-        values=("ld", "lld"),
-    )
+        "direct_ldflags",
+        default="none",
+        values="*",
+        multi=False,
+        description="Directly inject LDFLAGS into the Makefile",
+     )
 
     depends_on("netcdf-fortran@4.5.1:")
     depends_on("openmpi")
@@ -38,8 +39,6 @@ class Cice4(MakefilePackage):
 
     _buildscript = "spack-build.sh"
     _buildscript_path = join_path("bld", _buildscript)
-
-    __linkers = {"ld": "", "lld": "-fuse-ld=lld"}
 
     # The integer represents environment variable NTASK
     __targets = {12: {}, }
@@ -54,6 +53,11 @@ class Cice4(MakefilePackage):
                     [(spec[name].libs).ld_flags,
                     "-Wl,-rpath=" + join_path(spec[name].prefix, "lib")]
                    )
+
+    def get_variant_value(self, value):
+        if value == "none":
+            return ""
+        return value
 
     def edit(self, spec, prefix):
 
@@ -76,7 +80,7 @@ class Cice4(MakefilePackage):
         libs = " ".join([lstr] + [self.get_linker_args(spec, d) for d in ldeps])
 
         CFLAGS = "-c -O2"
-        LDFLAGS = self.__linkers[spec.variants["linker"].value]
+        LDFLAGS = self.get_variant_value(spec.variants["direct_ldflags"].value)
 
         # Based on https://github.com/coecms/access-esm-build-gadi/blob/master/patch/Macros.Linux.raijin.nci.org.au-mct
         config["pre"] = f"""
