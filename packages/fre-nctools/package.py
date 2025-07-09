@@ -16,13 +16,14 @@ class FreNctools(AutotoolsPackage):
     supporting the work of the Geophysical Fluid Dynamics Laboratory (GFDL)."""
 
     homepage = "https://github.com/NOAA-GFDL/FRE-NCtools"
-    git = "https://github.com/NOAA-GFDL/FRE-NCtools.git"
+    git = "https://github.com/ACCESS-NRI/FRE-NCtools.git"
 
     maintainers("dougiesquire")
 
     license("LGPL-3.0-only")
 
     # A number of versions are excluded from this spack package due to bugs:
+    # - 2024.05.02: see https://github.com/NOAA-GFDL/FRE-NCtools/issues/344
     # - 2024.05.01: see https://github.com/NOAA-GFDL/FRE-NCtools/issues/344
     # - 2024.03: implicit funcion delcaration in mppncscatter.c; fixed in edcdf78
     # - 2024.01: implicit function declaration in make_topog.c; fixed in 6b4d2fb
@@ -30,7 +31,7 @@ class FreNctools(AutotoolsPackage):
     # - 2023.01.01: implicit function declaration in make_topog.c; fixed in 6b4d2fb
     # - 2023.01: implicit function declaration in make_topog.c; fixed in 6b4d2fb
 
-    version("main", branch="main")
+    version("2024.05-1", sha256="3cef66c9196211780687e1c58cdc86316e6db221c6f0547ed8b72fdd60697ecb")
     version("2024.05", sha256="61cec52aa03e066b64bed794ef9dc3eb28654c3d1b872aef1b69ce99ef7a9c65")
     version("2024.04", sha256="e27346d7ade1b67af163bb7f327a47a288d5e475fe797323bd7cee3a46385de0")
     version("2024.02", sha256="90d52abc1b467d635dd648185b0046efcc6d58a232143b0ccaf9a0bff23d2f5d")
@@ -49,7 +50,7 @@ class FreNctools(AutotoolsPackage):
     flag_handler = build_system_flags
 
     def url_for_version(self, version):
-        return "https://github.com/NOAA-GFDL/FRE-NCtools/archive/{0}.tar.gz".format(version)
+        return "https://github.com/ACCESS-NRI/FRE-NCtools/archive/{0}.tar.gz".format(version)
 
     def configure_args(self):
         spec = self.spec
