@@ -17,7 +17,7 @@ class FreNctools(AutotoolsPackage):
 
     homepage = "https://github.com/NOAA-GFDL/FRE-NCtools"
     git = "https://github.com/ACCESS-NRI/FRE-NCtools.git"
-
+    url = "https://github.com/ACCESS-NRI/FRE-NCtools/archive/refs/tags/2022.02.tar.gz"
     maintainers("dougiesquire")
 
     license("LGPL-3.0-only")
@@ -48,9 +48,6 @@ class FreNctools(AutotoolsPackage):
     depends_on("nco", when="@2024.05:")
 
     flag_handler = build_system_flags
-
-    def url_for_version(self, version):
-        return "https://github.com/ACCESS-NRI/FRE-NCtools/archive/{0}.tar.gz".format(version)
 
     def configure_args(self):
         spec = self.spec
