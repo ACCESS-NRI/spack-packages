@@ -84,7 +84,7 @@ class Um(Package):
         "extract",
         "fcflags_overrides",
         "gwd_ussp_precision",
-        # "jules_sources",
+        "jules_sources",
         "land_surface_model",
         "ldflags_overrides_prefix",
         "ldflags_overrides_suffix",
@@ -101,7 +101,7 @@ class Um(Package):
         "stash_version",
         "timer_version",
         "ukca_sources",
-        # "um_sources"
+        "um_sources"
         )
     _str_variants = _rev_variants + _other_variants
 
