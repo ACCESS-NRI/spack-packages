@@ -308,6 +308,10 @@ class Um(Package):
             tty.info(f"{key}={config_env[key]}")
             env.set(key, config_env[key])
 
+        if self.spec.satisfies('model=vn13p1-am'):
+            env.set("jules_sources", join_path(self.stage.source_path, "JULES"))
+            env.set("um_sources", join_path(self.stage.source_path, "UM"))
+
         # Add the location of the FCM executable to PATH.
         env.prepend_path("PATH", spec["fcm"].prefix.bin)
 
