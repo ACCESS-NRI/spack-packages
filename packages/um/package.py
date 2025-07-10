@@ -84,7 +84,7 @@ class Um(Package):
         "extract",
         "fcflags_overrides",
         "gwd_ussp_precision",
-        "jules_sources",
+        # "jules_sources",
         "land_surface_model",
         "ldflags_overrides_prefix",
         "ldflags_overrides_suffix",
@@ -101,7 +101,8 @@ class Um(Package):
         "stash_version",
         "timer_version",
         "ukca_sources",
-        "um_sources")
+        # "um_sources"
+        )
     _str_variants = _rev_variants + _other_variants
 
     for var in _str_variants:
@@ -150,6 +151,20 @@ class Um(Package):
             "fcm_name": "netcdf",
             "fcm_ld_flags": "-lnetcdff -lnetcdf"}}
 
+    # Source acquisition for AM3
+    resource(
+        name="jules_sources",
+        git="https://github.com/ACCESS-NRI/JULES.git",
+        when="model=\"vn13p1-am\"",
+        destination="."
+    )
+
+    resource(
+        name="um_sources",
+        git="https://github.com/ACCESS-NRI/UM.git",
+        when="model=\"vn13p1-am\"",
+        destination="."
+    )
 
     def _config_file_path(self, model):
         """
