@@ -101,7 +101,9 @@ class Um(Package):
         "stash_version",
         "timer_version",
         "ukca_sources",
-        "um_sources")
+        "um_sources"
+        )
+
     _str_variants = _rev_variants + _other_variants
 
     for var in _str_variants:
@@ -150,6 +152,20 @@ class Um(Package):
             "fcm_name": "netcdf",
             "fcm_ld_flags": "-lnetcdff -lnetcdf"}}
 
+    # Source acquisition for AM3
+    resource(
+        name="jules_sources",
+        git="https://github.com/ACCESS-NRI/JULES.git",
+        when="model=\"vn13p1-am\"",
+        destination="."
+    )
+
+    resource(
+        name="um_sources",
+        git="https://github.com/ACCESS-NRI/UM.git",
+        when="model=\"vn13p1-am\"",
+        destination="."
+    )
 
     def _config_file_path(self, model):
         """
@@ -292,6 +308,11 @@ class Um(Package):
         for key in config_env:
             tty.info(f"{key}={config_env[key]}")
             env.set(key, config_env[key])
+
+        # Overload the sources keys for AM3 in FCM
+        if self.spec.satisfies('model=vn13p1-am'):
+            env.set("jules_sources", join_path(self.stage.source_path, "JULES"))
+            env.set("um_sources", join_path(self.stage.source_path, "UM"))
 
         # Add the location of the FCM executable to PATH.
         env.prepend_path("PATH", spec["fcm"].prefix.bin)
