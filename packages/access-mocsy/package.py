@@ -24,6 +24,13 @@ class AccessMocsy(CMakePackage, MakefilePackage):
 
     build_system("makefile", "cmake", default="cmake")
 
+    variant(
+        "shared",
+        default=False,
+        description="Build shared/dynamic libraries",
+        when="build_system=cmake",
+    )
+
     with when("build_system=cmake"):
         variant(
             "build_type",
@@ -47,6 +54,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
 
     def cmake_args(self):
         args = [
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("MOCSY_PRECISION", "precision"),
         ]
         return args
