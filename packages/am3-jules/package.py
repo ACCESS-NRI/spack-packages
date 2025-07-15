@@ -20,4 +20,4 @@ class Am3Jules(Package):
         # Just copy the staged source to the prefix so that downstream packages can pick it up
         # copy_tree(self.stage.source_path, prefix.src)
         tty.warn("Staging source.")
-        shutil.copytree(self.stage.source_path, prefix.src, dirs_exist_ok=True)
+        shutil.copytree(self.stage.source_path, prefix.src)
