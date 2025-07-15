@@ -1,5 +1,5 @@
 from spack.package import *
-from llnl.util.tty import tty
+import llnl.util.tty as tty
 
 class Am3Jules(Package):
     """Experimental JULES source-only package."""

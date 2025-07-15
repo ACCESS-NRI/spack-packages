@@ -1,5 +1,5 @@
 from spack.package import *
-from llnl.util.tty import tty
+import llnl.util.tty as tty
 
 class Am3Um(Package):
     """Experimental UM source-only package."""
