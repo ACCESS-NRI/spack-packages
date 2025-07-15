@@ -1,4 +1,5 @@
 from spack.package import *
+from llnl.util.tty import tty
 
 class Am3Um(Package):
     """Experimental UM source-only package."""
@@ -9,6 +10,9 @@ class Am3Um(Package):
     version('main', branch='AM3-dev')
 
     phases = ["install"]
+
+    def build(self, spec, prefix):
+        tty.warn("Source only, skipping build")
 
     def install(self, spec, prefix):
         # Just copy the staged source to the prefix so that downstream packages can pick it up
