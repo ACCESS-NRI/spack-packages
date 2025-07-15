@@ -17,5 +17,10 @@ class Am3Um(Package):
 
     def stage_source(self, spec, prefix):
         # Just copy the staged source to the prefix so that downstream packages can pick it up
+        # copy_tree(self.stage.source_path, prefix.src)
+        src = self.stage.source_path
+        dst = prefix.src
         tty.warn("Staging source.")
-        shutil.copytree(self.stage.source_path, prefix.src)
+        tty.warn(f"src = {src}")
+        tty.warn(f"dst = {dst}")
+        shutil.copytree(src, dst)

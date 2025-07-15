@@ -313,11 +313,6 @@ class Um(Package):
                 linker_args = self._get_linker_args(spec, var)
                 config_env[f"ldflags_{fcm_name}_on"] = linker_args
 
-        # Set environment variables based on config_env.
-        for key in config_env:
-            tty.info(f"{key}={config_env[key]}")
-            env.set(key, config_env[key])
-
         # Overload the sources keys for AM3 in FCM, path set above in resource directives
         # if self.spec.satisfies('model=vn13p1-am'):
         if self.spec.satisfies('+am3'):
@@ -325,8 +320,13 @@ class Um(Package):
             um_src = self.spec['am3-um'].prefix.src
             # env.set("jules_sources", join_path(self.stage.source_path, "resources/JULES"))
             # env.set("um_sources", join_path(self.stage.source_path, "resources/UM"))
-            env.set("jules_sources", jules_src)
-            env.set("um_sources", um_src)
+            config_env["jules_sources"] = jules_src
+            config_env["um_sources"] = um_src
+
+        # Set environment variables based on config_env.
+        for key in config_env:
+            tty.info(f"{key}={config_env[key]}")
+            env.set(key, config_env[key])
 
         # Add the location of the FCM executable to PATH.
         env.prepend_path("PATH", spec["fcm"].prefix.bin)
