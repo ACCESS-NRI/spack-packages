@@ -8,6 +8,8 @@ class Am3Um(Package):
 
     version('main', branch='AM3-dev')
 
+    phases = ["install"]
+
     def install(self, spec, prefix):
         # Just copy the staged source to the prefix so that downstream packages can pick it up
         install_tree(self.stage.source_path, prefix.src)
