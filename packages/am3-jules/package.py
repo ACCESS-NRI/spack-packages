@@ -9,12 +9,12 @@ class Am3Jules(Package):
 
     version('main', branch='AM3-dev')
 
-    phases = ["install"]
+    phases = ["stage_source"]
 
     def build(self, spec, prefix):
         tty.warn("Source only, skipping build")
 
 
-    def install(self, spec, prefix):
+    def stage_source(self, spec, prefix):
         # Just copy the staged source to the prefix so that downstream packages can pick it up
         install_tree(self.stage.source_path, prefix.src)
