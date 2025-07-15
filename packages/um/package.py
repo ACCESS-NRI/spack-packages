@@ -156,15 +156,19 @@ class Um(Package):
     resource(
         name="jules_sources",
         git="https://github.com/ACCESS-NRI/JULES.git",
+        branch="AM3-dev",
         when="model=\"vn13p1-am\"",
-        destination="."
+        destination="resources",
+        placement=dict(JULES="JULES")
     )
 
     resource(
         name="um_sources",
         git="https://github.com/ACCESS-NRI/UM.git",
+        branch="AM3-dev",
         when="model=\"vn13p1-am\"",
-        destination="."
+        destination="resources",
+        placement=dict(UM="UM")
     )
 
     def _config_file_path(self, model):
@@ -309,10 +313,10 @@ class Um(Package):
             tty.info(f"{key}={config_env[key]}")
             env.set(key, config_env[key])
 
-        # Overload the sources keys for AM3 in FCM
+        # Overload the sources keys for AM3 in FCM, path set above in resource directives
         if self.spec.satisfies('model=vn13p1-am'):
-            env.set("jules_sources", join_path(self.stage.source_path, "JULES"))
-            env.set("um_sources", join_path(self.stage.source_path, "UM"))
+            env.set("jules_sources", join_path(self.stage.source_path, "resources/JULES"))
+            env.set("um_sources", join_path(self.stage.source_path, "resources/UM"))
 
         # Add the location of the FCM executable to PATH.
         env.prepend_path("PATH", spec["fcm"].prefix.bin)
