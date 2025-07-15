@@ -152,24 +152,28 @@ class Um(Package):
             "fcm_name": "netcdf",
             "fcm_ld_flags": "-lnetcdff -lnetcdf"}}
 
-    # Source acquisition for AM3
-    resource(
-        name="jules_sources",
-        git="https://github.com/ACCESS-NRI/JULES.git",
-        branch="AM3-dev",
-        when="model=\"vn13p1-am\"",
-        destination="resources",
-        placement=dict(JULES="JULES")
-    )
+    # AM3
+    depends_on("am3-jules", when="+am3")
+    depends_on("am3-um", when="+am3")
 
-    resource(
-        name="um_sources",
-        git="https://github.com/ACCESS-NRI/UM.git",
-        branch="AM3-dev",
-        when="model=\"vn13p1-am\"",
-        destination="resources",
-        placement=dict(UM="UM")
-    )
+    # # Source acquisition for AM3
+    # resource(
+    #     name="jules_sources",
+    #     git="https://github.com/ACCESS-NRI/JULES.git",
+    #     branch="AM3-dev",
+    #     when="model=\"vn13p1-am\"",
+    #     destination="resources",
+    #     placement=dict(JULES="JULES")
+    # )
+
+    # resource(
+    #     name="um_sources",
+    #     git="https://github.com/ACCESS-NRI/UM.git",
+    #     branch="AM3-dev",
+    #     when="model=\"vn13p1-am\"",
+    #     destination="resources",
+    #     placement=dict(UM="UM")
+    # )
 
     def _config_file_path(self, model):
         """
@@ -314,9 +318,14 @@ class Um(Package):
             env.set(key, config_env[key])
 
         # Overload the sources keys for AM3 in FCM, path set above in resource directives
-        if self.spec.satisfies('model=vn13p1-am'):
-            env.set("jules_sources", join_path(self.stage.source_path, "resources/JULES"))
-            env.set("um_sources", join_path(self.stage.source_path, "resources/UM"))
+        # if self.spec.satisfies('model=vn13p1-am'):
+        if self.spec.satisfies('+am3'):
+            jules_src = self.spec['am3-jules'].prefix.src
+            um_src = self.spec['am3-um'].prefix.src
+            # env.set("jules_sources", join_path(self.stage.source_path, "resources/JULES"))
+            # env.set("um_sources", join_path(self.stage.source_path, "resources/UM"))
+            env.set("jules_sources", jules_src)
+            env.set("um_sources", um_src)
 
         # Add the location of the FCM executable to PATH.
         env.prepend_path("PATH", spec["fcm"].prefix.bin)
