@@ -153,6 +153,7 @@ class Um(Package):
             "fcm_ld_flags": "-lnetcdff -lnetcdf"}}
 
     # AM3
+    variant("am3", default="False", description="Build for AM3")
     depends_on("am3-jules", when="+am3")
     depends_on("am3-um", when="+am3")
 
