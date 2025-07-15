@@ -17,4 +17,4 @@ class Am3Jules(Package):
 
     def stage_source(self, spec, prefix):
         # Just copy the staged source to the prefix so that downstream packages can pick it up
-        install_tree(self.stage.source_path, prefix.src)
+        copy_tree(self.stage.source_path, prefix.src)
