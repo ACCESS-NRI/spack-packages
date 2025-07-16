@@ -153,7 +153,7 @@ class Um(Package):
             "fcm_ld_flags": "-lnetcdff -lnetcdf"}}
 
     # Set directory slugs for use below
-    jules_resource_dir, um_resource_dir = "JULES", "UM"
+    self.jules_resource_dir, self.um_resource_dir = "JULES", "UM"
 
     jules_versions = ["main"]
     variant("jules_sources", default="main", values=jules_versions, multi=False, description="Bring down JULES sources")
@@ -165,7 +165,7 @@ class Um(Package):
             branch="AM3-dev",
             when=f"model=\"vn13p1-am\" jules_sources={jv}",
             destination=".",
-            placement=jules_resource_dir
+            placement=self.jules_resource_dir
         )
     
     um_versions = ["main"]
@@ -178,7 +178,7 @@ class Um(Package):
             branch="AM3-dev",
             when=f"model=\"vn13p1-am\" um_sources={uv}",
             destination=".",
-            placement=um_resource_dir
+            placement=self.um_resource_dir
         )
 
     def _config_file_path(self, model):
@@ -318,10 +318,10 @@ class Um(Package):
                 linker_args = self._get_linker_args(spec, var)
                 config_env[f"ldflags_{fcm_name}_on"] = linker_args
 
-        # Overload the sources keys for AM3 in FCM, pat slugh set above in resource directives
+        # Overload the sources keys for AM3 in FCM, path slug set above in resource directives
         if self.spec.satisfies('model=vn13p1-am'):
-            config_env["jules_sources"] = join_path(self.stage.source_path, jules_resource_dir)
-            config_env["um_sources"] = join_path(self.stage.source_path, um_resource_dir)
+            config_env["jules_sources"] = join_path(self.stage.source_path, self.jules_resource_dir)
+            config_env["um_sources"] = join_path(self.stage.source_path, self.um_resource_dir)
 
         # Set environment variables based on config_env.
         for key in config_env:
