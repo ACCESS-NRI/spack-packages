@@ -152,29 +152,34 @@ class Um(Package):
             "fcm_name": "netcdf",
             "fcm_ld_flags": "-lnetcdff -lnetcdf"}}
 
-    # AM3
-    variant("am3", default=False, description="Build for AM3")
-    depends_on("am3-jules", when="+am3")
-    depends_on("am3-um", when="+am3")
+    # Set directory slugs for use below
+    jules_resource_dir, um_resource_dir = "JULES", "UM"
 
-    # # Source acquisition for AM3
-    # resource(
-    #     name="jules_sources",
-    #     git="https://github.com/ACCESS-NRI/JULES.git",
-    #     branch="AM3-dev",
-    #     when="model=\"vn13p1-am\"",
-    #     destination="resources",
-    #     placement=dict(JULES="JULES")
-    # )
+    jules_versions = ["main"]
+    variant("jules_sources", default="main", values=jules_versions, multi=False, description="Bring down JULES sources")
 
-    # resource(
-    #     name="um_sources",
-    #     git="https://github.com/ACCESS-NRI/UM.git",
-    #     branch="AM3-dev",
-    #     when="model=\"vn13p1-am\"",
-    #     destination="resources",
-    #     placement=dict(UM="UM")
-    # )
+    for jv in jules_versions:
+        resource(
+            name="jules_sources",
+            git="git@github.com:ACCESS-NRI/JULES.git",
+            branch="AM3-dev",
+            when=f"model=\"vn13p1-am\" jules_sources={jv}",
+            destination=".",
+            placement=jules_resource_dir
+        )
+    
+    um_versions = ["main"]
+    variant("um_sources", default="main", values=um_versions, multi=False, description="Bring down UM sources")
+
+    for uv in um_versions:
+        resource(
+            name="um_sources",
+            git="git@github.com:ACCESS-NRI/UM.git",
+            branch="AM3-dev",
+            when=f"model=\"vn13p1-am\" um_sources={uv}",
+            destination=".",
+            placement=um_resource_dir
+        )
 
     def _config_file_path(self, model):
         """
@@ -313,15 +318,10 @@ class Um(Package):
                 linker_args = self._get_linker_args(spec, var)
                 config_env[f"ldflags_{fcm_name}_on"] = linker_args
 
-        # Overload the sources keys for AM3 in FCM, path set above in resource directives
-        # if self.spec.satisfies('model=vn13p1-am'):
-        if self.spec.satisfies('+am3'):
-            jules_src = self.spec['am3-jules'].prefix.src
-            um_src = self.spec['am3-um'].prefix.src
-            # env.set("jules_sources", join_path(self.stage.source_path, "resources/JULES"))
-            # env.set("um_sources", join_path(self.stage.source_path, "resources/UM"))
-            config_env["jules_sources"] = jules_src
-            config_env["um_sources"] = um_src
+        # Overload the sources keys for AM3 in FCM, pat slugh set above in resource directives
+        if self.spec.satisfies('model=vn13p1-am'):
+            config_env["jules_sources"] = join_path(self.stage.source_path, jules_resource_dir)
+            config_env["um_sources"] = join_path(self.stage.source_path, um_resource_dir)
 
         # Set environment variables based on config_env.
         for key in config_env:
