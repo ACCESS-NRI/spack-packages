@@ -155,11 +155,13 @@ class Um(Package):
     # Set directory slugs for use below
     jules_resource_dir, um_resource_dir = "JULES", "UM"
 
-    jules_versions = ["main"]
-    variant("jules_sources", default="main", values=jules_versions, multi=False, description="Bring down JULES sources")
+    # Define the JULES sources for AM3. Add to this list additional hashes as needed.
+    jules_versions = ["HEAD"]
+    variant("jules_sources", default="HEAD", values=jules_versions, multi=False, description="AM3 JULES sources version.")
 
     for jv in jules_versions:
-        resource(
+
+        resource_args = dict(
             name="jules_sources",
             git="git@github.com:ACCESS-NRI/JULES.git",
             branch="AM3-dev",
@@ -167,12 +169,21 @@ class Um(Package):
             destination=".",
             placement=jules_resource_dir
         )
+
+        # The absence of a commit argument assumes HEAD
+        if jv != "HEAD":
+            resource_args["commit"] = jv
+
+        # Create the resource
+        resource(**resource_args)
     
-    um_versions = ["main"]
-    variant("um_sources", default="main", values=um_versions, multi=False, description="Bring down UM sources")
+    # Define the UM sources for AM3. Add to this list additional hashes as needed.
+    um_versions = ["HEAD"]
+    variant("um_sources", default="HEAD", values=um_versions, multi=False, description="AM3 UM sources version.")
 
     for uv in um_versions:
-        resource(
+
+        resource_args = dict(
             name="um_sources",
             git="git@github.com:ACCESS-NRI/UM.git",
             branch="AM3-dev",
@@ -180,6 +191,13 @@ class Um(Package):
             destination=".",
             placement=um_resource_dir
         )
+
+        # The absence of a commit argument assumes HEAD
+        if uv != "HEAD":
+            resource_args["commit"] = uv
+
+        # Create the resource
+        resource(**resource_args)
 
     def _config_file_path(self, model):
         """
