@@ -153,7 +153,7 @@ class Um(Package):
             "fcm_ld_flags": "-lnetcdff -lnetcdf"}}
 
     # Set directory slugs for use below
-    self.jules_resource_dir, self.um_resource_dir = "JULES", "UM"
+    jules_resource_dir, um_resource_dir = "JULES", "UM"
 
     jules_versions = ["main"]
     variant("jules_sources", default="main", values=jules_versions, multi=False, description="Bring down JULES sources")
@@ -165,7 +165,7 @@ class Um(Package):
             branch="AM3-dev",
             when=f"model=\"vn13p1-am\" jules_sources={jv}",
             destination=".",
-            placement=self.jules_resource_dir
+            placement=jules_resource_dir
         )
     
     um_versions = ["main"]
@@ -178,7 +178,7 @@ class Um(Package):
             branch="AM3-dev",
             when=f"model=\"vn13p1-am\" um_sources={uv}",
             destination=".",
-            placement=self.um_resource_dir
+            placement=um_resource_dir
         )
 
     def _config_file_path(self, model):
