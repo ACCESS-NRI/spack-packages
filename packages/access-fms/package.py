@@ -55,7 +55,10 @@ class AccessFms(CMakePackage):
     def libs(self):
         libraries = ["libfms_r4", "libfms_r8"]
         return find_libraries(
-            libraries, root=self.prefix, shared=False, recursive=True
+            libraries,
+            root=self.prefix,
+            shared=self.spec.variants.get("shared"),
+            recursive=True
         )
 
     def cmake_args(self):
