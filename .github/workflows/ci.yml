@@ -36,6 +36,8 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c  # v46.0.5
         with:
+          # We only care about the directory names under packages/ - since they are also the package names
+          # and we want to find changes the package.py files in those directories
           dir_names: true
           path: ./packages
           files: '*/package.py'
@@ -43,11 +45,12 @@ jobs:
       - name: Dispatch - Get packages
         id: set-matrix-dispatch
         if: github.event_name == 'workflow_dispatch'
+        # Either get all packages defined (all subfolders under packages/) or use the input
         run: |
           if [[ "${{ inputs.packages-to-test }}" == "ALL" ]]; then
-            pkgs=$(find packages/ -mindepth 1 -maxdepth 1 -type d -printf '%P ')" >> $GITHUB_OUTPUT
+            echo "pkgs=$(find packages/ -mindepth 1 -maxdepth 1 -type d -printf '%P ')" >> $GITHUB_OUTPUT
           else
-            pkgs="${{ inputs.packages-to-test }}" >> $GITHUB_OUTPUT
+            echo "pkgs="${{ inputs.packages-to-test }}" >> $GITHUB_OUTPUT
           fi
 
       - name: Setup Matrix
