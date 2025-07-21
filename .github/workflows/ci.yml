@@ -58,12 +58,12 @@ jobs:
         # Get all packages that will be tested, then
         # Get file paths to manifests for each package, then finally
         # Convert into a JSON array for the matrix, one of the form:
-        # { "filepaths": [
+        # [
         #   ".github/build-ci/manifests/mom5/intel.spack.yaml.j2",
         #   ".github/build-ci/manifests/mom5/amd.spack.yaml.j2",
         #   ".github/build-ci/manifests/cice5/spack.yaml.j2",
         #   ...
-        # ] }
+        # ]
         run: |
           pkgs="${{ steps.set-matrix-pr.outputs.all_changed_files || steps.set-matrix-dispatch.outputs.pkgs }}"
 
