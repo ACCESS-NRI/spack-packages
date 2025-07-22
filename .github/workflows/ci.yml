@@ -56,20 +56,35 @@ jobs:
       - name: Setup Matrix
         id: set-matrix
         # Get all packages that will be tested, then
-        # Get file paths to manifests for each package, then finally
+        # Get file paths to manifests for each package, and a template, then finally
         # Convert into a JSON array for the matrix, one of the form:
         # [
-        #   ".github/build-ci/manifests/mom5/intel.spack.yaml.j2",
-        #   ".github/build-ci/manifests/mom5/amd.spack.yaml.j2",
-        #   ".github/build-ci/manifests/cice5/spack.yaml.j2",
+        #   {"filepath": ".github/build-ci/manifests/mom5/intel.spack.yaml.j2", "template_value": "mom5"},
+        #   {"filepath": ".github/build-ci/manifests/mom5/amd.spack.yaml.j2", "template_value": "mom5"},
+        #   {"filepath": ".github/build-ci/manifests/cice5/spack.yaml.j2", "template_value": "cice5"},
         #   ...
         # ]
         run: |
           pkgs="${{ steps.set-matrix-pr.outputs.all_changed_files || steps.set-matrix-dispatch.outputs.pkgs }}"
 
-          filepaths=$(for pkg in $pkgs; do find .github/build-ci/manifests/$pkg -type f; done)
+          for pkg in $pkgs; do
+            # We want each manifest to have an associated injection of {{ package }} to $pkg
+            template_value="$pkg"
 
-          echo "matrix=$(echo $filepaths | jq -crR 'split(" ")')" >> $GITHUB_OUTPUT
+            if [ -d ".github/build-ci/manifests/$pkg" ]; then  # Look for specific manifests for the package
+              manifest_paths=$(find .github/build-ci/manifests/$pkg -type f)
+            else  # Use the default template if no specific manifests exist for the package
+              manifest_paths=".github/build-ci/manifests/template.spack.yaml.j2"
+            fi
+
+            while read -r manifest_path; do
+              json_entry=$(printf '{"filepath": "%s", "template_value": "%s"}' "$manifest_path" "$template_value")
+              json_entries+="${json_entry},"
+            done <<< "$manifest_paths"
+          done
+
+          # Remove the trailing comma and wrap in square brackets
+          echo "matrix=[${json_entries%,}]" >> $GITHUB_OUTPUT
 
       - name: Set refs
         id: set-refs
@@ -86,10 +101,12 @@ jobs:
       fail-fast: false
       max-parallel: 3
       matrix:
-        filepath: ${{ fromJson(needs.setup-ci.outputs.matrix) }}
+        package: ${{ fromJson(needs.setup-ci.outputs.matrix) }}
     uses: access-nri/build-ci/.github/workflows/ci.yml@v2
     with:
-      spack-manifest-path: ${{ matrix.filepath }}
+      spack-manifest-path: ${{ matrix.package.filepath }}
+      spack-manifest-data-pairs: |-
+        package ${{ matrix.package.template_value }}
       spack-packages-ref: ${{ needs.setup-ci.outputs.spack-packages-ref }}
       spack-config-ref: ${{ needs.setup-ci.outputs.spack-config-ref }}
       spack-ref: ${{ needs.setup-ci.outputs.spack-ref }}
