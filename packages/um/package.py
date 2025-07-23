@@ -349,10 +349,10 @@ class Um(Package):
         #     config_env["um_sources"] = join_path(self.stage.source_path, self.um_resource_dir)
 
         # Prep JULES sources
-        resource_dir = join_path(self.stage.source_path, "resources")
+        resource_dir = join_path(self.stage.source_path, "../", "resources")
         if spec.variants["jules_sources"].value != "NA":
             
-            jules_resource_dir = join_path(resource_dir, "JULES")
+            jules_resource_dir = join_path(resource_dir, "../", "JULES")
 
             # Check out the code to the resources dir
             self._dynamic_resource(
