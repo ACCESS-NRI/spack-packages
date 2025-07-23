@@ -154,10 +154,10 @@ class Um(Package):
 
     # Optional JULES and UM sources to be used in build (i.e. AM3)
     jules_git_url = "git@github.com:ACCESS-NRI/JULES.git"
-    variant("jules_sources", default="NA", values=str, multi=False, description=f"Optional JULES sources branch/tag/commit from {jules_url}.")
+    variant("jules_sources", default="NA", values=str, multi=False, description=f"Optional JULES sources branch/tag/commit from {jules_git_url}.")
     
     um_git_url = "git@github.com:ACCESS-NRI/UM.git"
-    variant("um_sources", default="NA", values=str, multi=False, description=f"Optional UM sources branch/tag/commit from {um_url}.")
+    variant("um_sources", default="NA", values=str, multi=False, description=f"Optional UM sources branch/tag/commit from {um_git_url}.")
 
     # # Set directory slugs for use below
     # jules_resource_dir, um_resource_dir = "JULES", "UM"
