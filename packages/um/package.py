@@ -154,11 +154,11 @@ class Um(Package):
 
     # Optional JULES sources to be used in build (i.e. AM3)
     jules_git_url = "git@github.com:ACCESS-NRI/JULES.git"
-    variant("jules_sources", default="", values=str, multi=False, description=f"Optional JULES sources branch/tag/commit from {jules_git_url}.")
+    variant("jules_sources", default="NA", values=str, multi=False, description=f"Optional JULES sources branch/tag/commit from {jules_git_url}.")
     
     # Optional UM sources to be used in build (i.e. AM3)
     um_git_url = "git@github.com:ACCESS-NRI/UM.git"
-    variant("um_sources", default="", values=str, multi=False, description=f"Optional UM sources branch/tag/commit from {um_git_url}.")
+    variant("um_sources", default="NA", values=str, multi=False, description=f"Optional UM sources branch/tag/commit from {um_git_url}.")
 
 
     def _config_file_path(self, model):
@@ -330,7 +330,7 @@ class Um(Package):
         resources_root = join_path(self.stage.source_path, "resources")
 
         # Optional UM sources (i.e. AM3)
-        if self.spec.variants["um_sources"].value:
+        if self.spec.variants["um_sources"].value != "NA":
             self._dynamic_resource(
                 url=self.um_git_url,
                 ref=self.spec.variants["um_sources"].value,
@@ -338,7 +338,7 @@ class Um(Package):
             )
 
         # Optional JULES sources (i.e. AM3)
-        if self.spec.variants["jules_sources"].value:
+        if self.spec.variants["jules_sources"].value != "NA":
             self._dynamic_resource(
                 url=self.jules_git_url,
                 ref=self.spec.variants["jules_sources"].value,
