@@ -128,7 +128,7 @@ class Um(Package):
     depends_on("netcdf-fortran@4.5.2", type=("build", "link", "run"),
         when="+netcdf")
 
-    phases = ["build", "install"]
+    phases = ["patch", "build", "install"]
 
     # The dependency name, include paths, and ld_flags from
     # the FCM config for each library configured via FCM.
@@ -153,10 +153,10 @@ class Um(Package):
             "fcm_ld_flags": "-lnetcdff -lnetcdf"}}
 
     # Optional JULES and UM sources to be used in build (i.e. AM3)
-    jules_url = "git@github.com:ACCESS-NRI/JULES.git"
+    jules_git_url = "git@github.com:ACCESS-NRI/JULES.git"
     variant("jules_sources", default="NA", values=str, multi=False, description=f"Optional JULES sources branch/tag/commit from {jules_url}.")
     
-    um_url = "git@github.com:ACCESS-NRI/UM.git"
+    um_git_url = "git@github.com:ACCESS-NRI/UM.git"
     variant("um_sources", default="NA", values=str, multi=False, description=f"Optional UM sources branch/tag/commit from {um_url}.")
 
     # # Set directory slugs for use below
@@ -349,14 +349,13 @@ class Um(Package):
         #     config_env["um_sources"] = join_path(self.stage.source_path, self.um_resource_dir)
 
         # Prep JULES sources
-        resource_dir = join_path(self.stage.source_path, "../", "resources")
+        resource_dir = join_path(self.stage.source_path, "resources")
         if spec.variants["jules_sources"].value != "NA":
-            jules_resource_dir = join_path(resource_dir, "JULES")
-            config_env["jules_sources"] = jules_resource_dir
+            config_env["jules_sources"] = join_path(resource_dir, "jules")
         
+        # Prep UM sources
         if spec.variants["um_sources"].value != "NA":
-            um_resource_dir = join_path(resource_dir, "UM")
-            config_env["um_sources"] = um_resource_dir
+            config_env["um_sources"] = join_path(resource_dir, "um")
             
         # Set environment variables based on config_env.
         for key in config_env:
@@ -373,32 +372,28 @@ class Um(Package):
         """
         return join_path(self.stage.source_path, "..", "spack-build")
 
+    def patch(self):
+        
+        resources_root = join_path(self.stage.source_path, "resources")
+
+        if self.spec.variants["um_sources"].value != "NA":
+            self._dynamic_resource(
+                url=self.um_git_url,
+                ref=self.spec.variants["um_sources"].value,
+                dst_dir=join_path(resources_root, "um")
+            )
+
+        if self.spec.variants["jules_sources"].value != "NA":
+            self._dynamic_resource(
+                url=self.jules_git_url,
+                ref=self.spec.variants["jules_sources"].value,
+                dst_dir=join_path(resources_root, "jules")
+            )
 
     def build(self, spec, prefix):
         """
         Use FCM to build the executables.
         """
-
-        # Prep JULES sources
-        resource_dir = join_path(self.stage.source_path, "../", "resources")
-        if spec.variants["jules_sources"].value != "NA":
-            jules_resource_dir = join_path(resource_dir, "JULES")
-
-            # Check out the code to the resources dir
-            self._dynamic_resource(
-                url=self.jules_url,
-                ref=spec.variants["jules_sources"].value,
-                dst_dir=jules_resource_dir
-            )
-
-        if spec.variants["um_sources"].value != "NA":
-            um_resource_dir = join_path(resource_dir, "UM")
-            self._dynamic_resource(
-                url=self.um_url,
-                ref=spec.variants["um_sources"].value,
-                dst_dir=um_resource_dir
-            )
-
         config_file = join_path(self.package_dir, "fcm-make.cfg")
         build_dir = self._build_dir()
         mkdirp(build_dir)
