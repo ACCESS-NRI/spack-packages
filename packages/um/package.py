@@ -152,59 +152,14 @@ class Um(Package):
             "fcm_name": "netcdf",
             "fcm_ld_flags": "-lnetcdff -lnetcdf"}}
 
-    # Optional JULES and UM sources to be used in build (i.e. AM3)
+    # Optional JULES sources to be used in build (i.e. AM3)
     jules_git_url = "git@github.com:ACCESS-NRI/JULES.git"
-    variant("jules_sources", default="NA", values=str, multi=False, description=f"Optional JULES sources branch/tag/commit from {jules_git_url}.")
+    variant("jules_sources", default="", values=str, multi=False, description=f"Optional JULES sources branch/tag/commit from {jules_git_url}.")
     
+    # Optional UM sources to be used in build (i.e. AM3)
     um_git_url = "git@github.com:ACCESS-NRI/UM.git"
-    variant("um_sources", default="NA", values=str, multi=False, description=f"Optional UM sources branch/tag/commit from {um_git_url}.")
+    variant("um_sources", default="", values=str, multi=False, description=f"Optional UM sources branch/tag/commit from {um_git_url}.")
 
-    # # Set directory slugs for use below
-    # jules_resource_dir, um_resource_dir = "JULES", "UM"
-
-    # # Define the JULES sources for AM3. Add to this list additional hashes as needed.
-    # jules_versions = ["HEAD"]
-    # variant("jules_sources", default="HEAD", values=jules_versions, multi=False, description="AM3 JULES sources version.")
-
-    # for jv in jules_versions:
-
-    #     resource_args = dict(
-    #         name="jules_sources",
-    #         git="git@github.com:ACCESS-NRI/JULES.git",
-    #         branch="AM3-dev",
-    #         when=f"model=\"vn13p1-am\" jules_sources={jv}",
-    #         destination=".",
-    #         placement=jules_resource_dir
-    #     )
-
-    #     # The absence of a commit argument assumes HEAD
-    #     if jv != "HEAD":
-    #         resource_args["commit"] = jv
-
-    #     # Create the resource
-    #     resource(**resource_args)
-    
-    # # Define the UM sources for AM3. Add to this list additional hashes as needed.
-    # um_versions = ["HEAD"]
-    # variant("um_sources", default="HEAD", values=um_versions, multi=False, description="AM3 UM sources version.")
-
-    # for uv in um_versions:
-
-    #     resource_args = dict(
-    #         name="um_sources",
-    #         git="git@github.com:ACCESS-NRI/UM.git",
-    #         branch="AM3-dev",
-    #         when=f"model=\"vn13p1-am\" um_sources={uv}",
-    #         destination=".",
-    #         placement=um_resource_dir
-    #     )
-
-    #     # The absence of a commit argument assumes HEAD
-    #     if uv != "HEAD":
-    #         resource_args["commit"] = uv
-
-    #     # Create the resource
-    #     resource(**resource_args)
 
     def _config_file_path(self, model):
         """
@@ -343,18 +298,13 @@ class Um(Package):
                 linker_args = self._get_linker_args(spec, var)
                 config_env[f"ldflags_{fcm_name}_on"] = linker_args
 
-        # # Overload the sources keys for AM3 in FCM, path slug set above in resource directives
-        # if self.spec.satisfies('model=vn13p1-am'):
-        #     config_env["jules_sources"] = join_path(self.stage.source_path, self.jules_resource_dir)
-        #     config_env["um_sources"] = join_path(self.stage.source_path, self.um_resource_dir)
-
-        # Prep JULES sources
+        # Add JULES sources to the environment if requested
         resource_dir = join_path(self.stage.source_path, "resources")
-        if spec.variants["jules_sources"].value != "NA":
+        if spec.variants["jules_sources"].value != "":
             config_env["jules_sources"] = join_path(resource_dir, "jules")
         
-        # Prep UM sources
-        if spec.variants["um_sources"].value != "NA":
+        # Add UM sources to the environment if requested
+        if spec.variants["um_sources"].value != "":
             config_env["um_sources"] = join_path(resource_dir, "um")
             
         # Set environment variables based on config_env.
@@ -372,18 +322,23 @@ class Um(Package):
         """
         return join_path(self.stage.source_path, "..", "spack-build")
 
+
     def patch(self):
+        """Patch the staging directory just before building."""
         
+        # Get the root to the resources
         resources_root = join_path(self.stage.source_path, "resources")
 
-        if self.spec.variants["um_sources"].value != "NA":
+        # Optional UM sources (i.e. AM3)
+        if self.spec.variants["um_sources"].value:
             self._dynamic_resource(
                 url=self.um_git_url,
                 ref=self.spec.variants["um_sources"].value,
                 dst_dir=join_path(resources_root, "um")
             )
 
-        if self.spec.variants["jules_sources"].value != "NA":
+        # Optional JULES sources (i.e. AM3)
+        if self.spec.variants["jules_sources"].value:
             self._dynamic_resource(
                 url=self.jules_git_url,
                 ref=self.spec.variants["jules_sources"].value,
