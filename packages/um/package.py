@@ -375,31 +375,31 @@ class Um(Package):
 
 
     def _dynamic_resource(self, url, ref, dst_dir):
-            """Check out resource dynamically based on a branch/tag/commit.
+        """Check out resource dynamically based on a branch/tag/commit.
 
-            Parameters
-            ----------
-            url : str
-                Git URL.
-            ref : str
-                branch, commit or tag
-            dst_dir : str
-                Checkout path.
-            """
+        Parameters
+        ----------
+        url : str
+            Git URL.
+        ref : str
+            branch, commit or tag
+        dst_dir : str
+            Checkout path.
+        """
 
-            # Create the destination directory
-            mkdirp(dst_dir)
+        # Create the destination directory
+        mkdirp(dst_dir)
 
-            git = Executable("git")
+        git = Executable("git")
 
-            # Attempt to check out branch to dir
-            try:
-                tty.msg(f"Attempting to checkout branch {ref}")
-                git("clone", "--depth", "1", "--branch", ref, url, dst_dir)
-            except ProcessError:
-                tty.warn(f"ref '{ref}' may be a commit/tag, retrying.")
-                git("clone", url, dst_dir)
-                with working_dir(dst_dir):
-                    git("checkout", ref)
-            
-            tty.msg(f"{ref} checked out from {url} to {dst_dir}")
+        # Attempt to check out branch to dir
+        try:
+            tty.msg(f"Attempting to checkout branch {ref}")
+            git("clone", "--depth", "1", "--branch", ref, url, dst_dir)
+        except ProcessError:
+            tty.warn(f"ref '{ref}' may be a commit/tag, retrying.")
+            git("clone", url, dst_dir)
+            with working_dir(dst_dir):
+                git("checkout", ref)
+        
+        tty.msg(f"{ref} checked out from {url} to {dst_dir}")
