@@ -351,32 +351,13 @@ class Um(Package):
         # Prep JULES sources
         resource_dir = join_path(self.stage.source_path, "../", "resources")
         if spec.variants["jules_sources"].value != "NA":
-            
-            jules_resource_dir = join_path(resource_dir, "../", "JULES")
-
-            # Check out the code to the resources dir
-            self._dynamic_resource(
-                url=self.jules_url,
-                ref=spec.variants["jules_sources"].value,
-                dst_dir=jules_resource_dir
-            )
-
-            # Add to environment for build
+            jules_resource_dir = join_path(resource_dir, "JULES")
             config_env["jules_sources"] = jules_resource_dir
-
+        
         if spec.variants["um_sources"].value != "NA":
-
             um_resource_dir = join_path(resource_dir, "UM")
-            
-            self._dynamic_resource(
-                url=self.um_url,
-                ref=spec.variants["um_sources"].value,
-                dst_dir=um_resource_dir
-            )
-
-            # Add to environment for build
             config_env["um_sources"] = um_resource_dir
-
+            
         # Set environment variables based on config_env.
         for key in config_env:
             tty.info(f"{key}={config_env[key]}")
@@ -397,6 +378,27 @@ class Um(Package):
         """
         Use FCM to build the executables.
         """
+
+        # Prep JULES sources
+        resource_dir = join_path(self.stage.source_path, "../", "resources")
+        if spec.variants["jules_sources"].value != "NA":
+            jules_resource_dir = join_path(resource_dir, "JULES")
+
+            # Check out the code to the resources dir
+            self._dynamic_resource(
+                url=self.jules_url,
+                ref=spec.variants["jules_sources"].value,
+                dst_dir=jules_resource_dir
+            )
+
+        if spec.variants["um_sources"].value != "NA":
+            um_resource_dir = join_path(resource_dir, "UM")
+            self._dynamic_resource(
+                url=self.um_url,
+                ref=spec.variants["um_sources"].value,
+                dst_dir=um_resource_dir
+            )
+
         config_file = join_path(self.package_dir, "fcm-make.cfg")
         build_dir = self._build_dir()
         mkdirp(build_dir)
