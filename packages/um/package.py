@@ -128,7 +128,7 @@ class Um(Package):
     depends_on("netcdf-fortran@4.5.2", type=("build", "link", "run"),
         when="+netcdf")
 
-    phases = ["patch", "build", "install"]
+    phases = ["build", "install"]
 
     # The dependency name, include paths, and ld_flags from
     # the FCM config for each library configured via FCM.
