@@ -130,6 +130,7 @@ jobs:
     uses: access-nri/build-ci/.github/workflows/ci.yml@v2
     with:
       spack-manifest-path: ${{ matrix.package.filepath }}
+      spack-manifest-data-path: .github/build-ci/data/standard_definitions.json
       spack-manifest-data-pairs: |-
         package ${{ matrix.package.template_value }}
       spack-packages-ref: ${{ needs.setup-ci.outputs.spack-packages-ref }}
