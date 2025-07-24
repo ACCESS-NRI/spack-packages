@@ -57,10 +57,26 @@ jobs:
         # Either get all packages defined (all subfolders under packages/) or use the input
         run: |
           if [[ "${{ inputs.packages-to-test }}" == "ALL" ]]; then
-            echo "pkgs=$(find packages/ -mindepth 1 -maxdepth 1 -type d -printf '%P ')" >> $GITHUB_OUTPUT
+            pkgs=$(find packages/ -mindepth 1 -maxdepth 1 -type d -printf '%P ')
           else
-            echo "pkgs="${{ inputs.packages-to-test }}" >> $GITHUB_OUTPUT
+            pkgs="${{ inputs.packages-to-test }}"
           fi
+
+
+          # Validate that all packages exist
+          error=false
+          for pkg in $pkgs; do
+            if [ ! -f "packages/$pkg/package.py" ]; then
+              echo "::error::packages/$pkg/package.py does not exist. Check spelling or if the package is defined."
+              error=true
+            fi
+          done
+
+          if [ "$error" = true ]; then
+            exit 1
+          fi
+
+          echo "pkgs=$pkgs" >> $GITHUB_OUTPUT
 
       - name: Setup Matrix
         id: set-matrix
