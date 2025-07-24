@@ -5,7 +5,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import find_headers, find_libraries
+from spack.package import *
+
 
 # Based on upstream $spack/var/spack/repos/builtin/packages/fms/package.py
 class AccessFms(CMakePackage):
