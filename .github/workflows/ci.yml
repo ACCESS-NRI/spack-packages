@@ -26,6 +26,11 @@ jobs:
   setup-ci:
     name: Setup CI
     runs-on: ubuntu-latest
+    env:
+      # These defaults can be overridden by the inputs (if the trigger is a workflow_dispatch)
+      DEFAULT_SPACK_REF: 'releases/v0.22'
+      DEFAULT_SPACK_CONFIG_REF: 'main'
+      DEFAULT_SPACK_PACKAGES_REF: ${{ github.event.pull_request.head.sha }}
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       spack-packages-ref: ${{ steps.set-refs.outputs.spack-packages-ref }}
@@ -93,9 +98,9 @@ jobs:
       - name: Set refs
         id: set-refs
         run: |
-          echo "spack-packages-ref=${{  inputs.spack-packages-ref || github.event.pull_request.head.sha }}" >> $GITHUB_OUTPUT
-          echo "spack-config-ref=${{ inputs.spack-config-ref || 'main' }}" >> $GITHUB_OUTPUT
-          echo "spack-ref=${{ inputs.spack-ref || 'releases/v0.22' }}" >> $GITHUB_OUTPUT
+          echo "spack-packages-ref=${{  inputs.spack-packages-ref || env.DEFAULT_SPACK_PACKAGES_REF }}" >> $GITHUB_OUTPUT
+          echo "spack-config-ref=${{ inputs.spack-config-ref || env.DEFAULT_SPACK_CONFIG_REF }}" >> $GITHUB_OUTPUT
+          echo "spack-ref=${{ inputs.spack-ref || env.DEFAULT_SPACK_REF }}" >> $GITHUB_OUTPUT
 
   ci:
     name: CI
