@@ -5,7 +5,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import BundlePackage, version, depends_on
+from spack.package import *
 
 
 class AccessRam3(BundlePackage):

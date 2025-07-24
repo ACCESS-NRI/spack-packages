@@ -2,7 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import CMakePackage, variant, version, depends_on
+from spack.package import *
+
 
 class AccessOm3Nuopc(CMakePackage):
     """ACCESS-OM3 global ocean-sea ice-wave coupled model."""
