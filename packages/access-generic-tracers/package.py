@@ -3,7 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import find_libraries
+from spack.package import *
+
 
 class AccessGenericTracers(CMakePackage):
     """This is a fork of the NOAA-GFDL/ocean_BGC repo managed by NOAA-GFDL.

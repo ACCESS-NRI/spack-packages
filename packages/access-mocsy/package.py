@@ -5,8 +5,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import find_libraries, install, join_path, mkdirp
 from spack.build_systems import cmake, makefile
+from spack.package import *
 
 
 class AccessMocsy(CMakePackage, MakefilePackage):

@@ -5,7 +5,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import install, join_path, mkdirp
+from spack.package import *
+
 
 # https://spack.readthedocs.io/en/latest/build_systems/makefilepackage.html
 class Cice5(MakefilePackage):
