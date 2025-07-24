@@ -8,16 +8,20 @@ on:
       packages-to-test:
         description: 'Packages to test (space-separated)'
         required: true
+        type: string
         default: 'ALL'
       spack-packages-ref:
         description: 'spack-packages ref to use'
         required: true
+        type: string
       spack-config-ref:
         description: 'spack-config ref to use'
         required: true
+        type: string
       spack-ref:
         description: 'spack ref to use'
         required: true
+        type: string
 jobs:
   setup-ci:
     name: Setup CI
