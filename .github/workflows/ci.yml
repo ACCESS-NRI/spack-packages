@@ -41,7 +41,7 @@ jobs:
         uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c  # v46.0.5
         with:
           # We only care about the directory names under packages/ - since they are also the package names
-          # and we want to find changes the package.py files in those directories
+          # and we want to find changes to the package.py files in those directories
           dir_names: true
           path: ./packages
           files: '*/package.py'
