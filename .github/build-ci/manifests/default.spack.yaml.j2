@@ -4,8 +4,8 @@ spack:
   # Creates matrices of the form:
   # - {{ package }} %{{ intel_compiler }}
   # - {{ package }} %{{ gcc_compiler }}
-  # Where {{ package }} is defined in the workflows inputs.spack-manifest-data-pairs
-  # And the {{ *_compiler }}s are defined in the standard_definitions.json data file
+  # Where package is defined in the workflows inputs.spack-manifest-data-pairs
+  # And the *_compilers are defined in the standard_definitions.json data file
   - matrix:
     - ['{{ package }}']
     - ['%{{ intel_compiler }}', '%{{ gcc_compiler }}']
