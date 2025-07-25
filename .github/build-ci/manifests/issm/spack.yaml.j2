@@ -1,0 +1,11 @@
+# This manifest tests all relevant combinations of the ISSM package variants
+spack:
+  specs:
+  - matrix:
+    - ['issm']
+    - ['+ad', '~ad']
+    - ['+wrappers']
+    - ['{{ gcc_compiler }}']
+  concretizer:
+    unify: false
+  view: false

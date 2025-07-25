@@ -1,0 +1,14 @@
+# This manifest is used by default for packages without a specific manifest under .github/build-ci/manifests/PACKAGE/*.j2
+spack:
+  specs:
+  # Creates matrices of the form:
+  # - {{ package }} %{{ intel_compiler }}
+  # - {{ package }} %{{ gcc_compiler }}
+  # Where {{ package }} is defined in the workflows inputs.spack-manifest-data-pairs
+  # And the {{ *_compiler }}s are defined in the standard_definitions.json data file
+  - matrix:
+    - ['{{ package }}']
+    - ['%{{ intel_compiler }}', '%{{ gcc_compiler }}']
+  concretizer:
+    unify: false
+  view: false

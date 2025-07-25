@@ -1,0 +1,4 @@
+{
+    "intel_compiler": "intel@2021.10.0",
+    "gcc_compiler": "gcc@8.5.0"
+}
