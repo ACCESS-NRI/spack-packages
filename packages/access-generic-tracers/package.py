@@ -14,12 +14,14 @@ class AccessGenericTracers(CMakePackage):
 
     homepage = "https://github.com/ACCESS-NRI/GFDL-generic-tracers"
     git = "https://github.com/ACCESS-NRI/GFDL-generic-tracers.git"
+    url = "https://github.com/ACCESS-NRI/GFDL-generic-tracers/archive/refs/tags/2025.07.000.tar.gz"
 
     maintainers("harshula")
 
-    version("master", branch="master")
-    # TODO: Needs to be changed once changes to build system enter master.
+    version("main", branch="main")
+    # TODO: The development version should be deleted once we're using >=2025.07.000 everywhere.
     version("development", branch="development", preferred=True)
+    version("2025.07.000", sha256="2ff752746ac7645dbe60818fd903b4685fe1f85d9f468adc4b0d50364b7c4274")
 
     variant(
         "shared",
