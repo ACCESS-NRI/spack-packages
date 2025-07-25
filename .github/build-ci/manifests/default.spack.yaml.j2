@@ -1,0 +1,8 @@
+spack:
+  specs:
+  - matrix:
+    - '{{ package }}'
+    - ['%{{ intel_compiler }}', '%{{ gcc_compiler }}']
+  concretizer:
+    unify: false
+  view: false

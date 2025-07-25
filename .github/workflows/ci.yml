@@ -101,7 +101,7 @@ jobs:
             fi
 
             if [[ -z "$manifest_paths" ]]; then  # Use the default template if no specific manifests exist for the package
-              manifest_paths=".github/build-ci/manifests/template.spack.yaml.j2"
+              manifest_paths=".github/build-ci/manifests/default.spack.yaml.j2"
             fi
 
             while read -r manifest_path; do
