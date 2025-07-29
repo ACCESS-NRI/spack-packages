@@ -391,7 +391,7 @@ class Um(Package):
         # Create the destination directory
         mkdirp(dst_dir)
 
-        git = git.git()
+        git = spack.util.git.git()
 
         # Attempt to check out branch to dir
         try:
