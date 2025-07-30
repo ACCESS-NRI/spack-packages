@@ -58,7 +58,7 @@ class Um7(Package):
         ]
         ideps = ["gcom4", "netcdf-fortran"]
         with when("@access-esm1.6"):
-            ideps.append("cable")
+            ideps.append("cable_science")
 
         incs = [self.spec[d].prefix.include for d in ideps] + oasis3_incs
         for ipath in incs:
@@ -100,7 +100,7 @@ class Um7(Package):
 
         ldeps = ["oasis3-mct", "netcdf-fortran", "dummygrib"]
         with when("@access-esm1.6"):
-            ldeps.append("cable")
+            ldeps.append("cable_science")
 
         libs = " ".join([self._get_linker_args(spec, d) for d in ldeps] + ["-lgcom"])
 
