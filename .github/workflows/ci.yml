@@ -97,17 +97,19 @@ jobs:
             template_value="$pkg"
 
             if [ -d ".github/build-ci/manifests/$pkg" ]; then  # Look for specific manifests for the package
-              manifest_paths=$(find .github/build-ci/manifests/$pkg -iname '*.j2' -type f)
+              # We space-separate the paths as we later use them in a for loop
+              manifest_paths=$(find .github/build-ci/manifests/$pkg -iname '*.j2' -type f -printf '%p ')
             fi
 
-            if [[ -z "$manifest_paths" ]]; then  # Use the default template if no specific manifests exist for the package
-              manifest_paths=".github/build-ci/manifests/default.spack.yaml.j2"
+            if [[ -z "$manifest_paths" ]]; then  # Use the default templates if no specific manifests exist for the package
+              # Similarly, space-separate the paths for a later for loop. Default manifests are always directly under .github/build-ci/manifests
+              manifest_paths=$(find .github/build-ci/manifests/ -maxdepth 1 -type f -iname '*.j2' -printf '%p ')
             fi
 
-            while read -r manifest_path; do
+            for manifest_path in $manifest_paths; do
               json_entry=$(printf '{"filepath": "%s", "template_value": "%s"}' "$manifest_path" "$template_value")
               json_entries+="${json_entry},"
-            done <<< "$manifest_paths"
+            done
           done
 
           # Remove the trailing comma and wrap in square brackets
