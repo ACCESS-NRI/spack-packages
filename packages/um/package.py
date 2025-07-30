@@ -9,6 +9,7 @@
 import configparser
 from spack.package import *
 import llnl.util.tty as tty
+import spack.util.git
 
 class Um(Package):
     """
@@ -101,7 +102,9 @@ class Um(Package):
         "stash_version",
         "timer_version",
         "ukca_sources",
-        "um_sources")
+        "um_sources"
+        )
+
     _str_variants = _rev_variants + _other_variants
 
     for var in _str_variants:
@@ -149,6 +152,14 @@ class Um(Package):
             "dep_name": "netcdf-fortran",
             "fcm_name": "netcdf",
             "fcm_ld_flags": "-lnetcdff -lnetcdf"}}
+
+    # Optional JULES sources to be used in build (i.e. AM3)
+    jules_git_url = "https://github.com/ACCESS-NRI/JULES.git"
+    variant("jules_sources", default="NA", values=str, multi=False, description=f"Optional JULES sources branch/tag/commit from {jules_git_url}.")
+    
+    # Optional UM sources to be used in build (i.e. AM3)
+    um_git_url = "https://github.com/ACCESS-NRI/UM.git"
+    variant("um_sources", default="NA", values=str, multi=False, description=f"Optional UM sources branch/tag/commit from {um_git_url}.")
 
 
     def _config_file_path(self, model):
@@ -288,6 +299,15 @@ class Um(Package):
                 linker_args = self._get_linker_args(spec, var)
                 config_env[f"ldflags_{fcm_name}_on"] = linker_args
 
+        # Add JULES sources to the environment if requested
+        resource_dir = join_path(self.stage.source_path, "resources")
+        if spec.variants["jules_sources"].value != "NA":
+            config_env["jules_sources"] = join_path(resource_dir, "jules")
+        
+        # Add UM sources to the environment if requested
+        if spec.variants["um_sources"].value != "NA":
+            config_env["um_sources"] = join_path(resource_dir, "um")
+            
         # Set environment variables based on config_env.
         for key in config_env:
             tty.info(f"{key}={config_env[key]}")
@@ -303,6 +323,28 @@ class Um(Package):
         """
         return join_path(self.stage.source_path, "..", "spack-build")
 
+
+    def patch(self):
+        """Patch the staging directory just before building."""
+        
+        # Get the root to the resources
+        resources_root = join_path(self.stage.source_path, "resources")
+
+        # Optional UM sources (i.e. AM3)
+        if self.spec.variants["um_sources"].value != "NA":
+            self._dynamic_resource(
+                url=self.um_git_url,
+                ref=self.spec.variants["um_sources"].value,
+                dst_dir=join_path(resources_root, "um")
+            )
+
+        # Optional JULES sources (i.e. AM3)
+        if self.spec.variants["jules_sources"].value != "NA":
+            self._dynamic_resource(
+                url=self.jules_git_url,
+                ref=self.spec.variants["jules_sources"].value,
+                dst_dir=join_path(resources_root, "jules")
+            )
 
     def build(self, spec, prefix):
         """
@@ -331,3 +373,34 @@ class Um(Package):
             install_bin_dir = join_path(prefix, bin_dir)
             mkdirp(install_bin_dir)
             install_tree(build_bin_dir, install_bin_dir)
+
+
+    def _dynamic_resource(self, url, ref, dst_dir):
+        """Check out resource dynamically based on a branch/tag/commit.
+
+        Parameters
+        ----------
+        url : str
+            Git URL.
+        ref : str
+            branch, commit or tag
+        dst_dir : str
+            Checkout path.
+        """
+
+        # Create the destination directory
+        mkdirp(dst_dir)
+
+        git = spack.util.git.git()
+
+        # Attempt to check out branch to dir
+        try:
+            tty.msg(f"Attempting to checkout branch {ref}")
+            git("clone", "--depth", "1", "--branch", ref, url, dst_dir)
+        except ProcessError:
+            tty.warn(f"ref '{ref}' may be a commit/tag, retrying.")
+            git("clone", url, dst_dir)
+            with working_dir(dst_dir):
+                git("checkout", ref)
+        
+        tty.msg(f"{ref} checked out from {url} to {dst_dir}")
