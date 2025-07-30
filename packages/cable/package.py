@@ -50,4 +50,9 @@ class Cable(CMakePackage):
         args = []
         args.append(self.define_from_variant("CABLE_MPI", "mpi"))
         args.append(self.define_from_variant("CABLE_LIBRARY", "library"))
+
+        # Specify the library version we should build
+        with when("@access-esm1.6"):
+            args.append(self.define_from_variant("ESM1.6", "library"))
+
         return args
