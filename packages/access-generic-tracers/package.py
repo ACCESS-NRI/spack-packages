@@ -17,9 +17,9 @@ class AccessGenericTracers(CMakePackage):
 
     maintainers("harshula")
 
-    version("master", branch="master")
-    # TODO: Needs to be changed once changes to build system enter master.
-    version("development", branch="development", preferred=True)
+    version("main", branch="main", preferred=True)
+    # TODO: Delete development version once we're sure we're using main everywhere.
+    version("development", branch="development")
 
     variant(
         "shared",
