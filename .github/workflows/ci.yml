@@ -97,11 +97,13 @@ jobs:
             template_value="$pkg"
 
             if [ -d ".github/build-ci/manifests/$pkg" ]; then  # Look for specific manifests for the package
+              # We space-separate the paths as we later use them in a for loop
               manifest_paths=$(find .github/build-ci/manifests/$pkg -iname '*.j2' -type f -printf '%p ')
             fi
 
             if [[ -z "$manifest_paths" ]]; then  # Use the default templates if no specific manifests exist for the package
-              manifest_paths=".github/build-ci/manifests/intel.spack.yaml.j2 .github/build-ci/manifests/gcc.spack.yaml.j2"
+              # Similarly, space-separate the paths for a later for loop. Default manifests are always directly under .github/build-ci/manifests
+              manifest_paths=$(find .github/build-ci/manifests/ -maxdepth 1 -type f -iname '*.j2' -printf '%p ')
             fi
 
             for manifest_path in $manifest_paths; do
