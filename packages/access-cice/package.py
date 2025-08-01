@@ -18,6 +18,7 @@ class AccessCice(CMakePackage):
 
     license("BSD-3-Clause", checked_by="anton-seaice")
 
+    version("head", preferred=True) # the default branch from git
     version("CICE6.6.0-3", commit="2c444bd")
     version("CICE6.6.0-1", commit="964a445")
 

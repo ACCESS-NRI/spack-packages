@@ -28,6 +28,7 @@ class Access3(CMakePackage):
     maintainers("anton-seaice", "harshula", "micaeljtoliveira")
     license("Apache-2.0", checked_by="anton-seaice")
 
+    version("main", branch="main", preferred=True)
     version("2025.03.1", commit="d28d8b3")
     version("2025.03.0", commit="d61a88a")
 
