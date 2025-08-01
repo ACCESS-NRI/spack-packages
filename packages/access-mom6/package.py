@@ -21,7 +21,7 @@ class AccessMom6(CMakePackage):
     # see license file in https://github.com/ACCESS-NRI/MOM6/blob/e92c971084e185cfd3902f18072320b45d583a54/LICENSE.md
     license("LGPL-3.0-only", checked_by="minghangli-uni")
 
-    version("head", preferred=True) # the default branch from git
+    version("head", preferred=True)  # the default branch from git
     version("2025.02.001", commit="a5f4397")
     version("2025.02.000", commit="e088c8b")
 

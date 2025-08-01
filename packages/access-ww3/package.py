@@ -15,7 +15,7 @@ class AccessWw3(CMakePackage):
     maintainers("anton-seaice", "harshula")
     license("LGPL-3.0-only", checked_by="anton-seaice")
 
-    version("head", preferred=True) # the default branch from git
+    version("head", preferred=True)  # the default branch from git
     version("2025.03.0", commit="d980dec")
 
     variant("openmp", default=False, description="Enable OpenMP")
