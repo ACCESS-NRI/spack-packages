@@ -37,6 +37,9 @@ class AccessCice(CMakePackage):
         description="CICE IO Method"
     )
 
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
+
     depends_on("access3-share", when="+access3") 
     depends_on("cmake@3.18:", type="build")
     depends_on("mpi")
