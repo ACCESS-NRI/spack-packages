@@ -36,6 +36,8 @@ class AccessGenericTracers(CMakePackage):
         description="If True, depend on access-fms, otherwise depend on fms"
     )
 
+    depends_on("fortran", type="build")
+
     depends_on("mpi")
     # TODO: Make conditional once Spack v0.23 or newer is used. The newer
     #       versions contain an fms SPR with variant shared.
