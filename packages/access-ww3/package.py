@@ -15,7 +15,8 @@ class AccessWw3(CMakePackage):
     maintainers("anton-seaice", "harshula")
     license("LGPL-3.0-only", checked_by="anton-seaice")
 
-    version("2025.03.0", commit="d980dec")
+    version("stable", branch="dev/2025.03", preferred=True)   # need to update branch for new major versions
+    version("2025.03.0", tag="2025.03.0", commit="d980dececb8843da1769470f24bc633982073db6")
 
     variant("openmp", default=False, description="Enable OpenMP")
     variant(
