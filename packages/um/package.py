@@ -114,6 +114,11 @@ class Um(Package):
     # used by the FCM configuration of UM.
     depends_on("fcm site=nci-gadi", type="build")
 
+    # Include openmpi directly https://github.com/ACCESS-NRI/spack-packages/issues/293
+    variant("mpi", default=True, description="Build with MPI")
+    depends_on("mpi", when="+mpi", type=("build", "link", "run"))
+    depends_on("openmpi@4.1.7:", when="+mpi^[virtuals=mpi] openmpi", type=("build", "link", "run"))
+
     # For GCOM versions, see
     # https://code.metoffice.gov.uk/trac/gcom/wiki/Gcom_meto_installed_versions
     depends_on("gcom@7.8", when="@:13.0", type=("build", "link"))
