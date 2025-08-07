@@ -21,7 +21,8 @@ class AccessMom6(CMakePackage):
     # see license file in https://github.com/ACCESS-NRI/MOM6/blob/e92c971084e185cfd3902f18072320b45d583a54/LICENSE.md
     license("LGPL-3.0-only", checked_by="minghangli-uni")
 
-    version("stable", branch="2025.02", preferred=True)   # need to update branch for new major versions
+    version("stable", branch="2025.08", preferred=True)   # need to update branch for new major versions
+    version("2025.08.000", tag="2025.08.000", commit="bc51c1ba407f5ae669b5bbc94b027e852e2c6ac4")
     version("2025.02.001", tag="2025.02.001", commit="a5f4397b953f749acecf06f21129c2a20aa578fe")
     version("2025.02.000", tag="2025.02.000", commit="e088c8b7f6c2b18b72edd568aa009e13396ec0c3")
 
