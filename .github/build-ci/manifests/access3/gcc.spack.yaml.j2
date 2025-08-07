@@ -6,7 +6,7 @@ spack:
   packages:
     all:
       require:
-      - '%{{ gcc_compiler }}'
+      - '%{{ gcc_compiler }} target={{ target }}'
   concretizer:
     unify: false
   view: false

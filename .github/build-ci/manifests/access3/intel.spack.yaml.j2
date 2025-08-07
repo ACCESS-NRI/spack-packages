@@ -6,7 +6,7 @@ spack:
   packages:
     all:
       require:
-      - '%{{ intel_compiler }}'
+      - '%{{ intel_compiler }} target={{ target }}'
   concretizer:
     unify: false
   view: false
