@@ -15,11 +15,15 @@ class AccessGenericTracers(CMakePackage):
     homepage = "https://github.com/ACCESS-NRI/GFDL-generic-tracers"
     git = "https://github.com/ACCESS-NRI/GFDL-generic-tracers.git"
 
-    maintainers("harshula")
+    maintainers("harshula", "dougiesquire")
 
-    version("main", branch="main", preferred=True)
-    # TODO: Delete development version once we're sure we're using main everywhere.
-    version("development", branch="development")
+    # TODO: Delete the "main" version once it is no longer being used anywhere.
+    version("main", branch="main")
+    version("stable", branch="main", preferred=True)
+    version("2025.07.002", tag="2025.07.002", commit="799b95697d0a874120de6d812f03091d60fd7485")
+    version("2025.07.001", tag="2025.07.001", commit="20faef70cdf2d8b508825d57bfd981cdd78921c1")
+    version("2025.07.000", tag="2025.07.000", commit="5ba87f81fac49314e15ff895f329d94cf2f99de0")
+    version("2024.08.001", tag="2024.08.001", commit="c17138303f8c6a206a89593eed5b16bdf7af174b")
 
     variant(
         "shared",
@@ -35,6 +39,7 @@ class AccessGenericTracers(CMakePackage):
     )
 
     depends_on("mpi")
+    depends_on("access-mocsy@2025.07.001:")  # >= 2025.07.001 for CMake BS with "mocsy" target name
     # TODO: Make conditional once Spack v0.23 or newer is used. The newer
     #       versions contain an fms SPR with variant shared.
     depends_on("fms@2025.02:", when="~use_access_fms")
@@ -46,9 +51,6 @@ class AccessGenericTracers(CMakePackage):
         depends_on("access-fms", when="+use_access_fms")
 
     flag_handler = build_system_flags
-
-    def url_for_version(self, version):
-        return "https://github.com/ACCESS-NRI/GFDL-generic-tracers/tarball/{0}".format(version)
 
     # TODO: We should try to remove this. The responsibility for including
     #       internal library dependencies for linking purposes should
