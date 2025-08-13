@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
-
+from .access3 import ACCESS3_VERSIONS
 
 class Access3Share(CMakePackage):
     """Shared coupler/mediator libraries used by the ACCESS version 3 climate
@@ -19,9 +19,9 @@ class Access3Share(CMakePackage):
     license("Apache-2.0", checked_by="anton-seaice")
 
     version("stable", branch="main", preferred=True)
-    version("2025.08.000", tag="2025.08.000", commit="f2f35ce5915e82a83899b69560d826deab53b668")
-    version("2025.03.1", tag="2025.03.1", commit="d28d8b3bb2d490920cabd48a87663de017ca6a18")
-    version("2025.03.0", tag="2025.03.0", commit="d61a88ac937092f6f8ee1215716e2d6a750161e3")
+    # access3-share uses the same git repository as access3
+    for tag,commit in ACCESS3_VERSIONS.items():
+        version(tag, tag=tag, commit=commit)
 
     variant("openmp", default=False, description="Enable OpenMP")
 
