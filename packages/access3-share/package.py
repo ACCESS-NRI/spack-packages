@@ -20,7 +20,7 @@ class Access3Share(CMakePackage):
 
     version("stable", branch="main", preferred=True)
     # access3-share uses the same git repository as access3
-    for tag,commit in ACCESS3_VERSIONS.items():
+    for tag, commit in ACCESS3_VERSIONS.items():
         version(tag, tag=tag, commit=commit)
 
     variant("openmp", default=False, description="Enable OpenMP")
