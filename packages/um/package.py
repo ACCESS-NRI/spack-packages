@@ -369,6 +369,14 @@ class Um(Package):
                         tag_var,
                         resource_path)
                     config_env[sources_var] = resource_path
+        else:
+            # The model does not use Guthub URLs and ignores the tag variants.
+            for tag_var in self._resource_cfg:
+                tag_value = spec.variants[tag_var].value
+                if tag_value != "none":
+                    tty.warn(
+                        f"The {model} model ignores the variant "
+                        f"{tag_var}={tag_value}.")
 
         # Set environment variables based on config_env.
         for key in config_env:
