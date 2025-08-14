@@ -253,7 +253,7 @@ class Um(Package):
                 if sources_var not in config_env:
                     tty.info(
                         f"The {model} model does not specify {sources_var}.")
-                else: # sources_var in config_env
+                else:  # sources_var in config_env
                     env_value = config_env[sources_var]
                     if env_value == "":
                         tty.info(
@@ -262,7 +262,7 @@ class Um(Package):
                         tty.warn(
                             f"The {model} model sets "
                             f"{sources_var}={env_value}.")
-            else: # sources_value != "none"
+            else:  # sources_value != "none"
                 # In this case, the spec has already overridden any value
                 # in the model configuration.
                 assert sources_value == config_env[sources_var]
