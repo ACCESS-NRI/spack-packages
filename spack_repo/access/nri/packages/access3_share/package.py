@@ -19,7 +19,7 @@ class Access3Share(CMakePackage):
     maintainers("anton-seaice", "harshula", "micaeljtoliveira")
     license("Apache-2.0", checked_by="anton-seaice")
 
-    version("develop", branch="develop", preferred=True)
+    version("develop", branch="develop", preferred=True, no_cache=True)
     version("2025.08.000", tag="2025.08.000", commit="f2f35ce5915e82a83899b69560d826deab53b668")
     version("2025.03.1", tag="2025.03.1", commit="d28d8b3bb2d490920cabd48a87663de017ca6a18")
     version("2025.03.0", tag="2025.03.0", commit="d61a88ac937092f6f8ee1215716e2d6a750161e3")
