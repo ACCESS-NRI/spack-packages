@@ -67,10 +67,10 @@ class Um(Package):
         "socrates_rev",
         "ukca_rev")
 
-    # Git branch or tag variants.
-    _tag_variants = (
-        "jules_tag",
-        "um_tag")
+    # Git reference variants.
+    _ref_variants = (
+        "jules_ref",
+        "um_ref")
 
     # Other string variants.
     _other_variants = (
@@ -110,7 +110,7 @@ class Um(Package):
         "um_sources"
         )
 
-    _str_variants = _rev_variants + _tag_variants + _other_variants
+    _str_variants = _rev_variants + _ref_variants + _other_variants
 
     for var in _str_variants:
         variant(var, default="none", description=var, values="*", multi=False)
@@ -164,13 +164,13 @@ class Um(Package):
 
     # Optional Github sources to be used in build (i.e. AM3)
     _resource_cfg = {
-        "jules_tag": {
+        "jules_ref": {
             "sources_var": "jules_sources",
-            "git_url": "git@github.com:ACCESS-NRI/JULES.git",
+            "git_url": "https://github.com/ACCESS-NRI/JULES.git",
             "subdir": "jules"},
-        "um_tag": {
+        "um_ref": {
             "sources_var": "um_sources",
-            "git_url": "git@github.com:ACCESS-NRI/UM.git",
+            "git_url": "https://github.com/ACCESS-NRI/UM.git",
             "subdir": "um"}}
 
 
@@ -233,20 +233,20 @@ class Um(Package):
                         f"The value {spec_value} will be used.")
 
 
-        def check_model_vs_sources_vs_tag(
+        def check_model_vs_sources_vs_ref(
             model,
             config_env,
             sources_var,
-            tag_var,
+            ref_var,
             resource_path):
             """
-            Check the values set by the variants sources_var and tag_var
+            Check the values set by the variants sources_var and ref_var
             against any existing sources value in config_env, and remind
             that the sources value will be overridden by resource_path.
             """
             sources_value = spec.variants[sources_var].value
-            tag_value = spec.variants[tag_var].value
-            tty.info(f"The spec sets {tag_var}={tag_value}")
+            ref_value = spec.variants[ref_var].value
+            tty.info(f"The spec sets {ref_var}={ref_value}")
             if sources_value == "none":
                 # In this case, the spec has not overridden any value
                 # in the model configuration.
@@ -355,28 +355,28 @@ class Um(Package):
             # Get the root to the resources
             resources_root = join_path(self.stage.source_path, "resources")
             # Add sources to the environment if requested
-            for tag_var in self._resource_cfg:
-                tag_value = spec.variants[tag_var].value
-                if tag_value != "none":
-                    sources_var = self._resource_cfg[tag_var]["sources_var"]
-                    subdir = self._resource_cfg[tag_var]["subdir"]
+            for ref_var in self._resource_cfg:
+                ref_value = spec.variants[ref_var].value
+                if ref_value != "none":
+                    sources_var = self._resource_cfg[ref_var]["sources_var"]
+                    subdir = self._resource_cfg[ref_var]["subdir"]
                     resource_path = join_path(resources_root, subdir)
                     # Output appropriate warning messages.
-                    check_model_vs_sources_vs_tag(
+                    check_model_vs_sources_vs_ref(
                         model,
                         config_env,
                         sources_var,
-                        tag_var,
+                        ref_var,
                         resource_path)
                     config_env[sources_var] = resource_path
         else:
-            # The model does not use Guthub URLs and ignores the tag variants.
-            for tag_var in self._resource_cfg:
-                tag_value = spec.variants[tag_var].value
-                if tag_value != "none":
+            # The model does not use Github URLs and ignores the ref variants.
+            for ref_var in self._resource_cfg:
+                ref_value = spec.variants[ref_var].value
+                if ref_value != "none":
                     tty.warn(
                         f"The {model} model ignores the variant "
-                        f"{tag_var}={tag_value}.")
+                        f"{ref_var}={ref_value}.")
 
         # Set environment variables based on config_env.
         for key in config_env:
