@@ -17,7 +17,7 @@ class AncomsRoms(MakefilePackage):
     git = "https://github.com/ACCESS-Community-Hub/roms.git"
     url = "https://github.com/ACCESS-Community-Hub/roms/archive/refs/tags/roms-4.1.tar.gz"
 
-    maintainers("phellipecouto", "helenmacdonald")
+    maintainers("phellipecouto", "helenmacdonald", "aidanheerdegen")
 
     version("stable", branch="develop", preferred=True)
     version("unsw", branch="unsw-coastal-regional-lab")
