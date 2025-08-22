@@ -61,6 +61,11 @@ class Issm(AutotoolsPackage):
         description="Propagate OpenMP flags so threaded deps link cleanly",
     )
 
+    variant(
+        "debug",
+        default=False,
+        description="Enable ISSM debugging/development mode and debug symbols",
+    )
     # --------------------------------------------------------------------
     # Dependencies
     # --------------------------------------------------------------------
@@ -126,6 +131,10 @@ class Issm(AutotoolsPackage):
                 f"-g -O3 -fPIC {self.compiler.cxx11_flag} -DCODI_ForcedInlines",  # https://issm.ess.uci.edu/trac/issm/wiki/totten#InstallingISSMwithCoDiPackAD
             )
 
+        if "+debug" in self.spec:
+            env.append_flags("CFLAGS", "-g")
+            env.append_flags("FFLAGS", "-g")
+
     # --------------------------------------------------------------------
     # Autoreconf hook
     # --------------------------------------------------------------------
@@ -137,17 +146,19 @@ class Issm(AutotoolsPackage):
     # --------------------------------------------------------------------
     def configure_args(self):
         args = [
-            "--enable-debugging",
-            "--enable-development",
             "--enable-shared",
             "--without-kriging",
-            "--without-Love",
         ]
-
+        # Toggle ISSM's internal debug/development switches
+        if "+debug" in self.spec:
+            args += ["--enable-debugging", "--enable-development"]
+        else:
+            args += ["--disable-debugging", "--disable-development"]
         # Linear-algebra backend
         if "+ad" in self.spec:
             # AD build: *exclude* PETSc and point at CoDiPack/MediPack
             args += [
+                f"--without-Love",
                 f"--with-codipack-dir={self.spec['codipack'].prefix}",
                 f"--with-medipack-dir={self.spec['medipack'].prefix}",
             ]
