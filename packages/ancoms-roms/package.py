@@ -17,7 +17,18 @@ class AncomsRoms(MakefilePackage):
     git = "https://github.com/ACCESS-Community-Hub/roms.git"
     url = "https://github.com/ACCESS-Community-Hub/roms/archive/refs/tags/roms-4.1.tar.gz"
 
-    version("unsw", branch="unsw-coastal-regional-lab", preferred=True)
+    maintainers("phellipecouto", "helenmacdonald", "aidanheerdegen")
+
+    version("stable", branch="develop", preferred=True)
+    version("unsw", branch="unsw-coastal-regional-lab")
+    version("4.2", tag="roms-4.2", commit="f3cd98c75e75d3ce4a44b0d42d55c99d85082cd2")
+    version("4.1", tag="roms-4.1", commit="f4ef852c084bccd1009b3ff4db8d1d059569b0e2")
+    version("4.0", tag="roms-4.0", commit="00c95a703746b6d344ce475a951f55c4be734c4d")
+    version("3.9", tag="roms-3.9", commit="9a7138ff395561082685124de42fac1a07bbdd93")
+    version("3.8", tag="roms-3.8", commit="55b59a205c680cba2069f97e73c0d52ad47f8471")
+    version("3.7", tag="roms-3.7", commit="5101827580c40d58b0877f620b1878ea41838e6e")
+    version("3.6", tag="roms-3.6", commit="0db3bdc59587154c194deb246b0007f4f743b35a")
+    version("3.5", tag="roms-3.5", commit="bf4c05eb1a4b384eda306c2ed74697284970e48a")
 
     variant("openmp", default=False, description="Turn on shared-memory parallelization in ROMS")
     variant("mpi", default=True, description="Turn on distributed-memory parallelization in ROMS")
