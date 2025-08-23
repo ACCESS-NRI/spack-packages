@@ -70,9 +70,9 @@ class Issm(AutotoolsPackage):
     # Dependencies
     # --------------------------------------------------------------------
     # Build-time tools
-    depends_on("autoconf", type="build", when="@3.10 build_system=autotools")
-    depends_on("automake", type="build", when="@3.10 build_system=autotools")
-    depends_on("libtool", type="build", when="@3.10 build_system=autotools")
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
     depends_on("m4", type="build")
 
     # Core build + runtime deps
