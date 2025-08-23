@@ -138,8 +138,8 @@ class Issm(AutotoolsPackage):
     # --------------------------------------------------------------------
     # Autoreconf hook
     # --------------------------------------------------------------------
-    def autoreconf(self, spec, prefix):
-        autoreconf("--install", "--verbose", "--force")
+    # def autoreconf(self, spec, prefix):
+    #     autoreconf("--install", "--verbose", "--force")
 
     # --------------------------------------------------------------------
     # Configure phase - construct ./configure arguments
