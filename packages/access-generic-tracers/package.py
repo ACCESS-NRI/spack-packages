@@ -23,6 +23,7 @@ class AccessGenericTracers(CMakePackage):
     version("2025.07.002", tag="2025.07.002", commit="799b95697d0a874120de6d812f03091d60fd7485")
     version("2025.07.001", tag="2025.07.001", commit="20faef70cdf2d8b508825d57bfd981cdd78921c1")
     version("2025.07.000", tag="2025.07.000", commit="5ba87f81fac49314e15ff895f329d94cf2f99de0")
+    version("2025.04.001", tag="2025.04.001", commit="2b461ad2cae882c1fc9df8f73c4f5bb12ef3aeac")
     version("2024.08.001", tag="2024.08.001", commit="c17138303f8c6a206a89593eed5b16bdf7af174b")
 
     variant(
