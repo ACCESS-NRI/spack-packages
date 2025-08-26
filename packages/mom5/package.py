@@ -63,14 +63,12 @@ class Mom5(CMakePackage, MakefilePackage):
 
     with when("@access-om2,legacy-access-om2-bgc"):
         depends_on("datetime-fortran")
-        depends_on("oasis3-mct+deterministic", when="+deterministic")
-        depends_on("oasis3-mct~deterministic", when="~deterministic")
         depends_on("libaccessom2+deterministic", when="+deterministic")
         depends_on("libaccessom2~deterministic", when="~deterministic")
 
-    with when("@access-esm1.6"):
-        depends_on("oasis3-mct@access-esm1.5+deterministic", when="+deterministic")
-        depends_on("oasis3-mct@access-esm1.5~deterministic", when="~deterministic")
+    with when("@access-om2,legacy-access-om2-bgc,access-esm1.6"):
+        depends_on("oasis3-mct+deterministic", when="+deterministic")
+        depends_on("oasis3-mct~deterministic", when="~deterministic")
 
     # NOTE: Spack will also match "access-om2-legacy-bgc" here, that's why
     #       it has been renamed to "legacy-access-om2-bgc".
