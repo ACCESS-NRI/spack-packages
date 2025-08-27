@@ -5,8 +5,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import install, join_path, mkdirp
-# from pprint import pprint
+from spack.package import *
+
 
 # https://spack.readthedocs.io/en/latest/build_systems/makefilepackage.html
 class Oasis3Mct(MakefilePackage):
@@ -17,6 +17,11 @@ class Oasis3Mct(MakefilePackage):
 
     maintainers("harshula", "penguian")
 
+    version(
+        "upstream",
+        branch="OASIS3-MCT_5.0",
+        git="https://gitlab.com/cerfacs/oasis3-mct.git",
+    )
     version("access-om2", branch="master", preferred=True)
     version("access-esm1.5", branch="access-esm1.5")
 
@@ -42,7 +47,7 @@ class Oasis3Mct(MakefilePackage):
     __pkgdir = join_path(__libdir, "pkgconfig")
     __makefiledir = join_path("util", "make_dir")
     __makeinc = join_path(__makefiledir, "make.inc")
-    __libs = {"mct": {}, "mpeu": {}, "psmile.MPI1": {}, "scrip": {}}
+    __libs = ["mct", "mpeu", "psmile.MPI1", "scrip"]
 
     # doc/oasis3mct_UserGuide.pdf:
     # If module mod_oasis is used in the models, it is enough to include
@@ -55,134 +60,21 @@ class Oasis3Mct(MakefilePackage):
     # use both the psmile and mct libraries $ARCHDIR/lib/libpsmile.MPI1.a
     # and libmct.a and libmpeu.a when linking.
 
-    __libs["mct"]["incfiles"] = [
-        "m_accumulatorcomms.mod",
-        "m_accumulator.mod",
-        "m_attrvectcomms.mod",
-        "m_attrvect.mod",
-        "m_attrvectreduce.mod",
-        "m_chars.mod",
-        "m_convertmaps.mod",
-        "mct_mod.mod",
-        "m_die.mod",
-        "m_dropdead.mod",
-        "m_errorhandler.mod",
-        "m_exchangemaps.mod",
-        "m_fccomms.mod",
-        "m_filename.mod",
-        "m_fileresolv.mod",
-        "m_flow.mod",
-        "m_generalgridcomms.mod",
-        "m_generalgrid.mod",
-        "m_globalmap.mod",
-        "m_globalsegmapcomms.mod",
-        "m_globalsegmap.mod",
-        "m_globaltolocal.mod",
-        "m_indexbin_char.mod",
-        "m_indexbin_integer.mod",
-        "m_indexbin_logical.mod",
-        "m_inpak90.mod",
-        "m_ioutil.mod",
-        "m_list.mod",
-        "m_mall.mod",
-        "m_matattrvectmul.mod",
-        "m_mctworld.mod",
-        "m_merge.mod",
-        "m_mergesorts.mod",
-        "m_mpif90.mod",
-        "m_mpif.mod",
-        "m_mpout.mod",
-        "m_navigator.mod",
-        "m_permuter.mod",
-        "m_rankmerge.mod",
-        "m_realkinds.mod",
-        "m_rearranger.mod",
-        "m_router.mod",
-        "m_sortingtools.mod",
-        "m_sparsematrixcomms.mod",
-        "m_sparsematrixdecomp.mod",
-        "m_sparsematrix.mod",
-        "m_sparsematrixplus.mod",
-        "m_sparsematrixtomaps.mod",
-        "m_spatialintegral.mod",
-        "m_spatialintegralv.mod",
-        "m_stdio.mod",
-        "m_string.mod",
-        "m_strtemplate.mod",
-        "m_traceback.mod",
-        "m_transfer.mod",
-        "m_zeit.mod",
-    ]
-
-    __libs["mpeu"]["incfiles"] = []
-
-    __libs["psmile.MPI1"]["incfiles"] = [
-        "mod_oasis_advance.mod",
-        "mod_oasis_coupler.mod",
-        "mod_oasis_data.mod",
-        "mod_oasis_getput_interface.mod",
-        "mod_oasis_grid.mod",
-        "mod_oasis_io.mod",
-        "mod_oasis_ioshr.mod",
-        "mod_oasis_kinds.mod",
-        "mod_oasis_method.mod",
-        "mod_oasis.mod",
-        "mod_oasis_mpi.mod",
-        "mod_oasis_namcouple.mod",
-        "mod_oasis_parameters.mod",
-        "mod_oasis_part.mod",
-        "mod_oasis_string.mod",
-        "mod_oasis_sys.mod",
-        "mod_oasis_timer.mod",
-        "mod_oasis_var.mod",
-        "mod_prism.mod",
-    ]
-
-    __libs["scrip"]["incfiles"] = [
-        "constants.mod",
-        "grids.mod",
-        "iounits.mod",
-        "kinds_mod.mod",
-        "mod_oasis_flush.mod",
-        "netcdf_mod.mod",
-        "remap_bicubic.mod",
-        "remap_bicubic_reduced.mod",
-        "remap_bilinear.mod",
-        "remap_bilinear_reduced.mod",
-        "remap_conservative.mod",
-        "remap_distance_weight.mod",
-        "remap_gaussian_weight.mod",
-        "remap_vars.mod",
-        "remap_write.mod",
-        "timers.mod",
-    ]
-
-    def __init__(self, args):
-        super().__init__(args)
-
-        for k in self.__libs.keys():
-            self.__libs[k]["filename"] = "lib" + k + ".a"
-            self.__libs[k]["filerelpath"] = join_path(
-                "lib", self.__libs[k]["filename"]
-            )
-            self.__libs[k]["pcname"] = "oasis3-" + k + ".pc"
-            self.__libs[k]["pcrelpath"] = join_path(
-                "lib", "pkgconfig", self.__libs[k]["pcname"]
-            )
-            self.__libs[k]["pcpath"] = join_path(
-                self.__pkgdir, self.__libs[k]["pcname"]
-            )
-
-        # Uncomment to print package files and directories
-        # pprint(self.__libs)
-
+    # TODO: Remove this function when it is no longer required
     def url_for_version(self, version):
+        if self.spec.satisfies("@upstream"):
+            raise ValueError("url_for_version() called for version @upstream")
+
         return "https://github.com/ACCESS-NRI/oasis3-mct/tarball/{0}".format(version)
 
     def __create_pkgconfig(self, spec, prefix):
 
+        oasis_version = "2.0"
+        if self.spec.satisfies("@upstream"):
+            oasis_version = "5"
+
         mkdirp(self.__pkgdir)
-        for k in self.__libs.keys():
+        for k in self.__libs:
             text = f"""\
 prefix={prefix}
 exec_prefix=${{prefix}}
@@ -190,13 +82,14 @@ libdir=${{exec_prefix}}/lib
 includedir=${{prefix}}/include
 
 Name: {k}
-Description: OASIS3-MCT 2.0 {k} Library for Fortran
-Version: 2.0
+Description: OASIS3-MCT {oasis_version} {k} Library for Fortran
+Version: {oasis_version}
 Libs: -L${{libdir}} -l{k}
 Cflags: -I${{includedir}}/{k}
 """
 
-            with open(self.__libs[k]["pcpath"], "w", encoding="utf-8") as pc:
+            pcpath = join_path(self.__pkgdir, "oasis3-" + k + ".pc")
+            with open(pcpath, "w", encoding="utf-8") as pc:
                 nchars_written = pc.write(text)
 
             if nchars_written < len(text):
@@ -224,7 +117,7 @@ Cflags: -I${{includedir}}/{k}
         CFLAGS = ""
         if "@access-esm1.5" in self.spec:
             NCI_OPTIM_FLAGS = "-g3 -O2 -xCORE-AVX512 -debug all -check none -traceback"
-            
+
         if "+deterministic" in self.spec:
             NCI_OPTIM_FLAGS = "-g0 -O0 -axCORE-AVX2 -debug none -check none"
             CFLAGS = "-g0"
@@ -343,29 +236,13 @@ CCFLAGS   = $(CCFLAGS_1) $(INCPSMILE) $(CPPDEF)
 
     def install(self, spec, prefix):
 
-        mkdirp(prefix.lib.pkgconfig)
+        install_tree(self.__libdir, prefix.lib)
 
-        src_dst = []
-        for libname in self.__libs.keys():
+        for libname in self.__libs:
+            srcdir = join_path(self.__incdir, libname)
+            dstdir = join_path(prefix.include, libname)
+            mkdirp(dstdir)
+            h = find_all_headers(srcdir)
+            for headerfile in h.headers:
+                install(headerfile, dstdir)
 
-            mkdirp(join_path(prefix.include, libname))
-
-            for f in [
-                self.__libs[libname]["filerelpath"],
-                self.__libs[libname]["pcrelpath"],
-            ]:
-                src_dst.append(
-                    (join_path(self.__builddir, f), join_path(prefix, f))
-                )
-
-            for f in self.__libs[libname]["incfiles"]:
-                src_dst.append(
-                    (
-                        join_path(self.__incdir, libname, f),
-                        join_path(prefix.include, libname, f),
-                    )
-                )
-
-        # Uncomment to print source and destination tuples
-        # pprint(src_dst)
-        [install(s, d) for (s, d) in src_dst]
