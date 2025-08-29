@@ -17,20 +17,17 @@ class Oasis3Mct(MakefilePackage):
 
     maintainers("harshula", "penguian")
 
-    version("access-om2", branch="master", preferred=True)
+    version("stable", branch="master", preferred=True)
+    # TODO: Remove the "access-om2" once it is no longer being used anywhere
+    version("access-om2", branch="master")
     version("access-esm1.5", branch="access-esm1.5")
 
     variant("deterministic", default=False, description="Deterministic build.")
     variant("optimisation_report", default=False, description="Generate optimisation reports.")
 
-    with when("@:access-esm0,access-esm2:"):
-        depends_on("netcdf-fortran@4.5.2:")
-        # Depend on virtual package "mpi".
-        depends_on("mpi")
-    with when("@access-esm1.5"):
-        depends_on("netcdf-fortran@4.5.1:")
-        # Depend on "openmpi".
-        depends_on("openmpi")
+    depends_on("netcdf-fortran@4.5.2:")
+    # Depend on virtual package "mpi".
+    depends_on("mpi")
 
     phases = ["edit", "build", "install"]
 
@@ -250,7 +247,7 @@ f90         = $(F90)
 f           = $(F90)
 """
 
-        config["gcc"] = f"""
+        config["gcc"] = """
 # Compiling and other commands
 MAKE        = make
 F90         = mpif90 -Wall -fallow-argument-mismatch
@@ -294,7 +291,7 @@ endif
         # Add support for the ifx compiler
         config["oneapi"] = config["intel"]
 
-        config["post"] = f"""
+        config["post"] = """
 f90FLAGS_1  = $(F90FLAGS_1)
 FFLAGS_1    = $(F90FLAGS_1)
 fFLAGS_1    = $(F90FLAGS_1)
