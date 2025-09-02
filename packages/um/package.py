@@ -248,7 +248,7 @@ class Um(Package):
             ref_value = spec.variants[ref_var].value
             tty.info(f"The spec sets {ref_var}={ref_value}")
             if sources_value == "none":
-                # In this case, the spec value for sources_var  not
+                # In this case, the spec value for sources_var has not
                 # overridden the model configuration value, if any.
                 if sources_var not in config_env:
                     tty.info(
