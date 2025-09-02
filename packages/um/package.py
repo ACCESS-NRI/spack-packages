@@ -67,6 +67,11 @@ class Um(Package):
         "socrates_rev",
         "ukca_rev")
 
+    # Git reference variants.
+    _ref_variants = (
+        "jules_ref",
+        "um_ref")
+
     # Other string variants.
     _other_variants = (
         "casim_sources",
@@ -105,7 +110,7 @@ class Um(Package):
         "um_sources"
         )
 
-    _str_variants = _rev_variants + _other_variants
+    _str_variants = _rev_variants + _ref_variants + _other_variants
 
     for var in _str_variants:
         variant(var, default="none", description=var, values="*", multi=False)
@@ -157,13 +162,16 @@ class Um(Package):
             "fcm_name": "netcdf",
             "fcm_ld_flags": "-lnetcdff -lnetcdf"}}
 
-    # Optional JULES sources to be used in build (i.e. AM3)
-    jules_git_url = "https://github.com/ACCESS-NRI/JULES.git"
-    variant("jules_sources", default="NA", values=str, multi=False, description=f"Optional JULES sources branch/tag/commit from {jules_git_url}.")
-    
-    # Optional UM sources to be used in build (i.e. AM3)
-    um_git_url = "https://github.com/ACCESS-NRI/UM.git"
-    variant("um_sources", default="NA", values=str, multi=False, description=f"Optional UM sources branch/tag/commit from {um_git_url}.")
+    # Optional Github sources to be used in build (i.e. AM3)
+    _resource_cfg = {
+        "jules_ref": {
+            "sources_var": "jules_sources",
+            "git_url": "https://github.com/ACCESS-NRI/JULES.git",
+            "subdir": "jules"},
+        "um_ref": {
+            "sources_var": "um_sources",
+            "git_url": "https://github.com/ACCESS-NRI/UM.git",
+            "subdir": "um"}}
 
 
     def _config_file_path(self, model):
@@ -223,6 +231,44 @@ class Um(Package):
                         f"The {model} model sets {var}={model_value} but "
                         f"the spec sets {var}={spec_value}. "
                         f"The value {spec_value} will be used.")
+
+
+        def check_model_vs_sources_vs_ref(
+            model,
+            config_env,
+            sources_var,
+            ref_var,
+            resource_path):
+            """
+            Check the values set by the variants sources_var and ref_var
+            against any existing sources value in config_env, and remind
+            that the sources value will be overridden by resource_path.
+            """
+            sources_value = spec.variants[sources_var].value
+            ref_value = spec.variants[ref_var].value
+            tty.info(f"The spec sets {ref_var}={ref_value}")
+            if sources_value == "none":
+                # In this case, the spec value for sources_var has not
+                # overridden the model configuration value, if any.
+                if sources_var not in config_env:
+                    tty.info(
+                        f"The {model} model does not specify {sources_var}.")
+                else:  # sources_var in config_env
+                    env_value = config_env[sources_var]
+                    if env_value == "":
+                        tty.info(
+                            f"The {model} model sets {sources_var}=''.")
+                    else:
+                        tty.warn(
+                            f"The {model} model sets "
+                            f"{sources_var}={env_value}.")
+            else:  # sources_value != "none"
+                # In this case, the spec value for sources_var has already
+                # overridden the model configuration value, if any.
+                assert sources_value == config_env[sources_var]
+                tty.warn(f"The spec sets {sources_var}={sources_value}.")
+            tty.info(
+                f"The value {resource_path} will be used for {sources_var}.")
 
 
         spec = self.spec
@@ -303,15 +349,35 @@ class Um(Package):
                 linker_args = self._get_linker_args(spec, var)
                 config_env[f"ldflags_{fcm_name}_on"] = linker_args
 
-        # Add JULES sources to the environment if requested
-        resource_dir = join_path(self.stage.source_path, "resources")
-        if spec.variants["jules_sources"].value != "NA":
-            config_env["jules_sources"] = join_path(resource_dir, "jules")
-        
-        # Add UM sources to the environment if requested
-        if spec.variants["um_sources"].value != "NA":
-            config_env["um_sources"] = join_path(resource_dir, "um")
-            
+        # The _resource_cfg is relevant only for models that use Github URLs.
+        # Only one model so far, but this may change in future.
+        if model == "vn13p1-am":
+            # Get the root to the resources
+            resources_root = join_path(self.stage.source_path, "resources")
+            # Add sources to the environment if requested
+            for ref_var in self._resource_cfg:
+                ref_value = spec.variants[ref_var].value
+                if ref_value != "none":
+                    sources_var = self._resource_cfg[ref_var]["sources_var"]
+                    subdir = self._resource_cfg[ref_var]["subdir"]
+                    resource_path = join_path(resources_root, subdir)
+                    # Output appropriate warning messages.
+                    check_model_vs_sources_vs_ref(
+                        model,
+                        config_env,
+                        sources_var,
+                        ref_var,
+                        resource_path)
+                    config_env[sources_var] = resource_path
+        else:
+            # The model does not use Github URLs and ignores the ref variants.
+            for ref_var in self._resource_cfg:
+                ref_value = spec.variants[ref_var].value
+                if ref_value != "none":
+                    tty.warn(
+                        f"The {model} model ignores the variant "
+                        f"{ref_var}={ref_value}.")
+
         # Set environment variables based on config_env.
         for key in config_env:
             tty.info(f"{key}={config_env[key]}")
@@ -329,26 +395,30 @@ class Um(Package):
 
 
     def patch(self):
-        """Patch the staging directory just before building."""
-        
-        # Get the root to the resources
-        resources_root = join_path(self.stage.source_path, "resources")
+        """
+        Patch the staging directory just before building.
+        """
 
-        # Optional UM sources (i.e. AM3)
-        if self.spec.variants["um_sources"].value != "NA":
-            self._dynamic_resource(
-                url=self.um_git_url,
-                ref=self.spec.variants["um_sources"].value,
-                dst_dir=join_path(resources_root, "um")
-            )
+        # This patch is relevant only for models that use Github URLs.
+        # Only one model so far, but this may change in future.
+        spec = self.spec
+        model = spec.variants["model"].value
+        if model == "vn13p1-am":
+            # Get the root to the resources
+            resources_root = join_path(self.stage.source_path, "resources")
 
-        # Optional JULES sources (i.e. AM3)
-        if self.spec.variants["jules_sources"].value != "NA":
-            self._dynamic_resource(
-                url=self.jules_git_url,
-                ref=self.spec.variants["jules_sources"].value,
-                dst_dir=join_path(resources_root, "jules")
-            )
+            # Optional sources (i.e. AM3)
+            for ref_var in self._resource_cfg:
+                ref_value = spec.variants[ref_var].value
+                if ref_value != "none":
+                    git_url = self._resource_cfg[ref_var]["git_url"]
+                    subdir = self._resource_cfg[ref_var]["subdir"]
+                    resource_path = join_path(resources_root, subdir)
+                    self._dynamic_resource(
+                        url=git_url,
+                        ref=ref_value,
+                        dst_dir=resource_path)
+
 
     def build(self, spec, prefix):
         """
@@ -380,7 +450,8 @@ class Um(Package):
 
 
     def _dynamic_resource(self, url, ref, dst_dir):
-        """Check out resource dynamically based on a branch/tag/commit.
+        """
+        Check out resource dynamically based on a branch/tag/commit.
 
         Parameters
         ----------
@@ -406,5 +477,5 @@ class Um(Package):
             git("clone", url, dst_dir)
             with working_dir(dst_dir):
                 git("checkout", ref)
-        
+
         tty.msg(f"{ref} checked out from {url} to {dst_dir}")
