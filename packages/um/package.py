@@ -248,8 +248,8 @@ class Um(Package):
             ref_value = spec.variants[ref_var].value
             tty.info(f"The spec sets {ref_var}={ref_value}")
             if sources_value == "none":
-                # In this case, the spec has not overridden any value
-                # in the model configuration.
+                # In this case, the spec value for sources_var  not
+                # overridden the model configuration value, if any.
                 if sources_var not in config_env:
                     tty.info(
                         f"The {model} model does not specify {sources_var}.")
@@ -263,8 +263,8 @@ class Um(Package):
                             f"The {model} model sets "
                             f"{sources_var}={env_value}.")
             else:  # sources_value != "none"
-                # In this case, the spec has already overridden any value
-                # in the model configuration.
+                # In this case, the spec value for sources_var has already
+                # overridden the model configuration value, if any.
                 assert sources_value == config_env[sources_var]
                 tty.warn(f"The spec sets {sources_var}={sources_value}.")
             tty.info(
@@ -408,15 +408,15 @@ class Um(Package):
             resources_root = join_path(self.stage.source_path, "resources")
 
             # Optional sources (i.e. AM3)
-            for var in self._resource_cfg:
-                spec_value = spec.variants[var].value
-                if spec_value != "none":
-                    git_url = self._resource_cfg[var]["git_url"]
-                    subdir = self._resource_cfg[var]["subdir"]
+            for ref_var in self._resource_cfg:
+                ref_value = spec.variants[ref_var].value
+                if ref_value != "none":
+                    git_url = self._resource_cfg[ref_var]["git_url"]
+                    subdir = self._resource_cfg[ref_var]["subdir"]
                     resource_path = join_path(resources_root, subdir)
                     self._dynamic_resource(
                         url=git_url,
-                        ref=spec_value,
+                        ref=ref_value,
                         dst_dir=resource_path)
 
 
