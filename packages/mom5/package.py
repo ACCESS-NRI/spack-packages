@@ -4,9 +4,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import install, join_path, mkdirp
 from spack.build_systems import cmake, makefile
 from spack.version.version_types import GitVersion, StandardVersion
+from spack.package import *
+
 
 class Mom5(CMakePackage, MakefilePackage):
     """MOM is a numerical ocean model based on the hydrostatic primitive equations."""

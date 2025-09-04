@@ -7,7 +7,8 @@
 
 # Based on packages/cice5/package.py and other sources noted below.
 
-from spack.package import install, join_path, mkdirp
+from spack.package import *
+
 
 # https://spack.readthedocs.io/en/latest/build_systems/makefilepackage.html
 class Cice4(MakefilePackage):
