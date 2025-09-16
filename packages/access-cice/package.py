@@ -36,6 +36,12 @@ class AccessCice(CMakePackage):
         description="CICE IO Method"
     )
 
+    variant("driver",
+            default="none",
+            values=("nuopc/cmeps", "access/cmeps", "standalone/cice"),
+            description="CICE driver path"
+            )
+
     depends_on("access3-share", when="+access3") 
     depends_on("cmake@3.18:", type="build")
     depends_on("mpi")
@@ -51,6 +57,7 @@ class AccessCice(CMakePackage):
             self.define_from_variant("CICE_OPENMP", "openmp"),
             self.define_from_variant("CICE_IO", "io_type"),
             self.define_from_variant("CICE_ACCESS3", "access3"),
+            self.define_from_variant("CICE_DRIVER", "driver")
         ]
 
         return args
