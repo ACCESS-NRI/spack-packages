@@ -53,8 +53,6 @@ class AccessMocsy(CMakePackage, MakefilePackage):
 
     depends_on("mpi")
 
-    flag_handler = build_system_flags
-
 
 class CMakeBuilder(cmake.CMakeBuilder):
 
