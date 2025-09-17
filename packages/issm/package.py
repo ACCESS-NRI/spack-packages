@@ -117,16 +117,15 @@ class Issm(AutotoolsPackage):
     def setup_build_environment(self, env):
         # OpenMP support
         if "+openmp" in self.spec:
-            omp_flag = self.compiler.openmp_flag  # e.g. "-fopenmp"
             for var in ("CFLAGS", "CXXFLAGS", "FFLAGS", "LDFLAGS"):
-                env.append_flags(var, omp_flag)
+                env.append_flags(var, self.compiler.openmp_flag)
 
         # Automatic Differentiation extras
         if "+ad" in self.spec:
             # CoDiPack's performance tips: force inlining & keep full symbols
             env.append_flags(
                 "CXXFLAGS",
-                f"-g -O3 -fPIC {self.compiler.cxx11_flag} -DCODI_ForcedInlines",
+                f"-g -O3 -fPIC {self.compiler.cxx11_flag} -DCODI_ForcedInlines", # https://issm.ess.uci.edu/trac/issm/wiki/totten#InstallingISSMwithCoDiPackAD
             )
 
     # --------------------------------------------------------------------
