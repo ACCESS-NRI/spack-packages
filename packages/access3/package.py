@@ -13,6 +13,7 @@ KNOWN_CONF = (
     "MOM6-CICE6",
     "CICE6-WW3",
     "MOM6-CICE6-WW3",
+    "MOM6-CICE6-UM13",
 )
 
 class Access3(CMakePackage):
@@ -64,6 +65,8 @@ class Access3(CMakePackage):
             depends_on("access-mom6@2025.02.000: +access3", when=f"configurations={conf}")
         if "WW3" in conf:
             depends_on("access-ww3@2025.03.0: +access3", when=f"configurations={conf}")
+        if "UM13" in conf:
+            depends_on("gcom@8.0", when=f"configurations={conf}")
 
     flag_handler = build_system_flags
 
