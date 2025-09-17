@@ -17,7 +17,7 @@ class Gcom4(Package):
     """
 
     homepage = "https://code.metoffice.gov.uk/trac/gcom"
-    git = "git@github.com:ACCESS-NRI/GCOM4.git"
+    git = "https://github.com/ACCESS-NRI/GCOM4.git"
 
     maintainers("penguian")
 
@@ -65,7 +65,7 @@ class Gcom4(Package):
                 r"-openmp", "-qopenmp",
                     join_path("fcm-make", "machines", f"{machine}.cfg"))
 
-            
+
     def build(self, spec, prefix):
         """
         Build the library.
@@ -99,4 +99,3 @@ class Gcom4(Package):
             join_path("build", "lib", "libgcom.a"),
             join_path(prefix.lib, "libgcom.a"))
         install_tree(join_path("build", "include"), prefix.include)
-

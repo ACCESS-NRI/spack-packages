@@ -5,7 +5,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import find_headers, find_libraries
+from spack.package import *
+
 
 # Based on upstream $spack/var/spack/repos/builtin/packages/fms/package.py
 class AccessFms(CMakePackage):
@@ -55,7 +56,10 @@ class AccessFms(CMakePackage):
     def libs(self):
         libraries = ["libfms_r4", "libfms_r8"]
         return find_libraries(
-            libraries, root=self.prefix, shared=False, recursive=True
+            libraries,
+            root=self.prefix,
+            shared=self.spec.variants.get("shared"),
+            recursive=True
         )
 
     def cmake_args(self):

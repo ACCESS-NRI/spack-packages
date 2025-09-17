@@ -5,7 +5,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import install, join_path, mkdirp
+from spack.package import *
+
 
 # https://spack.readthedocs.io/en/latest/build_systems/makefilepackage.html
 class Cice5(MakefilePackage):
@@ -21,6 +22,15 @@ class Cice5(MakefilePackage):
     version("access-esm1.6", branch="access-esm1.6")
 
     variant("deterministic", default=False, description="Deterministic build.")
+    # Support -fuse-ld=lld
+    # https://github.com/ACCESS-NRI/spack-packages/issues/255
+    variant(
+        "direct_ldflags",
+        default="none",
+        values="*",
+        multi=False,
+        description="Directly inject LDFLAGS into the Makefile",
+     )
     variant("optimisation_report", default=False, description="Generate optimisation reports.")
 
     # Depend on virtual package "mpi".
@@ -59,6 +69,11 @@ class Cice5(MakefilePackage):
                     [(spec[name].libs).ld_flags,
                     "-Wl,-rpath=" + join_path(spec[name].prefix, "lib")]
                    )
+
+    def get_variant_value(self, value):
+        if value == "none":
+            return ""
+        return value
 
     # The reason for the explicit -rpath is:
     # https://github.com/ACCESS-NRI/spack-packages/issues/14#issuecomment-1653651447
@@ -137,6 +152,7 @@ class Cice5(MakefilePackage):
         # TODO: https://github.com/ACCESS-NRI/ACCESS-OM/issues/12
         NCI_OPTIM_FLAGS = "-g3 -O2 -axCORE-AVX2 -debug all -check none -traceback -assume buffered_io"
         CFLAGS = "-c -O2"
+        LDFLAGS = self.get_variant_value(spec.variants["direct_ldflags"].value)
         if "+deterministic" in self.spec:
             NCI_OPTIM_FLAGS = "-g0 -O0 -axCORE-AVX2 -debug none -check none -assume buffered_io"
             CFLAGS = "-c -g0"
@@ -182,10 +198,10 @@ endif
         config["oneapi"] = config["intel"]
 
         # Copied from bld/Macros.nci
-        config["post"] = """
+        config["post"] = f"""
 MOD_SUFFIX := mod
 LD         := $(FC)
-LDFLAGS    := $(FFLAGS) -v
+LDFLAGS    := $(FFLAGS) -v {LDFLAGS}
 
 CPPDEFS :=  $(CPPDEFS) -DNXGLOB=$(NXGLOB) -DNYGLOB=$(NYGLOB) \
             -DNUMIN=$(NUMIN) -DNUMAX=$(NUMAX) \

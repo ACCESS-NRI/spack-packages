@@ -17,7 +17,7 @@ class Um7(Package):
     """
 
     homepage = "https://code.metoffice.gov.uk/trac/um"
-    git = "git@github.com:ACCESS-NRI/UM7.git"
+    git = "https://github.com/ACCESS-NRI/UM7.git"
 
     # https://code.metoffice.gov.uk/trac/um/wiki/PastReleases
     version("access-esm1.6", branch="dev-access-esm1.6", preferred=True)
@@ -179,13 +179,13 @@ tool::cpp                                          cpp
 tool::cppflags
 tool::cppkeys                                      {CPPKEYS}
 tool::fc                                           mpif90
-tool::fflags                                       {FO}  -g   -traceback  {FDEBUG} -V -i8 -r8      -fp-model precise {FFLAGS}
-tool::fflags::control::coupling::dump_received     {FO} {FG} {FTRACEBACK} {FDEBUG}            -mp1 -fp-model strict  {FFLAGS}
-tool::fflags::control::coupling::dump_sent         {FO} {FG} {FTRACEBACK} {FDEBUG}            -mp1 -fp-model strict  {FFLAGS}
-tool::fflags::control::coupling::oasis3_atmos_init {FO} {FG} {FTRACEBACK} {FDEBUG}    -i4 -r8 -mp1 -fp-model strict  {FFLAGS}
-tool::fflags::control::top_level::atm_step         -O0   -g  {FTRACEBACK} {FDEBUG} -V -i8 -r8 -mp1 -fp-model strict  {FFLAGS}
-tool::fflags::control::top_level::set_atm_pointers -O0   -g   -traceback  {FDEBUG}    -i8 -r8      -fp-model strict -ftz -std95
-tool::fflags::control::top_level::u_model          -O0   -g  {FTRACEBACK} {FDEBUG} -V -i8 -r8 -mp1 -fp-model strict  {FFLAGS}
+tool::fflags                                       {FO}  -g   -traceback  {FDEBUG} -i8 -r8      -fp-model precise {FFLAGS}
+tool::fflags::control::coupling::dump_received     {FO} {FG} {FTRACEBACK} {FDEBUG}         -mp1 -fp-model strict  {FFLAGS}
+tool::fflags::control::coupling::dump_sent         {FO} {FG} {FTRACEBACK} {FDEBUG}         -mp1 -fp-model strict  {FFLAGS}
+tool::fflags::control::coupling::oasis3_atmos_init {FO} {FG} {FTRACEBACK} {FDEBUG} -i4 -r8 -mp1 -fp-model strict  {FFLAGS}
+tool::fflags::control::top_level::atm_step         -O0   -g  {FTRACEBACK} {FDEBUG} -i8 -r8 -mp1 -fp-model strict  {FFLAGS}
+tool::fflags::control::top_level::set_atm_pointers -O0   -g   -traceback  {FDEBUG} -i8 -r8      -fp-model strict -ftz -std95
+tool::fflags::control::top_level::u_model          -O0   -g  {FTRACEBACK} {FDEBUG} -i8 -r8 -mp1 -fp-model strict  {FFLAGS}
 tool::fpp                                          cpp
 tool::fppflags                                     -P -traditional
 tool::fppkeys                                      {CPPKEYS}
@@ -219,4 +219,3 @@ tool::ldflags                                      {FOBLANK} -g -traceback {FDEB
         install(
             join_path(self._bld_path, "bin", um_exe),
             join_path(prefix.bin, um_exe))
-

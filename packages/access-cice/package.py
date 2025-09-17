@@ -18,8 +18,10 @@ class AccessCice(CMakePackage):
 
     license("BSD-3-Clause", checked_by="anton-seaice")
 
-    version("CICE6.6.0-3", commit="2c444bd")
-    version("CICE6.6.0-1", commit="964a445")
+    version("stable", branch="CICE6.6.1-x", preferred=True)  # need to update branch for new major versions
+    version("CICE6.6.1-0", tag="CICE6.6.1-0", commit="6bceb915e232f46a8c84992a3176b98ee0acd8b5")
+    version("CICE6.6.0-3", tag="CICE6.6.0-3", commit="2c444bd9d2fad1f1df4d855debc2801d4b23487d")
+    version("CICE6.6.0-1", tag="CICE6.6.0-1", commit="964a4455db3127d0c4681e6533f6d9733a5e8255")
 
     variant("openmp", default=False, description="Enable OpenMP")
     variant(

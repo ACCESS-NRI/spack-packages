@@ -9,6 +9,7 @@
 import configparser
 from spack.package import *
 import llnl.util.tty as tty
+import spack.util.git
 
 class Um(Package):
     """
@@ -66,6 +67,11 @@ class Um(Package):
         "socrates_rev",
         "ukca_rev")
 
+    # Git reference variants.
+    _ref_variants = (
+        "jules_ref",
+        "um_ref")
+
     # Other string variants.
     _other_variants = (
         "casim_sources",
@@ -101,8 +107,10 @@ class Um(Package):
         "stash_version",
         "timer_version",
         "ukca_sources",
-        "um_sources")
-    _str_variants = _rev_variants + _other_variants
+        "um_sources"
+        )
+
+    _str_variants = _rev_variants + _ref_variants + _other_variants
 
     for var in _str_variants:
         variant(var, default="none", description=var, values="*", multi=False)
@@ -110,6 +118,10 @@ class Um(Package):
     # The 'site=nci-gadi' variant of fcm defines the keywords
     # used by the FCM configuration of UM.
     depends_on("fcm site=nci-gadi", type="build")
+
+    # Include openmpi directly https://github.com/ACCESS-NRI/spack-packages/issues/293
+    variant("mpi", default=True, description="Build with MPI")
+    depends_on("mpi", when="+mpi", type=("build", "link", "run"))
 
     # For GCOM versions, see
     # https://code.metoffice.gov.uk/trac/gcom/wiki/Gcom_meto_installed_versions
@@ -150,6 +162,17 @@ class Um(Package):
             "fcm_name": "netcdf",
             "fcm_ld_flags": "-lnetcdff -lnetcdf"}}
 
+    # Optional Github sources to be used in build (i.e. AM3)
+    _resource_cfg = {
+        "jules_ref": {
+            "sources_var": "jules_sources",
+            "git_url": "https://github.com/ACCESS-NRI/JULES.git",
+            "subdir": "jules"},
+        "um_ref": {
+            "sources_var": "um_sources",
+            "git_url": "https://github.com/ACCESS-NRI/UM.git",
+            "subdir": "um"}}
+
 
     def _config_file_path(self, model):
         """
@@ -177,6 +200,15 @@ class Um(Package):
         return " ".join(ld_flags + rpaths)
 
 
+    def setup_run_environment(self, env):
+        """
+        Set the built path into the environment.
+        """
+        # Add the built executables to the path
+        env.prepend_path("PATH", join_path(self.prefix, "build-atmos", "bin"))
+        env.prepend_path("PATH", join_path(self.prefix, "build-recon", "bin"))
+
+
     def setup_build_environment(self, env):
         """
         Set environment variables to their required values.
@@ -199,6 +231,44 @@ class Um(Package):
                         f"The {model} model sets {var}={model_value} but "
                         f"the spec sets {var}={spec_value}. "
                         f"The value {spec_value} will be used.")
+
+
+        def check_model_vs_sources_vs_ref(
+            model,
+            config_env,
+            sources_var,
+            ref_var,
+            resource_path):
+            """
+            Check the values set by the variants sources_var and ref_var
+            against any existing sources value in config_env, and remind
+            that the sources value will be overridden by resource_path.
+            """
+            sources_value = spec.variants[sources_var].value
+            ref_value = spec.variants[ref_var].value
+            tty.info(f"The spec sets {ref_var}={ref_value}")
+            if sources_value == "none":
+                # In this case, the spec value for sources_var has not
+                # overridden the model configuration value, if any.
+                if sources_var not in config_env:
+                    tty.info(
+                        f"The {model} model does not specify {sources_var}.")
+                else:  # sources_var in config_env
+                    env_value = config_env[sources_var]
+                    if env_value == "":
+                        tty.info(
+                            f"The {model} model sets {sources_var}=''.")
+                    else:
+                        tty.warn(
+                            f"The {model} model sets "
+                            f"{sources_var}={env_value}.")
+            else:  # sources_value != "none"
+                # In this case, the spec value for sources_var has already
+                # overridden the model configuration value, if any.
+                assert sources_value == config_env[sources_var]
+                tty.warn(f"The spec sets {sources_var}={sources_value}.")
+            tty.info(
+                f"The value {resource_path} will be used for {sources_var}.")
 
 
         spec = self.spec
@@ -279,6 +349,35 @@ class Um(Package):
                 linker_args = self._get_linker_args(spec, var)
                 config_env[f"ldflags_{fcm_name}_on"] = linker_args
 
+        # The _resource_cfg is relevant only for models that use Github URLs.
+        # Only one model so far, but this may change in future.
+        if model == "vn13p1-am":
+            # Get the root to the resources
+            resources_root = join_path(self.stage.source_path, "resources")
+            # Add sources to the environment if requested
+            for ref_var in self._resource_cfg:
+                ref_value = spec.variants[ref_var].value
+                if ref_value != "none":
+                    sources_var = self._resource_cfg[ref_var]["sources_var"]
+                    subdir = self._resource_cfg[ref_var]["subdir"]
+                    resource_path = join_path(resources_root, subdir)
+                    # Output appropriate warning messages.
+                    check_model_vs_sources_vs_ref(
+                        model,
+                        config_env,
+                        sources_var,
+                        ref_var,
+                        resource_path)
+                    config_env[sources_var] = resource_path
+        else:
+            # The model does not use Github URLs and ignores the ref variants.
+            for ref_var in self._resource_cfg:
+                ref_value = spec.variants[ref_var].value
+                if ref_value != "none":
+                    tty.warn(
+                        f"The {model} model ignores the variant "
+                        f"{ref_var}={ref_value}.")
+
         # Set environment variables based on config_env.
         for key in config_env:
             tty.info(f"{key}={config_env[key]}")
@@ -293,6 +392,32 @@ class Um(Package):
         Return the build directory.
         """
         return join_path(self.stage.source_path, "..", "spack-build")
+
+
+    def patch(self):
+        """
+        Patch the staging directory just before building.
+        """
+
+        # This patch is relevant only for models that use Github URLs.
+        # Only one model so far, but this may change in future.
+        spec = self.spec
+        model = spec.variants["model"].value
+        if model == "vn13p1-am":
+            # Get the root to the resources
+            resources_root = join_path(self.stage.source_path, "resources")
+
+            # Optional sources (i.e. AM3)
+            for ref_var in self._resource_cfg:
+                ref_value = spec.variants[ref_var].value
+                if ref_value != "none":
+                    git_url = self._resource_cfg[ref_var]["git_url"]
+                    subdir = self._resource_cfg[ref_var]["subdir"]
+                    resource_path = join_path(resources_root, subdir)
+                    self._dynamic_resource(
+                        url=git_url,
+                        ref=ref_value,
+                        dst_dir=resource_path)
 
 
     def build(self, spec, prefix):
@@ -322,3 +447,35 @@ class Um(Package):
             install_bin_dir = join_path(prefix, bin_dir)
             mkdirp(install_bin_dir)
             install_tree(build_bin_dir, install_bin_dir)
+
+
+    def _dynamic_resource(self, url, ref, dst_dir):
+        """
+        Check out resource dynamically based on a branch/tag/commit.
+
+        Parameters
+        ----------
+        url : str
+            Git URL.
+        ref : str
+            branch, commit or tag
+        dst_dir : str
+            Checkout path.
+        """
+
+        # Create the destination directory
+        mkdirp(dst_dir)
+
+        git = spack.util.git.git()
+
+        # Attempt to check out branch to dir
+        try:
+            tty.msg(f"Attempting to checkout branch {ref}")
+            git("clone", "--depth", "1", "--branch", ref, url, dst_dir)
+        except ProcessError:
+            tty.warn(f"ref '{ref}' may be a commit/tag, retrying.")
+            git("clone", url, dst_dir)
+            with working_dir(dst_dir):
+                git("checkout", ref)
+
+        tty.msg(f"{ref} checked out from {url} to {dst_dir}")

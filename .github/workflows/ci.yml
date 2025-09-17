@@ -1,0 +1,147 @@
+name: CI
+on:
+  pull_request:
+    paths:
+      - packages/**
+  workflow_dispatch:
+    inputs:
+      packages-to-test:
+        description: 'Packages to test (space-separated)'
+        required: true
+        type: string
+        default: 'ALL'
+      spack-packages-ref:
+        description: 'spack-packages ref to use'
+        required: true
+        type: string
+      spack-config-ref:
+        description: 'spack-config ref to use'
+        required: true
+        type: string
+      spack-ref:
+        description: 'spack ref to use'
+        required: true
+        type: string
+jobs:
+  setup-ci:
+    name: Setup CI
+    runs-on: ubuntu-latest
+    env:
+      # These defaults can be overridden by the inputs (if the trigger is a workflow_dispatch)
+      DEFAULT_SPACK_REF: 'releases/v0.22'
+      DEFAULT_SPACK_CONFIG_REF: 'main'
+      DEFAULT_SPACK_PACKAGES_REF: ${{ github.event.pull_request.head.sha }}
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      spack-packages-ref: ${{ steps.set-refs.outputs.spack-packages-ref }}
+      spack-config-ref: ${{ steps.set-refs.outputs.spack-config-ref }}
+      spack-ref: ${{ steps.set-refs.outputs.spack-ref }}
+    steps:
+      - name: Checkout spack-packages
+        uses: actions/checkout@v4
+
+      - name: PR - Get packages
+        id: set-matrix-pr
+        if: github.event_name == 'pull_request'
+        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c  # v46.0.5
+        with:
+          # We only care about the directory names under packages/ - since they are also the package names
+          # and we want to find changes to the package.py files in those directories
+          dir_names: true
+          path: ./packages
+          files: '*/package.py'
+
+      - name: Dispatch - Get packages
+        id: set-matrix-dispatch
+        if: github.event_name == 'workflow_dispatch'
+        # Either get all packages defined (all subfolders under packages/) or use the input
+        run: |
+          if [[ "${{ inputs.packages-to-test }}" == "ALL" ]]; then
+            pkgs=$(find packages/ -mindepth 1 -maxdepth 1 -type d -printf '%P ')
+          else
+            pkgs="${{ inputs.packages-to-test }}"
+          fi
+
+
+          # Validate that all packages exist
+          error=false
+          for pkg in $pkgs; do
+            if [ ! -f "packages/$pkg/package.py" ]; then
+              echo "::error::packages/$pkg/package.py does not exist. Check spelling or if the package is defined."
+              error=true
+            fi
+          done
+
+          if [ "$error" = true ]; then
+            exit 1
+          fi
+
+          echo "pkgs=$pkgs" >> $GITHUB_OUTPUT
+
+      - name: Setup Matrix
+        id: set-matrix
+        # Get all packages that will be tested, then
+        # Get file paths to manifests for each package, and a template, then finally
+        # Convert into a JSON array for the matrix, one of the form:
+        # [
+        #   {"filepath": ".github/build-ci/manifests/mom5/intel.spack.yaml.j2", "template_value": "mom5"},
+        #   {"filepath": ".github/build-ci/manifests/mom5/amd.spack.yaml.j2", "template_value": "mom5"},
+        #   {"filepath": ".github/build-ci/manifests/cice5/spack.yaml.j2", "template_value": "cice5"},
+        #   ...
+        # ]
+        run: |
+          pkgs="${{ steps.set-matrix-pr.outputs.all_changed_files || steps.set-matrix-dispatch.outputs.pkgs }}"
+
+          for pkg in $pkgs; do
+            # We want each manifest to have an associated injection of {{ package }} to $pkg
+            template_value="$pkg"
+
+            if [ -d ".github/build-ci/manifests/$pkg" ]; then  # Look for specific manifests for the package
+              # We space-separate the paths as we later use them in a for loop
+              manifest_paths=$(find .github/build-ci/manifests/$pkg -iname '*.j2' -type f -printf '%p ')
+            fi
+
+            if [[ -z "$manifest_paths" ]]; then  # Use the default templates if no specific manifests exist for the package
+              # Similarly, space-separate the paths for a later for loop. Default manifests are always directly under .github/build-ci/manifests
+              manifest_paths=$(find .github/build-ci/manifests/ -maxdepth 1 -type f -iname '*.j2' -printf '%p ')
+            fi
+
+            for manifest_path in $manifest_paths; do
+              json_entry=$(printf '{"filepath": "%s", "template_value": "%s"}' "$manifest_path" "$template_value")
+              json_entries+="${json_entry},"
+            done
+            unset manifest_paths
+          done
+
+          echo "$json_entries"
+
+          # Remove the trailing comma and wrap in square brackets
+          echo "matrix=[${json_entries%,}]" >> $GITHUB_OUTPUT
+
+      - name: Set refs
+        id: set-refs
+        run: |
+          echo "spack-packages-ref=${{  inputs.spack-packages-ref || env.DEFAULT_SPACK_PACKAGES_REF }}" >> $GITHUB_OUTPUT
+          echo "spack-config-ref=${{ inputs.spack-config-ref || env.DEFAULT_SPACK_CONFIG_REF }}" >> $GITHUB_OUTPUT
+          echo "spack-ref=${{ inputs.spack-ref || env.DEFAULT_SPACK_REF }}" >> $GITHUB_OUTPUT
+
+  ci:
+    name: CI
+    needs:
+      - setup-ci
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        package: ${{ fromJson(needs.setup-ci.outputs.matrix) }}
+    uses: access-nri/build-ci/.github/workflows/ci.yml@v2
+    with:
+      spack-manifest-path: ${{ matrix.package.filepath }}
+      spack-manifest-data-path: .github/build-ci/data/standard_definitions.json
+      spack-manifest-data-pairs: |-
+        package ${{ matrix.package.template_value }}
+      spack-packages-ref: ${{ needs.setup-ci.outputs.spack-packages-ref }}
+      spack-config-ref: ${{ needs.setup-ci.outputs.spack-config-ref }}
+      spack-ref: ${{ needs.setup-ci.outputs.spack-ref }}
+    secrets:
+      spack-install-command-pat: ${{ secrets.SPACK_INSTALL_COMMAND_PAT }}
