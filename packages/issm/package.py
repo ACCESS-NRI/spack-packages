@@ -77,9 +77,7 @@ class Issm(AutotoolsPackage):
     depends_on("petsc~examples+metis+mumps+scalapack", when="~ad")
     depends_on("parmetis")
     depends_on("metis")
-
     depends_on("mumps~openmp", when="~openmp")
-
     depends_on("mumps+openmp", when="+openmp")
     depends_on("scalapack")
     # Note: ISSM's MUMPS support is not compatible with the Spack-provided
