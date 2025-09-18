@@ -53,8 +53,6 @@ class AccessGenericTracers(CMakePackage):
         depends_on("access-mocsy")
         depends_on("access-fms", when="+use_access_fms")
 
-    flag_handler = build_system_flags
-
     # TODO: We should try to remove this. The responsibility for including
     #       internal library dependencies for linking purposes should
     #       be in the source package's build system.
