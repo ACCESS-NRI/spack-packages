@@ -13,14 +13,13 @@ class M1qn3(MakefilePackage):
     """Minimise functions depending on a very large number of variables."""
 
     homepage = "https://who.rocq.inria.fr/Jean-Charles.Gilbert/modulopt/optimization-routines/m1qn3/m1qn3.html"
-    url = "https://issm.ess.uci.edu/files/externalpackages/m1qn3-3.3-distrib.tgz"
 
     version("3.3", sha256="27c6a8f56a4080420c25ffb0743e3dece7c57cc1740776936f220b4ed28b89d9")
 
     patch("m1qn3.patch")
 
     def url_for_version(self, version):
-        url = "https://issm.ess.uci.edu/files/externalpackages/m1qn3-{0}-distrib.tgz"
+        url = "https://github.com/ISSMteam/ExternalPackages/raw/refs/heads/main/m1qn3-{0}-distrib.tgz"
         return url.format(version)
 
     def edit(self, spec, prefix):
