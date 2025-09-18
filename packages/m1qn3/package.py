@@ -19,10 +19,6 @@ class M1qn3(MakefilePackage):
 
     patch("m1qn3.patch")
 
-    def url_for_version(self, version):
-        url = "https://github.com/ISSMteam/ExternalPackages/raw/refs/heads/main/m1qn3-{0}-distrib.tgz"
-        return url.format(version)
-
     def edit(self, spec, prefix):
         with open("Makefile", "w") as f:
             f.write(f"""
