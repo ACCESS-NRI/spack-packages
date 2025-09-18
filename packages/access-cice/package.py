@@ -37,7 +37,7 @@ class AccessCice(CMakePackage):
     )
 
     variant("driver",
-            default="none",
+            default="access/cmeps",
             values=("nuopc/cmeps", "access/cmeps", "standalone/cice"),
             description="CICE driver path"
             )
