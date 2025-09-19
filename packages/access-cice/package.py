@@ -37,8 +37,8 @@ class AccessCice(CMakePackage):
     )
 
     variant("driver",
-            default="access/cmeps",
-            values=("nuopc/cmeps", "access/cmeps", "standalone/cice"),
+            default="none",
+            values=("none", "nuopc/cmeps", "access/cmeps", "standalone/cice"),
             description="CICE driver path"
             )
 
@@ -57,7 +57,9 @@ class AccessCice(CMakePackage):
             self.define_from_variant("CICE_OPENMP", "openmp"),
             self.define_from_variant("CICE_IO", "io_type"),
             self.define_from_variant("CICE_ACCESS3", "access3"),
-            self.define_from_variant("CICE_DRIVER", "driver")
         ]
+
+        if self.spec.variants["driver"].value != "none":
+            args.append(self.define_from_variant("CICE_DRIVER", "driver"))
 
         return args
