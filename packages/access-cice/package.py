@@ -40,7 +40,7 @@ class AccessCice(CMakePackage):
             default="none",
             values=("none", "nuopc/cmeps", "access/cmeps", "standalone/cice"),
             description="CICE driver path"
-            )
+    )
 
     depends_on("access3-share", when="+access3") 
     depends_on("cmake@3.18:", type="build")
@@ -61,5 +61,6 @@ class AccessCice(CMakePackage):
 
         if self.spec.variants["driver"].value != "none":
             args.append(self.define_from_variant("CICE_DRIVER", "driver"))
+      # if driver="none" respect default set through CMake
 
         return args
