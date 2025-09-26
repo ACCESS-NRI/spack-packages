@@ -61,6 +61,6 @@ class AccessCice(CMakePackage):
 
         if self.spec.variants["driver"].value != "none":
             args.append(self.define_from_variant("CICE_DRIVER", "driver"))
-      # if driver="none" respect default set through CMake
+        # if driver="none" respect default set through CMake
 
         return args
