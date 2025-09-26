@@ -15,6 +15,14 @@ KNOWN_CONF = (
     "MOM6-CICE6-WW3",
 )
 
+# tag,commit pairs for releases in access3-share git repository
+ACCESS3_VERSIONS = {
+    "2025.08.000": "f2f35ce5915e82a83899b69560d826deab53b668",
+    "2025.03.1": "d28d8b3bb2d490920cabd48a87663de017ca6a18",
+    "2025.03.0": "d61a88ac937092f6f8ee1215716e2d6a750161e3"
+}
+
+
 class Access3(CMakePackage):
     """Executable build for ACCESS version 3 climate models. The exectuable is
     defined in Community Mediator for Earth Prediction Systems (CMEPS).
@@ -29,9 +37,10 @@ class Access3(CMakePackage):
     license("Apache-2.0", checked_by="anton-seaice")
 
     version("stable", branch="main", preferred=True)
-    version("2025.08.000", tag="2025.08.000", commit="f2f35ce5915e82a83899b69560d826deab53b668")
-    version("2025.03.1", tag="2025.03.1", commit="d28d8b3bb2d490920cabd48a87663de017ca6a18")
-    version("2025.03.0", tag="2025.03.0", commit="d61a88ac937092f6f8ee1215716e2d6a750161e3")
+    for tag, commit in ACCESS3_VERSIONS.items():
+        version(tag, tag=tag, commit=commit)
+        # access3-share uses the same git repository as access3:
+        depends_on(f"access3-share@{tag}", when=f"@{tag}")
 
     variant(
         "configurations",
