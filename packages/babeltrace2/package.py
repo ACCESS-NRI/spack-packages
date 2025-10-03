@@ -4,8 +4,6 @@
 
 from os.path import join as pjoin
 
-from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
-
 from spack.package import *
 
 
