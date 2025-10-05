@@ -44,6 +44,7 @@ class Babeltrace2(AutotoolsPackage):
     depends_on("glib@2.22:", type=("build", "link"))
     depends_on("python@3.9:", when="+python", type=("build", "run"))
     depends_on("py-setuptools", when="+python", type="build")
+    depends_on("swig@2.0:", when="+python", type="build")
 
     extends("python", when="+python")
 
