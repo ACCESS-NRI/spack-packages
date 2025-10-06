@@ -32,6 +32,8 @@ class Babeltrace2(AutotoolsPackage):
     variant("plugins", default=True, description="Enable Python plugin provider")
     variant("manpages", default=True, description="Build man pages")
 
+    depends_on("c", type="build")
+
     depends_on("pkgconfig", type="build")
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
@@ -59,7 +61,6 @@ class Babeltrace2(AutotoolsPackage):
         args = []
         if self.spec.satisfies("+python"):
             args.append("--enable-python-bindings")
-            args.append(f"PYTHON={self.spec['python'].command.path}")
 
         if self.spec.satisfies("+plugins"):
             args.append("--enable-python-plugins")
