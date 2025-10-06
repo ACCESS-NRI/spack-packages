@@ -2,8 +2,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from os.path import join as pjoin
-
 from spack.package import *
 
 
@@ -49,27 +47,26 @@ class Babeltrace2(AutotoolsPackage):
     extends("python", when="+python")
 
     def setup_build_environment(self, env):
-        if "+python" in self.spec:
+        if self.spec.satisfies("+python"):
             env.set("PYTHON", self.spec["python"].command.path)
 
     def setup_run_environment(self, env):
-        if "+python" in self.spec:
+        if self.spec.satisfies("+python"):
             pyver = self.spec["python"].version.up_to(2)
             env.prepend_path(
-                "PYTHONPATH", pjoin(self.prefix.lib, f"python{pyver}", "site-packages")
+                "PYTHONPATH", join_path(self.prefix.lib, f"python{pyver}", "site-packages")
             )
 
     def configure_args(self):
-        spec = self.spec
         args = []
-        if "+python" in spec:
+        if self.spec.satisfies("+python"):
             args.append("--enable-python-bindings")
-            args.append(f"PYTHON={spec['python'].command.path}")
-            if "+plugins" in spec:
+            args.append(f"PYTHON={self.spec['python'].command.path}")
+            if self.spec.satisfies("+plugins"):
                 args.append("--enable-python-plugins")
         else:
             args.append("--disable-python-bindings")
 
-        args.append("--enable-man-pages" if "+manpages" in spec else "--disable-man-pages")
+        args.append("--enable-man-pages" if self.spec.satisfies("+manpages") else "--disable-man-pages")
 
         return args
