@@ -61,6 +61,7 @@ class Babeltrace2(AutotoolsPackage):
             if self.spec.satisfies("+plugins"):
                 args.append("--enable-python-plugins")
 
-        args.append("--enable-man-pages" if self.spec.satisfies("+manpages") else "--disable-man-pages")
+        if self.spec.satisfies("+manpages"):
+            args.append("--enable-man-pages")
 
         return args
