@@ -60,8 +60,6 @@ class Babeltrace2(AutotoolsPackage):
             args.append(f"PYTHON={self.spec['python'].command.path}")
             if self.spec.satisfies("+plugins"):
                 args.append("--enable-python-plugins")
-        else:
-            args.append("--disable-python-bindings")
 
         args.append("--enable-man-pages" if self.spec.satisfies("+manpages") else "--disable-man-pages")
 
