@@ -28,9 +28,6 @@ class Babeltrace2(AutotoolsPackage):
     version("2.0.3", sha256="6cdeaa3bfc12d47936e7c664c5a2610c376ad3d2dfc8cf947137c4b3a2051dd3")
     version("2.0.2", sha256="1c09428fec2d0000bf6f5332da2624b39fbf110477b82d2cb0856dcb74c58afc")
 
-    def url_for_version(self, v):
-        return f"https://github.com/efficios/babeltrace/archive/refs/tags/v{v}.tar.gz"
-
     variant("python", default=True, description="Build Python3 bindings (bt2)")
     variant("plugins", default=True, description="Enable Python plugin provider")
     variant("manpages", default=False, description="Build man pages (needs doc toolchain)")
