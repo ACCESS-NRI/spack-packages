@@ -41,7 +41,6 @@ class Babeltrace2(AutotoolsPackage):
     depends_on("py-setuptools", when="+python", type="build")
     depends_on("swig@2.0:", when="+python", type="build")
 
-    extends("python", when="+python")
 
     def setup_build_environment(self, env):
         if self.spec.satisfies("+python"):
