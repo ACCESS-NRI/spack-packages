@@ -32,7 +32,7 @@ class Cice5(MakefilePackage):
     conflicts(
         "model=access-om2",
         when="@access-esm1.6-2025.09.000",
-        msg="access-om2 not included in @access-esm1.6 versions"
+        msg="Version is not compatible with model=access-om2"
     )
 
     variant("deterministic", default=False, description="Deterministic build.")
