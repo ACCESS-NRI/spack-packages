@@ -27,7 +27,7 @@ class Cice5(MakefilePackage):
     conflicts(
         "model=access-esm1.6",
         when="@2025.03.001",
-        msg="access-esm1.6 not included in @2025.03.001"
+        msg="Version is not compatible with model=access-esm1.6"
     )
     conflicts(
         "model=access-om2",
