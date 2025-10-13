@@ -31,7 +31,7 @@ class Cice5(MakefilePackage):
     )
     conflicts(
         "model=access-om2",
-        when="@access-esm1.6-2025.09.000",
+        when="@access-esm1.6",
         msg="Version is not compatible with model=access-om2"
     )
 
