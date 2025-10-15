@@ -61,6 +61,12 @@ class Issm(AutotoolsPackage):
         description="Propagate OpenMP flags so threaded deps link cleanly",
     )
 
+    variant(
+        "py",
+        default=False,
+        description="Install ISSM python files under <prefix>/python",
+    )
+
     # --------------------------------------------------------------------
     # Dependencies
     # --------------------------------------------------------------------
@@ -94,9 +100,16 @@ class Issm(AutotoolsPackage):
     depends_on("access-triangle", when="+wrappers")
     depends_on("python@3.9.2:", when="+wrappers", type=("build", "run"))
     depends_on("py-numpy", when="+wrappers", type=("build", "run"))
+    
+    # --------------------------------------------------------------------
+    # Conflicts
+    # --------------------------------------------------------------------
 
     # GCC 14 breaks on several C++17 constructs used in ISSM
     conflicts("%gcc@14:", msg="ISSM cannot be built with GCC versions above 13")
+
+    # +wrappers requires +py to access the wrappers
+    conflicts("+wrappers", when="~py", msg="The +wrappers variant requires +py")
 
     # --------------------------------------------------------------------
     # Helper functions
@@ -202,3 +215,27 @@ class Issm(AutotoolsPackage):
             examples_src = join_path(self.stage.source_path, "examples")
             examples_dst = join_path(prefix, "examples")
             install_tree(examples_src, examples_dst)
+
+            # Optionally install Python (.py) files
+        if "+py" in spec:
+            py_src = join_path(self.stage.source_path, "src", "m")
+            py_dst = join_path(prefix, "python")
+            mkdirp(py_dst)
+            install_tree(py_src, py_dst, pattern="*.py")
+
+    # --------------------------------------------------------------------
+    # Run environment - set ISSM_DIR and PYTHONPATH
+    # --------------------------------------------------------------------
+    def setup_run_environment(self, env):
+        """Set ISSM_DIR to the install root."""
+
+        # Get the prefix path (install root)
+        issm_dir = self.prefix
+
+        # Set environment variable
+        env.set('ISSM_DIR', issm_dir)
+
+        # Add ISSM python files to PYTHONPATH if +py
+        if "+py" in self.spec:
+            env.prepend_path("PYTHONPATH", join_path(self.prefix, "python"))
+
