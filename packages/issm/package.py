@@ -63,9 +63,9 @@ class Issm(AutotoolsPackage):
     )
 
     variant(
-        "py",
+        "py-tools",
         default=False,
-        description="Install ISSM python files under <prefix>/python",
+        description="Install ISSM python files under <prefix>/python-tools",
     )
 
     # --------------------------------------------------------------------
@@ -109,8 +109,8 @@ class Issm(AutotoolsPackage):
     # GCC 14 breaks on several C++17 constructs used in ISSM
     conflicts("%gcc@14:", msg="ISSM cannot be built with GCC versions above 13")
 
-    # +wrappers requires +py to access the wrappers
-    conflicts("+wrappers", when="~py", msg="The +wrappers variant requires +py")
+    # +wrappers requires +py-tools to access the wrappers
+    conflicts("+wrappers", when="~py-tools", msg="The +wrappers variant requires +py-tools")
 
     # --------------------------------------------------------------------
     # Helper functions
@@ -217,10 +217,10 @@ class Issm(AutotoolsPackage):
             examples_dst = join_path(prefix, "examples")
             install_tree(examples_src, examples_dst)
 
-            # Optionally install Python (.py) files
-        if "+py" in spec:
+        # Optionally install Python (.py) files
+        if "+py-tools" in spec:
             py_src = join_path(self.stage.source_path, "src", "m")
-            py_dst = join_path(prefix, "python")
+            py_dst = join_path(prefix, "python-tools")
             mkdirp(py_dst)
             
             ## Recursively copy all .py files from src/m to the destination
@@ -242,7 +242,8 @@ class Issm(AutotoolsPackage):
         # Set environment variable
         env.set('ISSM_DIR', issm_dir)
 
-        # Add ISSM python files to PYTHONPATH if +py
-        if "+py" in self.spec:
-            env.prepend_path("PYTHONPATH", join_path(self.prefix, "python"))
+        # Add ISSM python files (and shared libraries) to PYTHONPATH if +py
+        if "+py-tools" in self.spec:
+            env.prepend_path("PYTHONPATH", join_path(self.prefix, "python-tools"))
+            env.prepend_path("PYTHONPATH", join_path(self.prefix, "lib"))
 
