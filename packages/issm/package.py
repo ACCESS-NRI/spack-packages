@@ -212,6 +212,7 @@ class Issm(AutotoolsPackage):
     def install(self, spec, prefix):
         make("install", parallel=False)
 
+        # Optionally install examples directory
         if "+examples" in self.spec:
             examples_src = join_path(self.stage.source_path, "examples")
             examples_dst = join_path(prefix, "examples")
@@ -223,7 +224,7 @@ class Issm(AutotoolsPackage):
             py_dst = join_path(prefix, "python-tools")
             mkdirp(py_dst)
             
-            ## Recursively copy all .py files from src/m to the destination
+            # Recursively copy all .py files from src/m to the destination
             for root, _, files in os.walk(py_src):
                 for file in files:
                     if file.endswith(".py"):
