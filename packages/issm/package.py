@@ -6,6 +6,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+import os
 
 
 class Issm(AutotoolsPackage):
@@ -221,7 +222,13 @@ class Issm(AutotoolsPackage):
             py_src = join_path(self.stage.source_path, "src", "m")
             py_dst = join_path(prefix, "python")
             mkdirp(py_dst)
-            install_tree(py_src, py_dst, pattern="*.py")
+            
+            ## Recursively copy all .py files from src/m to the destination
+            for root, _, files in os.walk(py_src):
+                for file in files:
+                    if file.endswith(".py"):
+                        src_file = join_path(root, file)
+                        install(src_file, py_dst)
 
     # --------------------------------------------------------------------
     # Run environment - set ISSM_DIR and PYTHONPATH
