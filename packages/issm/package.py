@@ -6,7 +6,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
-import os
+import os, zipfile
 
 
 class Issm(AutotoolsPackage):
@@ -111,6 +111,9 @@ class Issm(AutotoolsPackage):
 
     # +wrappers requires +py-tools to access the wrappers
     conflicts("+wrappers", when="~py-tools", msg="The +wrappers variant requires +py-tools")
+
+    # +py-tools requires +wrappers for full Python functionality
+    conflicts("+py-tools", when="~wrappers", msg="The +py-tools variant requires +wrappers for full functionality")
 
     # --------------------------------------------------------------------
     # Helper functions
@@ -218,18 +221,23 @@ class Issm(AutotoolsPackage):
             examples_dst = join_path(prefix, "examples")
             install_tree(examples_src, examples_dst)
 
-        # Optionally install Python (.py) files
+        # Optionally install Python (.py) files as a zip archive
         if "+py-tools" in spec:
             py_src = join_path(self.stage.source_path, "src", "m")
-            py_dst = join_path(prefix, "python-tools")
-            mkdirp(py_dst)
+            py_dst = join_path(prefix, "python-tools.zip")
             
-            # Recursively copy all .py files from src/m to the destination
-            for root, _, files in os.walk(py_src):
-                for file in files:
-                    if file.endswith(".py"):
-                        src_file = join_path(root, file)
-                        install(src_file, py_dst)
+            # Recursively copy all .py files from src/m to python-tools.zip
+            # Exclude contrib directory which contains working files
+            exclude_dirs = {'contrib'}
+
+            # Create a zip file and add *.py files, excluding exclude_dirs
+            with zipfile.ZipFile(py_dst, 'w', zipfile.ZIP_DEFLATED) as zf:
+                for root, dirs, files in os.walk(py_src):
+                    dirs[:] = [d for d in dirs if d not in exclude_dirs]
+                    for file in files:
+                        if file.endswith('.py'):
+                            src_path = os.path.join(root, file)
+                            zf.write(src_path, arcname = file)
 
     # --------------------------------------------------------------------
     # Run environment - set ISSM_DIR and PYTHONPATH
@@ -245,6 +253,6 @@ class Issm(AutotoolsPackage):
 
         # Add ISSM python files (and shared libraries) to PYTHONPATH if +py
         if "+py-tools" in self.spec:
-            env.prepend_path("PYTHONPATH", join_path(self.prefix, "python-tools"))
+            env.prepend_path("PYTHONPATH", join_path(self.prefix, "python-tools.zip"))
             env.prepend_path("PYTHONPATH", join_path(self.prefix, "lib"))
 
