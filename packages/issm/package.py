@@ -6,7 +6,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
-import os, zipfile
+import os
+import zipfile
 
 
 class Issm(AutotoolsPackage):
@@ -237,7 +238,7 @@ class Issm(AutotoolsPackage):
                     for file in files:
                         if file.endswith('.py'):
                             src_path = os.path.join(root, file)
-                            zf.write(src_path, arcname = file)
+                            zf.write(src_path, arcname=file)
 
     # --------------------------------------------------------------------
     # Run environment - set ISSM_DIR and PYTHONPATH
