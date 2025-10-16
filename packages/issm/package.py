@@ -252,7 +252,7 @@ class Issm(AutotoolsPackage):
         # Set environment variable
         env.set('ISSM_DIR', issm_dir)
 
-        # Add ISSM python files (and shared libraries) to PYTHONPATH if +py
+        # Add ISSM python files (and shared libraries) to PYTHONPATH if +py-tools
         if "+py-tools" in self.spec:
             env.prepend_path("PYTHONPATH", join_path(self.prefix, "python-tools.zip"))
             env.prepend_path("PYTHONPATH", join_path(self.prefix, "lib"))
