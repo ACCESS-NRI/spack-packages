@@ -18,7 +18,7 @@ class Cice4(MakefilePackage):
     license("BSD-3-Clause", checked_by="anton-seaice")
 
     version("stable", branch="access-esm1.5", preferred=True)
-    version("access-esm1.5-2025.04.001", tag="access-esm1.5-2025.04.001", commit="694a9fbd4ac29dc841b38aff002eb36da5b650f1")
+    version("2025.04.001", tag="access-esm1.5-2025.04.001", commit="694a9fbd4ac29dc841b38aff002eb36da5b650f1")
 
     # Support -fuse-ld=lld
     # https://github.com/ACCESS-NRI/spack-packages/issues/255

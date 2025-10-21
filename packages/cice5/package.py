@@ -14,25 +14,12 @@ class Cice5(MakefilePackage):
     license("BSD-3-Clause", checked_by="anton-seaice")
 
     version("stable", branch="master", preferred=True)
-    version("2025.03.001", tag="2025.03.001", commit="4cc7abd9875153a8114647fd3317a31993fdf80d")
-    version("access-esm1.6-2025.09.000", tag="access-esm1.6-2025.09.000", commit="16e26c8585eca4cb2ba97eb6462ce3b803a8b46c")
 
     variant(
         "model",
         default="access-om2",
         values=("access-om2", "access-esm1.6"),
         description="Which model this build is coupled with"
-    )
-
-    conflicts(
-        "model=access-esm1.6",
-        when="@2025:",
-        msg="Version is not compatible with model=access-esm1.6"
-    )
-    conflicts(
-        "model=access-om2",
-        when="@access-esm1.6",
-        msg="Version is not compatible with model=access-om2"
     )
 
     variant("deterministic", default=False, description="Deterministic build.")
