@@ -6,7 +6,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
-import os
 import zipfile
 
 
@@ -231,14 +230,21 @@ class Issm(AutotoolsPackage):
             # Exclude contrib directory which contains working files
             exclude_dirs = {'contrib'}
 
-            # Create a zip file and add *.py files, excluding exclude_dirs
-            with zipfile.ZipFile(py_dst, 'w', zipfile.ZIP_DEFLATED) as zf:
-                for root, dirs, files in os.walk(py_src):
-                    dirs[:] = [d for d in dirs if d not in exclude_dirs]
-                    for file in files:
-                        if file.endswith('.py'):
-                            src_path = os.path.join(root, file)
-                            zf.write(src_path, arcname=file)
+            # Find all .py files recursively
+            py_files = find(py_src, "*.py")
+
+            # Exclude files in the specified directories
+            py_files = [
+                f for f in py_files
+                if not any(f"/{excl}/" in f for excl in exclude_dirs)
+            ]
+
+            # Create the ZIP archive
+            with zipfile.ZipFile(py_dst, "w", zipfile.ZIP_DEFLATED) as zf:
+                for src_path in py_files:
+                    # Use only the filename inside the archive
+                    arcname = src_path.split("/")[-1]
+                    zf.write(src_path, arcname=arcname)
 
     # --------------------------------------------------------------------
     # Run environment - set ISSM_DIR and PYTHONPATH
