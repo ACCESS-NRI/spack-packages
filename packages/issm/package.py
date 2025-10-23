@@ -7,6 +7,7 @@
 
 from spack.package import *
 import zipfile
+import os
 
 
 class Issm(AutotoolsPackage):
@@ -231,14 +232,23 @@ class Issm(AutotoolsPackage):
             # Exclude contrib directory which contains working files
             exclude_dirs = {'contrib'}
 
-            # Find all .py files recursively
-            py_files = find(py_src, "*.py")
+            # Empty list to hold paths of .py files
+            py_files = []
 
-            # Exclude files in the specified directories
-            py_files = [
-                f for f in py_files
-                if not any(f"/{excl}/" in f for excl in exclude_dirs)
-            ]
+            # Walk through the directory tree
+            for root, dirs, files in os.walk(py_src):
+
+                # Split root into path parts (to allow direct exclusion of exclude_dirs)
+                parts = os.path.normpath(root).split(os.sep)
+
+                # Skip excluded directories
+                if any(excl in parts for excl in exclude_dirs):
+                    continue
+
+                # Iterate over files in the current directory and collect .py files
+                for file in files:
+                    if file.endswith('.py'):
+                        py_files.append(join_path(root, file))
 
             # Create the ZIP archive
             with zipfile.ZipFile(py_dst, "w", zipfile.ZIP_DEFLATED) as zf:
