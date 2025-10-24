@@ -6,6 +6,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+import zipfile
+import os
 
 
 class Issm(AutotoolsPackage):
@@ -28,6 +30,7 @@ class Issm(AutotoolsPackage):
     # --------------------------------------------------------------------
     version("upstream", branch="main", git="https://github.com/ISSMteam/ISSM.git")
     version("main", branch="main")
+    version("access-release", branch="access-release")
     version(
         "access-development",
         branch="access-development",
@@ -59,6 +62,12 @@ class Issm(AutotoolsPackage):
         "openmp",
         default=True,
         description="Propagate OpenMP flags so threaded deps link cleanly",
+    )
+
+    variant(
+        "py-tools",
+        default=False,
+        description="Install ISSM python files under <prefix>/python-tools",
     )
 
     # --------------------------------------------------------------------
@@ -94,9 +103,19 @@ class Issm(AutotoolsPackage):
     depends_on("access-triangle", when="+wrappers")
     depends_on("python@3.9.2:", when="+wrappers", type=("build", "run"))
     depends_on("py-numpy", when="+wrappers", type=("build", "run"))
+    
+    # --------------------------------------------------------------------
+    # Conflicts
+    # --------------------------------------------------------------------
 
     # GCC 14 breaks on several C++17 constructs used in ISSM
     conflicts("%gcc@14:", msg="ISSM cannot be built with GCC versions above 13")
+
+    # +wrappers requires +py-tools to access the wrappers
+    conflicts("+wrappers", when="~py-tools", msg="The +wrappers variant requires +py-tools")
+
+    # +py-tools requires +wrappers for full Python functionality
+    conflicts("+py-tools", when="~wrappers", msg="The +py-tools variant requires +wrappers for full functionality")
 
     # --------------------------------------------------------------------
     # Helper functions
@@ -198,7 +217,60 @@ class Issm(AutotoolsPackage):
     def install(self, spec, prefix):
         make("install", parallel=False)
 
+        # Optionally install examples directory
         if "+examples" in self.spec:
             examples_src = join_path(self.stage.source_path, "examples")
             examples_dst = join_path(prefix, "examples")
             install_tree(examples_src, examples_dst)
+
+        # Optionally install Python (.py) files as a zip archive
+        if "+py-tools" in spec:
+            py_src = join_path(self.stage.source_path, "src", "m")
+            py_dst = join_path(prefix, "python-tools.zip")
+            
+            # Recursively copy all .py files from src/m to python-tools.zip
+            # Exclude contrib directory which contains working files
+            exclude_dirs = {'contrib'}
+
+            # Empty list to hold paths of .py files
+            py_files = []
+
+            # Walk through the directory tree
+            for root, dirs, files in os.walk(py_src):
+
+                # Split root into path parts (to allow direct exclusion of exclude_dirs)
+                parts = os.path.normpath(root).split(os.sep)
+
+                # Skip excluded directories
+                if any(excl in parts for excl in exclude_dirs):
+                    continue
+
+                # Iterate over files in the current directory and collect .py files
+                for file in files:
+                    if file.endswith('.py'):
+                        py_files.append(join_path(root, file))
+
+            # Create the ZIP archive
+            with zipfile.ZipFile(py_dst, "w", zipfile.ZIP_DEFLATED) as zf:
+                for src_path in py_files:
+                    # Use only the filename inside the archive
+                    arcname = src_path.split("/")[-1]
+                    zf.write(src_path, arcname=arcname)
+
+    # --------------------------------------------------------------------
+    # Run environment - set ISSM_DIR and PYTHONPATH
+    # --------------------------------------------------------------------
+    def setup_run_environment(self, env):
+        """Set ISSM_DIR to the install root."""
+
+        # Get the prefix path (install root)
+        issm_dir = self.prefix
+
+        # Set environment variable
+        env.set('ISSM_DIR', issm_dir)
+
+        # Add ISSM python files (and shared libraries) to PYTHONPATH if +py-tools
+        if "+py-tools" in self.spec:
+            env.prepend_path("PYTHONPATH", join_path(self.prefix, "python-tools.zip"))
+            env.prepend_path("PYTHONPATH", join_path(self.prefix, "lib"))
+
