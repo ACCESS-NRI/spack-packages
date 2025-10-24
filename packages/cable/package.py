@@ -32,7 +32,7 @@ class Cable(CMakePackage):
 
     variant(
         "library",
-        default=False,
+        default="none",
         values=(
             conditional("ESM1.6", when="@access-esm1.6")
         ),
