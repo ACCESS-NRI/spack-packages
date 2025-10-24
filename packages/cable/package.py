@@ -33,6 +33,9 @@ class Cable(CMakePackage):
     variant(
         "library",
         default=False,
+        values=(
+            conditional("ESM1.6", when="@access-esm1.6")
+        ),
         description="Build CABLE science library object.",
     )
 
@@ -49,5 +52,6 @@ class Cable(CMakePackage):
     def cmake_args(self):
         args = []
         args.append(self.define_from_variant("CABLE_MPI", "mpi"))
-        args.append(self.define_from_variant("CABLE_LIBRARY", "library"))
+        args.append(self.define("CABLE_LIBRARY", self.spec.variants["library"].value != "none"))
+        args.append(self.define_from_variant("CABLE_LIBRARY_TARGET", "library"))
         return args
