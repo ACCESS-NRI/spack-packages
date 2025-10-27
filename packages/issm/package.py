@@ -83,7 +83,9 @@ class Issm(AutotoolsPackage):
     depends_on("mpi")
 
     # Linear-algebra stack - only for the *non-AD* flavour
-    depends_on("petsc~examples+metis+mumps+scalapack", when="~ad")
+    # depends_on("petsc~examples+metis+mumps+scalapack", when="~ad")
+    depends_on("petsc~examples, when="~ad")
+    depends_on("metris+mumps+scalapack", when="~ad")
     depends_on("parmetis")
     depends_on("metis")
     depends_on("mumps~openmp", when="~openmp")
@@ -224,7 +226,7 @@ class Issm(AutotoolsPackage):
             install_tree(examples_src, examples_dst)
 
         # Optionally install Python (.py) files as a zip archive
-        if "+py-tools" in spec:
+        if "+py-tools" in self.spec:
             py_src = join_path(self.stage.source_path, "src", "m")
             py_dst = join_path(prefix, "python-tools.zip")
             
