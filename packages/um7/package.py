@@ -42,7 +42,7 @@ class Um7(Package):
             values=("high", "debug"), multi=False)
 
     with when("@access-esm1.6"):
-        depends_on("cable", type=("build", "link"))
+        depends_on("cable library=ESM1.6", type=("build", "link"))
 
     phases = ["edit", "build", "install"]
 
