@@ -84,8 +84,7 @@ class Issm(AutotoolsPackage):
 
     # Linear-algebra stack - only for the *non-AD* flavour
     # depends_on("petsc~examples+metis+mumps+scalapack", when="~ad")
-    depends_on("petsc~examples", when="~ad")
-    depends_on("metis+scalapack", when="~ad") #Removing mumps here because it's added below. 
+    depends_on("petsc~examples", when="~ad") #Removing nested pcakages here because they're defined below. 
     depends_on("parmetis")
     depends_on("metis")
     depends_on("mumps~openmp", when="~openmp")
