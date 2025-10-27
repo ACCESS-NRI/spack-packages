@@ -143,6 +143,14 @@ class Um7(Package):
             FARCH = "-xCORE-AVX512"
             FOBLANK = ""
 
+        # FCM tries to find all instances of USE and include them as
+        # source code, except things explicitly excluded by excl_deps.
+        # This means when using CABLE as a library, everything USEd
+        # by the coupled infrastructure, which still lives in UM7,
+        # must be explicitly included. Leave the default of an empty
+        # string for older versions of UM7 which include CABLE as
+        # source code.
+        CABLE_excl_deps = ""
         with when("@access-esm1.6"):
             CABLE_excl_deps = """
 excl_dep                                           USE::cable_def_types_mod
