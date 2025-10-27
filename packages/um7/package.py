@@ -24,7 +24,7 @@ class Um7(Package):
     version("access-esm1.5", branch="access-esm1.5")
 
     maintainers("penguian")
-
+    print("Test hello world")
     depends_on("fcm", type="build")
     depends_on("dummygrib", type=("build", "link"))
     depends_on("gcom4+mpi", type=("build", "link"))
