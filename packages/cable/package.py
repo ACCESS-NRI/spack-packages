@@ -17,7 +17,7 @@ class Cable(CMakePackage):
     homepage = "https://github.com/CABLE-LSM/CABLE"
     git = "https://github.com/CABLE-LSM/CABLE.git"
 
-    maintainers("SeanBryan51")
+    maintainers("SeanBryan51", "Whyborn")
 
     version("main", branch="main")
 

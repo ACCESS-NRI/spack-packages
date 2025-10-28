@@ -23,7 +23,7 @@ class Um7(Package):
     version("access-esm1.6", branch="dev-access-esm1.6", preferred=True)
     version("access-esm1.5", branch="access-esm1.5")
 
-    maintainers("penguian")
+    maintainers("penguian", "Whyborn")
 
     depends_on("fcm", type="build")
     depends_on("dummygrib", type=("build", "link"))
