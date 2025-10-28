@@ -83,13 +83,25 @@ class Issm(AutotoolsPackage):
     depends_on("mpi")
 
     # Linear-algebra stack - only for the *non-AD* flavour
+    with when("~ad"):
+        # NOTE: Mumps is built with +openmp by default here.
+        # NOTE: +metis adds support for metis and parmetis (Default = True)
+    
+        depends_on("petsc~examples+metis+mumps+scalapack")
+        
+    with when("+ad"):
+        depends_on("metis")
+        depends_on("parmetis")
+        depends_on("mumps~openmp", when="~openmp")
+        depends_on("mumps+openmp", when="+openmp")
+        depends_on("scalapack")
+        
     # depends_on("petsc~examples+metis+mumps+scalapack", when="~ad")
-    depends_on("petsc~examples", when="~ad") #Removing nested pcakages here because they're defined below. 
-    depends_on("parmetis")
-    depends_on("metis")
-    depends_on("mumps~openmp", when="~openmp")
-    depends_on("mumps+openmp", when="+openmp")
-    depends_on("scalapack")
+    # depends_on("parmetis")
+    # depends_on("metis", when="+ad")
+    # depends_on("mumps~openmp", when="~openmp +ad")
+    # depends_on("mumps+openmp", when="+openmp +ad")
+    # depends_on("scalapack", when="+ad")
     # Note: ISSM's MUMPS support is not compatible with the Spack-provided
     # MUMPS, so we use the one provided by the ISSM team.
 
