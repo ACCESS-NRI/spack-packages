@@ -97,6 +97,9 @@ class Issm(AutotoolsPackage):
         depends_on("mumps~openmp", when="~openmp")
         depends_on("mumps+openmp", when="+openmp")
         depends_on("scalapack")
+        depends_on("codipack")
+        depends_on("medipack")
+
         
     # depends_on("petsc~examples+metis+mumps+scalapack", when="~ad")
     # depends_on("parmetis")
@@ -110,9 +113,9 @@ class Issm(AutotoolsPackage):
     # Optimiser
     depends_on("m1qn3")
 
-    # Automatic-differentiation libraries
-    depends_on("codipack", when="+ad")
-    depends_on("medipack", when="+ad")
+    # # Automatic-differentiation libraries
+    # depends_on("codipack", when="+ad")
+    # depends_on("medipack", when="+ad")
 
     # Optional extras controlled by +wrappers
     depends_on("access-triangle", when="+wrappers")
