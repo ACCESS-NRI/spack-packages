@@ -83,13 +83,14 @@ class Issm(AutotoolsPackage):
     depends_on("mpi")
 
     # Linear-algebra stack - only for the *non-AD* flavour
-    with when("~ad +openmp"):
-        # NOTE: +metis adds support for metis and parmetis
-        depends_on("petsc~examples+metis+mumps+openmp+scalapack")
-
-    with when("~ad ~openmp"):
-        # NOTE: +metis adds support for metis and parmetis
-        depends_on("petsc~examples+metis+mumps~openmp+scalapack")
+    with when("~ad"):
+        # PETSc always with MUMPS, METIS, ScaLAPACK
+        depends_on("petsc~examples+metis+mumps+scalapack+openmp", when="+openmp")
+        depends_on("petsc~examples+metis+mumps+scalapack~openmp", when="~openmp")
+    
+        # Match MUMPS' OpenMP state to PETSc and this package
+        depends_on("mumps+openmp", when="+openmp ^petsc+mumps")
+        depends_on("mumps~openmp", when="~openmp ^petsc+mumps")
         
     with when("+ad"):
         depends_on("metis")
