@@ -1,7 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
-#
-# Copyright 2024 ACCESS-NRI
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -18,7 +15,7 @@ class AccessEsm1p6(BundlePackage):
     * The CABLE land surface model with biogeochemistry (CASA-CNP) (CABLE2.4)
     * The GFDL MOM5 ocean model at 1 degree resolution
     * The WOMBATlite ocean BGC model (generic tracer version)
-    * The LANL CICE4.1 sea ice model (version as ACCESS1.4). CICE5 for testing.
+    * The LANL CICE5 sea ice model. CICE4 for early development (before 2025.08)
     * The OASIS-MCT coupler
     """
 
@@ -45,8 +42,8 @@ class AccessEsm1p6(BundlePackage):
         multi=False,
     )
 
-    depends_on("cice4@access-esm1.5", type="run", when="cice=4")
-    depends_on("cice5@access-esm1.6", type="run", when="cice=5")
+    depends_on("cice4", type="run", when="cice=4")
+    depends_on("cice5 model=access-esm1.6", type="run", when="cice=5")
     depends_on("mom5@access-esm1.6", type="run")
     # um7 is in a private repository
     depends_on("um7@access-esm1.5", type="run", when="um=access-esm1.5")

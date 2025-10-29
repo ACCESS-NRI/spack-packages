@@ -1,7 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
-#
-# Copyright 2024 ACCESS-NRI
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -29,7 +26,7 @@ class AccessEsm1p5(BundlePackage):
 
     version("latest")
 
-    depends_on("cice4@access-esm1.5", type="run")
+    depends_on("cice4", type="run")
     depends_on("mom5@access-esm1.5", type="run")
     # um7 is in a private repository
     depends_on("um7@access-esm1.5", type="run")

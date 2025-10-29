@@ -1,7 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
-#
-# Copyright 2024 ACCESS-NRI
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -20,7 +17,8 @@ class Cice4(MakefilePackage):
     maintainers("penguian")
     license("BSD-3-Clause", checked_by="anton-seaice")
 
-    version("access-esm1.5", branch="access-esm1.5")
+    version("stable", branch="access-esm1.5", preferred=True)
+    version("2025.04.001", tag="access-esm1.5-2025.04.001", commit="694a9fbd4ac29dc841b38aff002eb36da5b650f1")
 
     # Support -fuse-ld=lld
     # https://github.com/ACCESS-NRI/spack-packages/issues/255

@@ -1,14 +1,9 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
-#
-# Copyright 2023 ACCESS-NRI
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
 
-
-# https://spack.readthedocs.io/en/latest/build_systems/makefilepackage.html
 class Cice5(MakefilePackage):
     """The Los Alamos sea ice model (CICE) is the result of an effort to develop a computationally efficient sea ice component for a fully coupled atmosphere-land global climate model."""
 
@@ -18,8 +13,28 @@ class Cice5(MakefilePackage):
     maintainers("harshula", "anton-seaice")
     license("BSD-3-Clause", checked_by="anton-seaice")
 
-    version("access-om2", branch="master", preferred=True)
+    version("stable", branch="master", preferred=True)
+    version("access-om2", branch="master")
     version("access-esm1.6", branch="access-esm1.6")
+
+    variant(
+        "model",
+        default="access-om2",
+        values=("access-om2", "access-esm1.6"),
+        description="Which model this build is coupled with"
+    )
+
+    conflicts(
+        "model=access-esm1.6",
+        when="@access-om2",
+        msg="model=access-esm1.6 not included in @access-om2"
+    )
+
+    conflicts(
+        "model=access-om2",
+        when="@access-esm1.6",
+        msg="model=access-om2 not included in @access-esm1.6"
+    )
 
     variant("deterministic", default=False, description="Deterministic build.")
     # Support -fuse-ld=lld
@@ -41,9 +56,7 @@ class Cice5(MakefilePackage):
     depends_on("oasis3-mct+deterministic", when="+deterministic")
     depends_on("oasis3-mct~deterministic", when="~deterministic")
 
-    # These are the default dependencies when building version "master".
-    # Copied with when() from MOM5 SPR
-    with when("@:access-esm0,access-esm2:"):
+    with when("model=access-om2"):
         # TODO: For initial verification we are going to use static pio.
         #       Eventually we plan to move to shared pio
         # ~shared requires: https://github.com/spack/spack/pull/34837
@@ -92,7 +105,7 @@ class Cice5(MakefilePackage):
 
     def set_deps_targets(self, spec, prefix):
 
-        if self.spec.satisfies("@access-esm1.6"):
+        if self.spec.variants["model"].value == "access-esm1.6":
             # The integer represents environment variable NTASK
             # esm1.5 used 12 (cice4), cm2 used 16 (cice5), build both for testing
             self.__targets = {12: {}, 16: {}} 
@@ -105,8 +118,7 @@ class Cice5(MakefilePackage):
             ldeps = ["oasis3-mct", "netcdf-c", "netcdf-fortran"]
             lstr = ""
 
-        # These are the default settings when building version "master".
-        else:
+        else:  # model==access-om2
             # The integer represents environment variable NTASK
             self.__targets = {24: {}, 480: {}, 722: {}, 1682: {}}
 
