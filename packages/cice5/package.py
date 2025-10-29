@@ -14,12 +14,26 @@ class Cice5(MakefilePackage):
     license("BSD-3-Clause", checked_by="anton-seaice")
 
     version("stable", branch="master", preferred=True)
+    version("access-om2", branch="master")
+    version("access-esm1.6", branch="access-esm1.6")
 
     variant(
         "model",
         default="access-om2",
         values=("access-om2", "access-esm1.6"),
         description="Which model this build is coupled with"
+    )
+
+    conflicts(
+        "model=access-esm1.6",
+        when="@access-om2",
+        msg="model=access-esm1.6 not included in @access-om2"
+    )
+
+    conflicts(
+        "model=access-om2",
+        when="@access-esm1.6",
+        msg="model=access-om2 not included in @access-esm1.6"
     )
 
     variant("deterministic", default=False, description="Deterministic build.")
