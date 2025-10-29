@@ -31,11 +31,8 @@ class Issm(AutotoolsPackage):
     version("upstream", branch="main", git="https://github.com/ISSMteam/ISSM.git")
     version("main", branch="main")
     version("access-release", branch="access-release")
-    version(
-        "access-development",
-        branch="access-development",
-        preferred=True,
-    )
+    version("lb-dev", branch="lb/dev", preferred=True)
+    version("access-development", branch="access-development")
 
     # --------------------------------------------------------------------
     # Variants
