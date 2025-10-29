@@ -30,12 +30,9 @@ class Issm(AutotoolsPackage):
     # --------------------------------------------------------------------
     version("upstream", branch="main", git="https://github.com/ISSMteam/ISSM.git")
     version("main", branch="main")
-    version("access-release", branch="access-release")
-    version(
-        "access-development",
-        branch="access-development",
-        preferred=True,
-    )
+    version("lb/gadi-modules", branch="lb/gadi-modules", preferred=True)
+    version("access-development", branch="access-development")
+    # version("access-release", branch="access-release", preferred=True)
 
     # --------------------------------------------------------------------
     # Variants
@@ -58,11 +55,11 @@ class Issm(AutotoolsPackage):
         description="Build with CoDiPack automatic differentiation (drops PETSc)",
     )
 
-    variant(
-        "openmp",
-        default=True,
-        description="Propagate OpenMP flags so threaded deps link cleanly",
-    )
+    # variant(
+    #     "openmp",
+    #     default=True,
+    #     description="Propagate OpenMP flags so threaded deps link cleanly",
+    # )
 
     variant(
         "py-tools",
@@ -73,31 +70,37 @@ class Issm(AutotoolsPackage):
     # --------------------------------------------------------------------
     # Dependencies
     # --------------------------------------------------------------------
-    # Build-time tools
-    depends_on("autoconf", type="build")
-    depends_on("automake", type="build")
-    depends_on("libtool", type="build")
-    depends_on("m4", type="build")
+    # # Build-time tools
+    # depends_on("autoconf", type="build")
+    # depends_on("automake", type="build")
+    # depends_on("libtool", type="build")
+    # depends_on("m4", type="build")
 
-    # Core build + runtime deps
-    depends_on("mpi")
+    # # Core build + runtime deps
+    # depends_on("mpi")
 
-    # Linear-algebra stack - only for the *non-AD* flavour
-    depends_on("petsc~examples+metis+mumps+scalapack", when="~ad")
-    depends_on("parmetis")
-    depends_on("metis")
-    depends_on("mumps~openmp", when="~openmp")
-    depends_on("mumps+openmp", when="+openmp")
-    depends_on("scalapack")
-    # Note: ISSM's MUMPS support is not compatible with the Spack-provided
-    # MUMPS, so we use the one provided by the ISSM team.
+    # # Linear-algebra stack - only for the *non-AD* flavour
+    # depends_on("petsc~examples+metis+mumps+scalapack", when="~ad")
+    # depends_on("parmetis")
+    # depends_on("metis")
+    # depends_on("mumps~openmp", when="~openmp")
+    # depends_on("mumps+openmp", when="+openmp")
+    # depends_on("scalapack")
+    # # Note: ISSM's MUMPS support is not compatible with the Spack-provided
+    # # MUMPS, so we use the one provided by the ISSM team.
 
-    # Optimiser
-    depends_on("m1qn3")
+    # # Optimiser
+    # depends_on("m1qn3")
 
-    # Automatic-differentiation libraries
-    depends_on("codipack", when="+ad")
-    depends_on("medipack", when="+ad")
+    # # Automatic-differentiation libraries
+    # depends_on("codipack", when="+ad")
+    # depends_on("medipack", when="+ad")
+
+    depends_on("mpi", type=("build", "link", "run"))
+    depends_on("petsc", type=("build", "link", "run"))
+    depends_on("m1qn3", type=("build", "link", "run"))
+    depends_on("netcdf-c", type=("build", "link", "run"))
+    depends_on("hdf5", type=("build", "link", "run"))
 
     # Optional extras controlled by +wrappers
     depends_on("access-triangle", when="+wrappers")
@@ -173,12 +176,12 @@ class Issm(AutotoolsPackage):
             args += [
                 f"--with-petsc-dir={self.spec['petsc'].prefix}",
             ]
-        args.append(f"--with-parmetis-dir={self.spec['parmetis'].prefix}")
-        args.append(f"--with-metis-dir={self.spec['metis'].prefix}")
-        args.append(f"--with-mumps-dir={self.spec['mumps'].prefix}")
+        # args.append(f"--with-parmetis-dir={self.spec['parmetis'].prefix}")
+        args.append(f"--with-metis-dir={self.spec['petsc'].prefix}")
+        args.append(f"--with-mumps-dir={self.spec['petsc'].prefix}")
         # Optimiser
         args.append(f"--with-m1qn3-dir={self.spec['m1qn3'].prefix.lib}")
-        args.append(f"--with-scalapack-dir={self.spec['scalapack'].prefix}")
+        # args.append(f"--with-scalapack-dir={self.spec['scalapack'].prefix}")
 
         # MPI compilers & headers
         mpi = self.spec["mpi"]
@@ -186,9 +189,15 @@ class Issm(AutotoolsPackage):
             f"--with-mpi-include={mpi.prefix.include}",
             f"CC={mpi.mpicc}",
             f"CXX={mpi.mpicxx}",
-            f"FC={mpi.mpifc}",
-            f"F77={mpi.mpif77}",
+            f"FC={mpi.mpif90}",
+            f"F77={mpi.mpif90}",
         ]
+
+        # MKL libraries
+        mklroot = self.spec.get('mkl', None)
+        if mklroot:
+            args.append(f'--with-scalapack-lib="-L{mklroot.prefix.lib}/intel64 -lmkl_scalapack_lp64 -lmkl_blacs_openmpi_lp64"')
+            args.append(f'--with-mkl-libflags="-L{mklroot.prefix.lib}/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lpthread -lm"')
 
         # Optional wrappers
         if "+wrappers" in self.spec:
@@ -208,6 +217,8 @@ class Issm(AutotoolsPackage):
             ]
         else:
             args.append("--with-wrappers=no")
+
+        args.append("--with-numthreads=16")
 
         return args
 
