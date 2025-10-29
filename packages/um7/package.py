@@ -42,7 +42,7 @@ class Um7(Package):
             values=("high", "debug"), multi=False)
 
     with when("@access-esm1.6"):
-        depends_on("cable library=ESM1.6", type=("build", "link"))
+        depends_on("cable library='access-esm1.6'", type=("build", "link"))
 
     phases = ["edit", "build", "install"]
 
@@ -190,6 +190,7 @@ excl_dep                                           USE::POP_TYPES
 excl_dep                                           USE::cable_runtime_opts_mod
 excl_dep                                           USE::landuse_mod
             """
+
         config = f"""
 # ------------------------------------------------------------------------------
 # File header
