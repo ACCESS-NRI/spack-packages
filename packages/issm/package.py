@@ -99,7 +99,7 @@ class Issm(AutotoolsPackage):
     depends_on("mpi", type=("build", "link", "run"))
     depends_on("petsc", type=("build", "link", "run"))
     depends_on("m1qn3", type=("build", "link", "run"))
-    depends_on("netcdf", type=("build", "link", "run"))
+    depends_on("netcdf-c", type=("build", "link", "run"))
     depends_on("hdf5", type=("build", "link", "run"))
 
     # Optional extras controlled by +wrappers
