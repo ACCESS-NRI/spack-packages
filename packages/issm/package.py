@@ -30,7 +30,7 @@ class Issm(AutotoolsPackage):
     # --------------------------------------------------------------------
     version("upstream", branch="main", git="https://github.com/ISSMteam/ISSM.git")
     version("main", branch="main")
-    version("lb/gadi-modules", branch="lb/gadi-modules", preferred=True)
+    version("lb/dev", branch="lb/dev", preferred=True)
     version("access-development", branch="access-development")
     # version("access-release", branch="access-release", preferred=True)
 
