@@ -189,8 +189,8 @@ class Issm(AutotoolsPackage):
             f"--with-mpi-include={mpi.prefix.include}",
             f"CC={mpi.mpicc}",
             f"CXX={mpi.mpicxx}",
-            f"FC={mpi.mpif90}",
-            f"F77={mpi.mpif90}",
+            f"FC={mpi.mpifc}",
+            f"F77={mpi.mpif77}",
         ]
 
         # MKL libraries
