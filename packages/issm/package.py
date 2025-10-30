@@ -101,6 +101,7 @@ class Issm(AutotoolsPackage):
     depends_on("m1qn3", type=("build", "link", "run"))
     depends_on("netcdf-c", type=("build", "link", "run"))
     depends_on("hdf5", type=("build", "link", "run"))
+    depends_on("intel-mkl", type=("build", "link", "run"))
 
     # Optional extras controlled by +wrappers
     depends_on("access-triangle", when="+wrappers")
@@ -194,7 +195,7 @@ class Issm(AutotoolsPackage):
         ]
 
         # MKL libraries
-        mklroot = self.spec.get('mkl', None)
+        mklroot = self.spec["intel-mkl"]
         if mklroot:
             args.append(f'--with-scalapack-lib="-L{mklroot.prefix.lib}/intel64 -lmkl_scalapack_lp64 -lmkl_blacs_openmpi_lp64"')
             args.append(f'--with-mkl-libflags="-L{mklroot.prefix.lib}/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lpthread -lm"')
