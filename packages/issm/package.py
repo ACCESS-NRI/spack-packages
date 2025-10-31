@@ -113,7 +113,7 @@ class Issm(AutotoolsPackage):
     # --------------------------------------------------------------------
 
     # GCC 14 breaks on several C++17 constructs used in ISSM
-    conflicts("%gcc@14:", msg="ISSM cannot be built with GCC versions above 13")
+    # conflicts("%gcc@14:", msg="ISSM cannot be built with GCC versions above 13")
 
     # +wrappers requires +py-tools to access the wrappers
     conflicts("+wrappers", when="~py-tools", msg="The +wrappers variant requires +py-tools")
