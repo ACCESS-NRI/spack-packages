@@ -23,7 +23,7 @@ class Um7(Package):
     version("access-esm1.6", branch="dev-access-esm1.6", preferred=True)
     version("access-esm1.5", branch="access-esm1.5")
 
-    maintainers("penguian", "Whyborn")
+    maintainers("penguian")
 
     depends_on("fcm", type="build")
     depends_on("dummygrib", type=("build", "link"))
@@ -41,9 +41,6 @@ class Um7(Package):
     variant("optim", default="high", description="Optimization level",
             values=("high", "debug"), multi=False)
 
-    with when("@access-esm1.6"):
-        depends_on("cable library='access-esm1.6'", type=("build", "link"))
-
     phases = ["edit", "build", "install"]
 
 
@@ -56,8 +53,6 @@ class Um7(Package):
                 join_path(self.spec["oasis3-mct"].prefix.include, subdir)
                 for subdir in ["psmile.MPI1", "mct"]]
         ideps = ["gcom4", "netcdf-fortran"]
-        with when("@access-esm1.6"):
-            ideps.append("cable")
         incs = [self.spec[d].prefix.include for d in ideps] + oasis3_incs
         for ipath in incs:
             env.prepend_path("CPATH", ipath)
@@ -102,8 +97,6 @@ class Um7(Package):
         """
 
         ldeps = ["oasis3-mct", "netcdf-fortran", "dummygrib"]
-        with when("@access-esm1.6"):
-            ldeps.append("cable")
         libs = " ".join([self._get_linker_args(spec, d) for d in ldeps] + ["-lgcom"])
 
         opt_value = spec.variants["optim"].value
@@ -143,54 +136,6 @@ class Um7(Package):
             FARCH = "-xCORE-AVX512"
             FOBLANK = ""
 
-        # FCM tries to find all instances of USE and include them as
-        # source code, except things explicitly excluded by excl_deps.
-        # This means when using CABLE as a library, everything USEd
-        # by the coupled infrastructure, which still lives in UM7,
-        # must be explicitly included. Leave the default of an empty
-        # string for older versions of UM7 which include CABLE as
-        # source code.
-        CABLE_excl_deps = ""
-        with when("@access-esm1.6"):
-            CABLE_excl_deps = """
-excl_dep                                           USE::cable_def_types_mod
-excl_dep                                           USE::cbl_masks_mod
-excl_dep                                           USE::cable_other_constants_mod
-excl_dep                                           USE::cable_math_constants_mod
-excl_dep                                           USE::cable_phys_constants_mod
-excl_dep                                           USE::cable_soil_params_mod
-excl_dep                                           USE::cable_common_module
-excl_dep                                           USE::cbl_init_radiation_module
-excl_dep                                           USE::grid_constants_mod_cbl
-excl_dep                                           USE::cable_surface_types_mod
-excl_dep                                           USE::cable_soil_type_mod
-excl_dep                                           USE::cable_veg_type_mod
-excl_dep                                           USE::cable_pft_params_mod
-excl_dep                                           USE::cbl_albedo_mod
-excl_dep                                           USE::cbl_soil_snow_main_module
-excl_dep                                           USE::cable_soil_snow_type_mod
-excl_dep                                           USE::cbl_lai_canopy_height_mod
-excl_dep                                           USE::cable_carbon_module
-excl_dep                                           USE::snow_aging_mod
-excl_dep                                           USE::cable_roughness_module
-excl_dep                                           USE::cable_air_module
-excl_dep                                           USE::cable_canopy_module
-excl_dep                                           USE::cable_canopy_type_mod
-excl_dep                                           USE::casadimension
-excl_dep                                           USE::casa_inout_module
-excl_dep                                           USE::casa_readbiome_module
-excl_dep                                           USE::cable_init_wetfac_mod
-excl_dep                                           USE::casavariable
-excl_dep                                           USE::casaparm
-excl_dep                                           USE::phenvariable
-excl_dep                                           USE::feedback_mod
-excl_dep                                           USE::bgcdriver_mod
-excl_dep                                           USE::sumcflux_mod
-excl_dep                                           USE::POP_TYPES
-excl_dep                                           USE::cable_runtime_opts_mod
-excl_dep                                           USE::landuse_mod
-            """
-
         config = f"""
 # ------------------------------------------------------------------------------
 # File header
@@ -222,7 +167,6 @@ excl_dep                                           USE::mod_prism_grids_writing
 excl_dep                                           USE::mod_prism_def_partition_proto
 excl_dep                                           USE::mod_prism_put_proto
 excl_dep                                           USE::mod_prism_get_proto
-{CABLE_excl_deps}
 excl_dep::script                                   EXE
 exe_dep                                            portio2a.o pio_data_conv.o pio_io_timer.o
 exe_name::flumeMain                                {EXE_NAME}

@@ -17,7 +17,7 @@ class Cable(CMakePackage):
     homepage = "https://github.com/CABLE-LSM/CABLE"
     git = "https://github.com/CABLE-LSM/CABLE.git"
 
-    maintainers("SeanBryan51", "Whyborn")
+    maintainers("SeanBryan51")
 
     version("main", branch="main")
 
@@ -32,11 +32,7 @@ class Cable(CMakePackage):
 
     variant(
         "library",
-        default="none",
-        values=(
-            "none",
-            "access-esm1.6"
-        ),
+        default=False,
         description="Build CABLE science library object.",
     )
 
@@ -53,6 +49,5 @@ class Cable(CMakePackage):
     def cmake_args(self):
         args = []
         args.append(self.define_from_variant("CABLE_MPI", "mpi"))
-        args.append(self.define("CABLE_LIBRARY", self.spec.variants["library"].value != "none"))
-        args.append(self.define_from_variant("CABLE_LIBRARY_TARGET", "library"))
+        args.append(self.define_from_variant("CABLE_LIBRARY", "library"))
         return args
