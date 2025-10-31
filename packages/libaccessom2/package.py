@@ -26,7 +26,7 @@ class Libaccessom2(CMakePackage):
     )
 
     depends_on("cmake@3.20:", type="build")
-    depends_on("pkgconf", type="build")
+    depends_on("pkgconfig", type="build")
     # Depend on virtual package "mpi".
     depends_on("mpi")
     depends_on("oasis3-mct+deterministic", when="+deterministic")
