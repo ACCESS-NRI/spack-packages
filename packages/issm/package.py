@@ -56,12 +56,6 @@ class Issm(AutotoolsPackage):
     )
 
     variant(
-        "openmp",
-        default=True,
-        description="Propagate OpenMP flags so threaded deps link cleanly",
-    )
-
-    variant(
         "py-tools",
         default=False,
         description="Install ISSM python files under <prefix>/python-tools",
@@ -87,31 +81,16 @@ class Issm(AutotoolsPackage):
     with when("+ad"):
         depends_on("metis")
         depends_on("parmetis")
-        depends_on("mumps~openmp", when="~openmp")
-        depends_on("mumps+openmp", when="+openmp")
+        depends_on("mumps")
         depends_on("scalapack")
         depends_on("codipack")
         depends_on("medipack")
 
-        
-    # depends_on("petsc~examples+metis+mumps+scalapack", when="~ad")
-    # depends_on("parmetis")
-    # depends_on("metis", when="+ad")
-    # depends_on("mumps~openmp", when="~openmp +ad")
-    # depends_on("mumps+openmp", when="+openmp +ad")
-    # depends_on("scalapack", when="+ad")
-    # Note: ISSM's MUMPS support is not compatible with the Spack-provided
-    # MUMPS, so we use the one provided by the ISSM team.
-
-    # Optimiser
+    # Other dependencies
     depends_on("m1qn3")
-
-    # # Automatic-differentiation libraries
-    # depends_on("codipack", when="+ad")
-    # depends_on("medipack", when="+ad")
+    depends_on("access-triangle")
 
     # Optional extras controlled by +wrappers
-    depends_on("access-triangle", when="+wrappers")
     depends_on("python@3.9.2:", when="+wrappers", type=("build", "run"))
     depends_on("py-numpy", when="+wrappers", type=("build", "run"))
     
@@ -141,10 +120,10 @@ class Issm(AutotoolsPackage):
     # Build environment - inject AD and/or OpenMP compiler flags when needed
     # --------------------------------------------------------------------
     def setup_build_environment(self, env):
-        # OpenMP support
-        if "+openmp" in self.spec:
-            for var in ("CFLAGS", "CXXFLAGS", "FFLAGS", "LDFLAGS"):
-                env.append_flags(var, self.compiler.openmp_flag)
+        # # OpenMP support
+        # if "+openmp" in self.spec:
+        #     for var in ("CFLAGS", "CXXFLAGS", "FFLAGS", "LDFLAGS"):
+        #         env.append_flags(var, self.compiler.openmp_flag)
 
         # Automatic Differentiation extras
         if "+ad" in self.spec:
@@ -187,6 +166,9 @@ class Issm(AutotoolsPackage):
         args.append(f"--with-parmetis-dir={self.spec['parmetis'].prefix}")
         args.append(f"--with-metis-dir={self.spec['metis'].prefix}")
         args.append(f"--with-mumps-dir={self.spec['mumps'].prefix}")
+        args.append(f"--with-triangle-dir={self.spec['access-triangle'].prefix}")
+        args.append(f"--with-parmetis-dir={self.spec['parmetis'].prefix}")
+
         # Optimiser
         args.append(f"--with-m1qn3-dir={self.spec['m1qn3'].prefix.lib}")
         args.append(f"--with-scalapack-dir={self.spec['scalapack'].prefix}")
@@ -204,8 +186,6 @@ class Issm(AutotoolsPackage):
         # Optional wrappers
         if "+wrappers" in self.spec:
             args.append("--with-wrappers=yes")
-            args.append(f"--with-parmetis-dir={self.spec['parmetis'].prefix}")
-            args.append(f"--with-triangle-dir={self.spec['access-triangle'].prefix}")
 
             py_ver = self.spec["python"].version.up_to(2)
             py_pref = self.spec["python"].prefix
