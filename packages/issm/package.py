@@ -56,6 +56,12 @@ class Issm(AutotoolsPackage):
     )
 
     variant(
+        "openmp",
+        default=True,
+        description="Propagate OpenMP flags so threaded deps link cleanly",
+    )
+
+    variant(
         "py-tools",
         default=False,
         description="Install ISSM python files under <prefix>/python-tools",
@@ -81,7 +87,8 @@ class Issm(AutotoolsPackage):
     with when("+ad"):
         depends_on("metis")
         depends_on("parmetis")
-        depends_on("mumps")
+        depends_on("mumps~openmp", when="~openmp")
+        depends_on("mumps+openmp", when="+openmp")
         depends_on("scalapack")
         depends_on("codipack")
         depends_on("medipack")
@@ -91,9 +98,10 @@ class Issm(AutotoolsPackage):
     depends_on("access-triangle")
 
     # Optional extras controlled by +wrappers
-    depends_on("python@3.9.2:", when="+wrappers", type=("build", "run"))
-    depends_on("py-numpy", when="+wrappers", type=("build", "run"))
-    
+    with when("+wrappers"):
+        depends_on("python@3.9.2:", type=("build", "run"))
+        depends_on("py-numpy", type=("build", "run"))
+
     # --------------------------------------------------------------------
     # Conflicts
     # --------------------------------------------------------------------
@@ -120,13 +128,15 @@ class Issm(AutotoolsPackage):
     # Build environment - inject AD and/or OpenMP compiler flags when needed
     # --------------------------------------------------------------------
     def setup_build_environment(self, env):
-        # # OpenMP support
+        # OpenMP support
+        with when("+openmp"):
         # if "+openmp" in self.spec:
-        #     for var in ("CFLAGS", "CXXFLAGS", "FFLAGS", "LDFLAGS"):
-        #         env.append_flags(var, self.compiler.openmp_flag)
+            for var in ("CFLAGS", "CXXFLAGS", "FFLAGS", "LDFLAGS"):
+                env.append_flags(var, self.compiler.openmp_flag)
 
         # Automatic Differentiation extras
-        if "+ad" in self.spec:
+        with when("+ad"):
+        # if "+ad" in self.spec:
             # CoDiPack's performance tips: force inlining & keep full symbols
             env.append_flags(
                 "CXXFLAGS",
@@ -152,13 +162,15 @@ class Issm(AutotoolsPackage):
         ]
 
         # Linear-algebra backend
-        if "+ad" in self.spec:
+        with when("+ad"):
+        # if "+ad" in self.spec:
             # AD build: *exclude* PETSc and point at CoDiPack/MediPack
             args += [
                 f"--with-codipack-dir={self.spec['codipack'].prefix}",
                 f"--with-medipack-dir={self.spec['medipack'].prefix}",
             ]
-        else:
+        with when("~ad"):
+        # else:
             # Classic build with PETSc
             args += [
                 f"--with-petsc-dir={self.spec['petsc'].prefix}",
@@ -184,7 +196,8 @@ class Issm(AutotoolsPackage):
         ]
 
         # Optional wrappers
-        if "+wrappers" in self.spec:
+        with when("+wrappers"):
+        # if "+wrappers" in self.spec:
             args.append("--with-wrappers=yes")
 
             py_ver = self.spec["python"].version.up_to(2)
@@ -197,7 +210,9 @@ class Issm(AutotoolsPackage):
                 f"--with-python-dir={py_pref}",
                 f"--with-python-numpy-dir={np_inc}",
             ]
-        else:
+
+        with when("~wrappers"):
+        # else:
             args.append("--with-wrappers=no")
 
         return args
@@ -209,13 +224,15 @@ class Issm(AutotoolsPackage):
         make("install", parallel=False)
 
         # Optionally install examples directory
-        if "+examples" in self.spec:
+        with when("+examples"):
+        # if "+examples" in self.spec:
             examples_src = join_path(self.stage.source_path, "examples")
             examples_dst = join_path(prefix, "examples")
             install_tree(examples_src, examples_dst)
 
         # Optionally install Python (.py) files as a zip archive
-        if "+py-tools" in self.spec:
+        with when("+py-tools"):
+        # if "+py-tools" in self.spec:
             py_src = join_path(self.stage.source_path, "src", "m")
             py_dst = join_path(prefix, "python-tools.zip")
             
@@ -261,7 +278,8 @@ class Issm(AutotoolsPackage):
         env.set('ISSM_DIR', issm_dir)
 
         # Add ISSM python files (and shared libraries) to PYTHONPATH if +py-tools
-        if "+py-tools" in self.spec:
+        with when("+py-tools"):
+        # if "+py-tools" in self.spec:
             env.prepend_path("PYTHONPATH", join_path(self.prefix, "python-tools.zip"))
             env.prepend_path("PYTHONPATH", join_path(self.prefix, "lib"))
 
