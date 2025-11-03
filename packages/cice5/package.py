@@ -187,7 +187,7 @@ FIXEDFLAGS := -132
 FREEFLAGS  :=
 """
 
-        config["gcc"] = f"""
+        config["gcc"] = """
 # TODO: removed -std=f2008 due to compiler errors
 FFLAGS = -Wall -fdefault-real-8 -fdefault-double-8 -ffpe-trap=invalid,zero,overflow -fallow-argument-mismatch
 """
