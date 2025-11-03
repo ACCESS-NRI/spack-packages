@@ -99,7 +99,7 @@ class Issm(AutotoolsPackage):
 
     # Optional extras controlled by +wrappers
     with when("+wrappers"):
-        depends_on("python@3.9.2:", type=("build", "run"))
+        depends_on("python@3.11.7:", type=("build", "run"))
         depends_on("py-numpy", type=("build", "run"))
 
     # --------------------------------------------------------------------
