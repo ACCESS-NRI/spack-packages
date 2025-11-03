@@ -94,7 +94,6 @@ jobs:
 
           for pkg in $pkgs; do
             # We want each manifest to have an associated injection of {{ package }} to $pkg
-            # From PR 346:
             # Replace underscores with hyphens for the template value, as spack converts directory underscores to package name hyphens
             template_value="${pkg//_/-}"
 
