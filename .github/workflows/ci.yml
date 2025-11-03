@@ -2,7 +2,7 @@ name: CI
 on:
   pull_request:
     paths:
-      - packages/**
+      - spack_repo/access/nri/packages/**
   workflow_dispatch:
     inputs:
       packages-to-test:
@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # These defaults can be overridden by the inputs (if the trigger is a workflow_dispatch)
-      DEFAULT_SPACK_REF: 'releases/v0.22'
+      DEFAULT_SPACK_REF: 'releases/v1.0'
       DEFAULT_SPACK_CONFIG_REF: 'main'
       DEFAULT_SPACK_PACKAGES_REF: ${{ github.event.pull_request.head.sha }}
     outputs:
@@ -48,7 +48,7 @@ jobs:
           # We only care about the directory names under packages/ - since they are also the package names
           # and we want to find changes to the package.py files in those directories
           dir_names: true
-          path: ./packages
+          path: ./spack_repo/access/nri/packages
           files: '*/package.py'
 
       - name: Dispatch - Get packages
@@ -94,7 +94,9 @@ jobs:
 
           for pkg in $pkgs; do
             # We want each manifest to have an associated injection of {{ package }} to $pkg
-            template_value="$pkg"
+            # From PR 346:
+            # Replace underscores with hyphens for the template value, as spack converts directory underscores to package name hyphens
+            template_value="${pkg//_/-}"
 
             if [ -d ".github/build-ci/manifests/$pkg" ]; then  # Look for specific manifests for the package
               # We space-separate the paths as we later use them in a for loop
@@ -131,7 +133,7 @@ jobs:
       - setup-ci
     strategy:
       fail-fast: false
-      max-parallel: 3
+      max-parallel: 5
       matrix:
         package: ${{ fromJson(needs.setup-ci.outputs.matrix) }}
     uses: access-nri/build-ci/.github/workflows/ci.yml@v2
@@ -143,5 +145,6 @@ jobs:
       spack-packages-ref: ${{ needs.setup-ci.outputs.spack-packages-ref }}
       spack-config-ref: ${{ needs.setup-ci.outputs.spack-config-ref }}
       spack-ref: ${{ needs.setup-ci.outputs.spack-ref }}
+      container-image-version: :rocky-v1.0-2025.09.000  # https://github.com/ACCESS-NRI/build-ci/pkgs/container/build-ci-upstream/501398004?tag=rocky-v1.0-2025.09.000
     secrets:
       spack-install-command-pat: ${{ secrets.SPACK_INSTALL_COMMAND_PAT }}

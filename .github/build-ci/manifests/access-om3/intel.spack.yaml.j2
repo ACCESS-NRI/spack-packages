@@ -7,9 +7,18 @@ spack:
     access3:
       require:
       - 'configurations=MOM6-CICE6'
+    c:
+      require:
+        - '{{ intel_compiler }}'
+    cxx:
+      require:
+        - '{{ intel_compiler }}'
+    fortran:
+      require:
+        - '{{ intel_compiler }}'
     all:
       require:
-      - '%{{ intel_compiler }} target={{ target }}'
+      - 'target={{ target }}'
   concretizer:
     unify: false
   view: false
