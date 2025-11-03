@@ -57,7 +57,7 @@ jobs:
         # Either get all packages defined (all subfolders under packages/) or use the input
         run: |
           if [[ "${{ inputs.packages-to-test }}" == "ALL" ]]; then
-            pkgs=$(find packages/ -mindepth 1 -maxdepth 1 -type d -printf '%P ')
+            pkgs=$(find spack_repo/access/nri/packages/ -mindepth 1 -maxdepth 1 -type d -printf '%P ')
           else
             pkgs="${{ inputs.packages-to-test }}"
           fi
