@@ -84,9 +84,9 @@ jobs:
         # Get file paths to manifests for each package, and a template, then finally
         # Convert into a JSON array for the matrix, one of the form:
         # [
-        #   {"filepath": ".github/build-ci/manifests/mom5/intel.spack.yaml.j2", "template_value": "mom5"},
-        #   {"filepath": ".github/build-ci/manifests/mom5/amd.spack.yaml.j2", "template_value": "mom5"},
-        #   {"filepath": ".github/build-ci/manifests/cice5/spack.yaml.j2", "template_value": "cice5"},
+        #   {"template_value": "mom5", "filepath": ".github/build-ci/manifests/mom5/intel.spack.yaml.j2"},
+        #   {"template_value": "mom5", "filepath": ".github/build-ci/manifests/mom5/amd.spack.yaml.j2"},
+        #   {"template_value": "cice5", "filepath": ".github/build-ci/manifests/cice5/spack.yaml.j2"},
         #   ...
         # ]
         run: |
@@ -108,7 +108,7 @@ jobs:
             fi
 
             for manifest_path in $manifest_paths; do
-              json_entry=$(printf '{"filepath": "%s", "template_value": "%s"}' "$manifest_path" "$template_value")
+              json_entry=$(printf '{"template_value": "%s", "filepath": "%s"}' "$template_value" "$manifest_path")
               json_entries+="${json_entry},"
             done
             unset manifest_paths
