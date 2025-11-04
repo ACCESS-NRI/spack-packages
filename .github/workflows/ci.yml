@@ -31,6 +31,7 @@ jobs:
       DEFAULT_SPACK_REF: 'releases/v1.0'
       DEFAULT_SPACK_CONFIG_REF: 'main'
       DEFAULT_SPACK_PACKAGES_REF: ${{ github.event.pull_request.head.sha }}
+      PACKAGES_ROOT_DIR: spack_repo/access/nri/packages
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       spack-packages-ref: ${{ steps.set-refs.outputs.spack-packages-ref }}
@@ -45,10 +46,10 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c  # v46.0.5
         with:
-          # We only care about the directory names under packages/ - since they are also the package names
+          # We only care about the directory names under the env.PACKAGES_ROOT_DIR - since they are also the package names
           # and we want to find changes to the package.py files in those directories
           dir_names: true
-          path: ./spack_repo/access/nri/packages
+          path: ./${{ env.PACKAGES_ROOT_DIR }}
           files: '*/package.py'
 
       - name: Dispatch - Get packages
@@ -57,7 +58,7 @@ jobs:
         # Either get all packages defined (all subfolders under packages/) or use the input
         run: |
           if [[ "${{ inputs.packages-to-test }}" == "ALL" ]]; then
-            pkgs=$(find spack_repo/access/nri/packages/ -mindepth 1 -maxdepth 1 -type d -printf '%P ')
+            pkgs=$(find ${{ env.PACKAGES_ROOT_DIR }}/ -mindepth 1 -maxdepth 1 -type d -printf '%P ')
           else
             pkgs="${{ inputs.packages-to-test }}"
           fi
@@ -66,7 +67,7 @@ jobs:
           # Validate that all packages exist
           error=false
           for pkg in $pkgs; do
-            if [ ! -f "packages/$pkg/package.py" ]; then
+            if [ ! -f "${{ env.PACKAGES_ROOT_DIR }}/$pkg/package.py" ]; then
               echo "::error::packages/$pkg/package.py does not exist. Check spelling or if the package is defined."
               error=true
             fi
