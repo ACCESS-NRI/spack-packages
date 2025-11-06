@@ -16,7 +16,7 @@ class Cable(CMakePackage):
 
     maintainers("SeanBryan51", "Whyborn")
 
-    version("stable", branch="main")
+    version("stable", branch="main", preferred=True)
     version("2025.11.000", tag="2025.11.000", commit="15f639dd33dfb15819304332d72c2b405b51b85e")
 
     def url_for_version(self, version):
