@@ -1,7 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
-#
-# Copyright 2022 ACCESS-NRI
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -19,7 +16,8 @@ class Cable(CMakePackage):
 
     maintainers("SeanBryan51", "Whyborn")
 
-    version("main", branch="main")
+    version("stable", branch="main")
+    version("2025.11.000", tag="2025.11.000", commit="15f639dd33dfb15819304332d72c2b405b51b85e")
 
     def url_for_version(self, version):
         return "https://github.com/CABLE-LSM/CABLE/tarball/{0}".format(version)
