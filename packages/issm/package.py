@@ -94,10 +94,10 @@ class Issm(AutotoolsPackage):
 
     # Other dependencies
     depends_on("m1qn3")
-    depends_on("access-triangle")
 
     # Optional extras controlled by +wrappers
     with when("+wrappers"):
+        depends_on("access-triangle")
         depends_on("python", type=("build", "run"))
         depends_on("py-numpy", type=("build", "run"))
 
@@ -204,7 +204,6 @@ class Issm(AutotoolsPackage):
                 f"--with-python-dir={py_pref}",
                 f"--with-python-numpy-dir={np_inc}",
             ]
-
         else:
             args.append("--with-wrappers=no")
 
