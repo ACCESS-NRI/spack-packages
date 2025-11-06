@@ -30,8 +30,7 @@ class Issm(AutotoolsPackage):
     # --------------------------------------------------------------------
     version("upstream", branch="main", git="https://github.com/ISSMteam/ISSM.git")
     version("main", branch="main")
-    version("access-release", branch="access-release")
-    version("lb-dev", branch="lb/dev", preferred=True)
+    version("access-release", branch="access-release", preferred=True)
     version("access-development", branch="access-development")
 
     # --------------------------------------------------------------------
@@ -99,7 +98,7 @@ class Issm(AutotoolsPackage):
 
     # Optional extras controlled by +wrappers
     with when("+wrappers"):
-        depends_on("python@3.9.2:", type=("build", "run"))
+        depends_on("python", type=("build", "run"))
         depends_on("py-numpy", type=("build", "run"))
 
     # --------------------------------------------------------------------
@@ -174,7 +173,6 @@ class Issm(AutotoolsPackage):
         args.append(f"--with-parmetis-dir={self.spec['parmetis'].prefix}")
         args.append(f"--with-metis-dir={self.spec['metis'].prefix}")
         args.append(f"--with-mumps-dir={self.spec['mumps'].prefix}")
-        args.append(f"--with-triangle-dir={self.spec['access-triangle'].prefix}")
         args.append(f"--with-parmetis-dir={self.spec['parmetis'].prefix}")
 
         # Optimiser
@@ -194,6 +192,7 @@ class Issm(AutotoolsPackage):
         # Optional wrappers
         if "+wrappers" in self.spec:
             args.append("--with-wrappers=yes")
+            args.append(f"--with-triangle-dir={self.spec['access-triangle'].prefix}")
 
             py_ver = self.spec["python"].version.up_to(2)
             py_pref = self.spec["python"].prefix
