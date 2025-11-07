@@ -78,11 +78,12 @@ class Issm(AutotoolsPackage):
     # Core build + runtime deps
     depends_on("mpi")
 
-    # Linear-algebra stack - only for the *non-AD* flavour
+    # When building "default" ISSM, use Petsc (including metis [incl. parmetis], mumps, and scalapack)
     with when("~ad"):
-        # Build Petsc with metis (incl. parmetis), mumps, and scalapack.
         depends_on("petsc~examples+metis+mumps+scalapack")
 
+    # When building with AD support, do not use Petsc; instead use CoDiPack + MeDiPack.
+    # Other dependencies (metis, parmetis, mumps, scalapack) remain.
     with when("+ad"):
         depends_on("metis")
         depends_on("parmetis")
