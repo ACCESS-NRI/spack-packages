@@ -16,13 +16,10 @@ class Cable(CMakePackage):
 
     maintainers("SeanBryan51", "Whyborn")
     
-    license("CSIRO Open Source Software License v1.0", checked_by="anton-seaice")
+    license("LicenseRef-CSIRO-Open-Source-Software-License-v1.0", checked_by="anton-seaice")
 
     version("stable", branch="main", preferred=True)
     version("2025.11.000", tag="2025.11.000", commit="15f639dd33dfb15819304332d72c2b405b51b85e")
-
-    def url_for_version(self, version):
-        return "https://github.com/CABLE-LSM/CABLE/tarball/{0}".format(version)
 
     variant(
         "mpi",
