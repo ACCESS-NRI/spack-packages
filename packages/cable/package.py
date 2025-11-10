@@ -1,7 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
-#
-# Copyright 2022 ACCESS-NRI
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -18,11 +15,11 @@ class Cable(CMakePackage):
     git = "https://github.com/CABLE-LSM/CABLE.git"
 
     maintainers("SeanBryan51", "Whyborn")
+    
+    license("LicenseRef-CSIRO-Open-Source-Software-License-v1.0", checked_by="anton-seaice")
 
-    version("main", branch="main")
-
-    def url_for_version(self, version):
-        return "https://github.com/CABLE-LSM/CABLE/tarball/{0}".format(version)
+    version("stable", branch="main", preferred=True)
+    version("2025.11.000", tag="2025.11.000", commit="15f639dd33dfb15819304332d72c2b405b51b85e")
 
     variant(
         "mpi",
