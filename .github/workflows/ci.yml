@@ -10,8 +10,12 @@ on:
         required: true
         type: string
         default: 'ALL'
-      spack-packages-ref:
-        description: 'spack-packages ref to use'
+      builtin-spack-packages-ref:
+        description: 'spack/spack-packages ref to use'
+        required: true
+        type: string
+      access-spack-packages-ref:
+        description: 'access-nri/access-spack-packages ref to use'
         required: true
         type: string
       spack-config-ref:
@@ -30,11 +34,13 @@ jobs:
       # These defaults can be overridden by the inputs (if the trigger is a workflow_dispatch)
       DEFAULT_SPACK_REF: 'releases/v1.0'
       DEFAULT_SPACK_CONFIG_REF: 'main'
-      DEFAULT_SPACK_PACKAGES_REF: ${{ github.event.pull_request.head.sha }}
+      DEFAULT_BUILTIN_SPACK_PACKAGES_REF: 'main'
+      DEFAULT_ACCESS_SPACK_PACKAGES_REF: ${{ github.event.pull_request.head.sha }}
       PACKAGES_ROOT_DIR: spack_repo/access/nri/packages
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
-      spack-packages-ref: ${{ steps.set-refs.outputs.spack-packages-ref }}
+      builtin-spack-packages-ref: ${{ steps.set-refs.outputs.builtin-spack-packages-ref }}
+      access-spack-packages-ref: ${{ steps.set-refs.outputs.access-spack-packages-ref }}
       spack-config-ref: ${{ steps.set-refs.outputs.spack-config-ref }}
       spack-ref: ${{ steps.set-refs.outputs.spack-ref }}
     steps:
@@ -123,7 +129,8 @@ jobs:
       - name: Set refs
         id: set-refs
         run: |
-          echo "spack-packages-ref=${{  inputs.spack-packages-ref || env.DEFAULT_SPACK_PACKAGES_REF }}" >> $GITHUB_OUTPUT
+          echo "builtin-spack-packages-ref=${{  inputs.builtin-spack-packages-ref || env.DEFAULT_BUILTIN_SPACK_PACKAGES_REF }}" >> $GITHUB_OUTPUT
+          echo "access-spack-packages-ref=${{  inputs.access-spack-packages-ref || env.DEFAULT_ACCESS_SPACK_PACKAGES_REF }}" >> $GITHUB_OUTPUT
           echo "spack-config-ref=${{ inputs.spack-config-ref || env.DEFAULT_SPACK_CONFIG_REF }}" >> $GITHUB_OUTPUT
           echo "spack-ref=${{ inputs.spack-ref || env.DEFAULT_SPACK_REF }}" >> $GITHUB_OUTPUT
 
@@ -133,7 +140,7 @@ jobs:
       - setup-ci
     strategy:
       fail-fast: false
-      max-parallel: 7
+      max-parallel: 5
       matrix:
         package: ${{ fromJson(needs.setup-ci.outputs.matrix) }}
         exclude:
@@ -147,15 +154,15 @@ jobs:
           - package: {template_value: "access-issm"}
           - package: {template_value: "access-test"}
           - package: {template_value: "coastri-roms"}
-    uses: access-nri/build-ci/.github/workflows/ci.yml@v2
+    uses: access-nri/build-ci/.github/workflows/ci.yml@v3
     with:
       spack-manifest-path: ${{ matrix.package.filepath }}
       spack-manifest-data-path: .github/build-ci/data/standard_definitions.json
       spack-manifest-data-pairs: |-
         package ${{ matrix.package.template_value }}
-      spack-packages-ref: ${{ needs.setup-ci.outputs.spack-packages-ref }}
+      builtin-spack-packages-ref: ${{ needs.setup-ci.outputs.builtin-spack-packages-ref }}
+      access-spack-packages-ref: ${{ needs.setup-ci.outputs.access-spack-packages-ref }}
       spack-config-ref: ${{ needs.setup-ci.outputs.spack-config-ref }}
       spack-ref: ${{ needs.setup-ci.outputs.spack-ref }}
-      container-image-version: :rocky-v1.0-test-2
     secrets:
       spack-install-command-pat: ${{ secrets.SPACK_INSTALL_COMMAND_PAT }}
