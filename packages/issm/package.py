@@ -69,38 +69,42 @@ class Issm(AutotoolsPackage):
     # --------------------------------------------------------------------
     # Dependencies
     # --------------------------------------------------------------------
-    # Build-time tools
+
+    # Build-time & runtime dependencies
+    # --------------------------------------------------------------------
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
 
-    # Core build + runtime deps
+    # Runtime MPI dependency
     depends_on("mpi")
 
-    # When building "default" ISSM, use Petsc (including metis [incl. parmetis], mumps, and scalapack)
+    # Conditional dependencies
+    # --------------------------------------------------------------------
+    # When building "default" ISSM, use Petsc (with metis [incl. parmetis], mumps, and scalapack variants)
     with when("~ad"):
         depends_on("petsc~examples+metis+mumps+scalapack")
 
     # When building with AD support, do not use Petsc; instead use CoDiPack + MeDiPack.
-    # Other dependencies (metis, parmetis, mumps, scalapack) remain.
     with when("+ad"):
-        depends_on("metis")
-        depends_on("parmetis")
-        depends_on("mumps~openmp", when="~openmp")
-        depends_on("mumps+openmp", when="+openmp")
-        depends_on("scalapack")
         depends_on("codipack")
         depends_on("medipack")
 
-    # Other dependencies
-    depends_on("m1qn3")
-
-    # Optional extras controlled by +wrappers
+    # When building with Python wrappers, need access-triangle, Python, and NumPy
     with when("+wrappers"):
         depends_on("access-triangle")
         depends_on("python", type=("build", "run"))
         depends_on("py-numpy", type=("build", "run"))
+
+    # Unconditional dependencies
+    # --------------------------------------------------------------------
+    depends_on("metis")
+    depends_on("parmetis")
+    depends_on("mumps~openmp", when="~openmp")
+    depends_on("mumps+openmp", when="+openmp")
+    depends_on("scalapack")
+    depends_on("m1qn3")
 
     # --------------------------------------------------------------------
     # Conflicts
