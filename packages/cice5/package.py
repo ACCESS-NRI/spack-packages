@@ -253,7 +253,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
         buildscript_dest = join_path(srcdir, self.__buildscript_path)
         makeinc_path = join_path(srcdir, "bld", "Macros.spack")
 
-        copy(join_path(self.package_dir, self.__buildscript), buildscript_dest)
+        copy(join_path(pkg.package_dir, self.__buildscript), buildscript_dest)
 
         config = {}
         incs = self.__deps["includes"]
@@ -374,7 +374,7 @@ ifeq ($(OASIS3_MCT), yes)
    CPPDEFS := $(CPPDEFS) -DOASIS3_MCT
 endif
 """
-        fullconfig = config["pre"] + config[self.compiler.name] + config["post"]
+        fullconfig = config["pre"] + config[pkg.compiler.name] + config["post"]
         print(fullconfig)
         with open(makeinc_path, "w") as makeinc:
             makeinc.write(fullconfig)
