@@ -1,0 +1,11 @@
+spack:
+  specs:
+    - 'access-esm1.6@=stable %{{ intel_compiler }}'
+  packages:
+    - '{{ package }}'
+    all:
+      require:
+      - '%{{ intel_compiler }}'
+  concretizer:
+    unify: false
+  view: false

@@ -1,0 +1,12 @@
+spack:
+  specs:
+    - 'access-om2@=stable ~deterministic %{{ intel_compiler }} ^cice5 build_system=cmake'
+    - 'access-om2@=stable ~deterministic %{{ intel_compiler }} ^cice5 build_system=makefile'
+  packages:
+    - '{{ package }} build_system=cmake model=access-om2 nxglob=360 nyglob=300 blckx=15 blcky=300 mxblcks=1'
+    all:
+      require:
+      - '%{{ intel_compiler }}'
+  concretizer:
+    unify: false
+  view: false
