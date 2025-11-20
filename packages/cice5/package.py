@@ -170,7 +170,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
 
     # The reason for the explicit -rpath is:
     # https://github.com/ACCESS-NRI/spack-packages/issues/14#issuecomment-1653651447
-    def get_linker_args(self, pkg, spec, name):
+    def get_linker_args(self, spec, name):
         return " ".join(
             [
                 (spec[name].libs).ld_flags,
@@ -178,18 +178,18 @@ class MakefileBuilder(makefile.MakefileBuilder):
             ]
         )
 
-    def get_variant_value(self, pkg, value):
+    def get_variant_value(self, value):
         if value == "none":
             return ""
         return value
 
     # The reason for the explicit -rpath is:
     # https://github.com/ACCESS-NRI/spack-packages/issues/14#issuecomment-1653651447
-    def make_linker_args(self, pkg, spec, name, namespecs):
+    def make_linker_args(self, spec, name, namespecs):
         path = join_path(spec[name].prefix, "lib")
         return " ".join(["-L" + path, namespecs, "-Wl,-rpath=" + path])
 
-    def add_target(self, pkg, ntask, driver, grid, blocks):
+    def add_target(self, ntask, driver, grid, blocks):
         self.__targets[ntask]["driver"] = driver
         self.__targets[ntask]["grid"] = grid
         self.__targets[ntask]["blocks"] = blocks
@@ -379,7 +379,7 @@ endif
         with open(makeinc_path, "w") as makeinc:
             makeinc.write(fullconfig)
 
-    def build(self, spec, prefix):
+    def build(self, pkg, spec, prefix):
         build = Executable(join_path(self.stage.source_path, self.__buildscript_path))
 
         for k in self.__targets:
@@ -390,7 +390,7 @@ endif
                 str(k),
             )
 
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         mkdirp(prefix.bin)
         for k in self.__targets:
             name = "_".join(
