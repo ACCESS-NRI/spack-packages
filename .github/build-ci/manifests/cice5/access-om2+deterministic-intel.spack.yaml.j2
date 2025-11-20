@@ -1,7 +1,8 @@
 spack:
   specs:
-    - 'access-om2@stable +deterministic %{{ intel_compiler }}'
+    - 'access-om2@=stable +deterministic %{{ intel_compiler }}'
   packages:
+    - '{{ package }}'
     all:
       require:
       - '%{{ intel_compiler }}'

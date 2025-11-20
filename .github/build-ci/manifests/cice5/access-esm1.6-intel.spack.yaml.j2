@@ -1,7 +1,8 @@
 spack:
   specs:
-    - 'access-esm1.6@stable %{{ intel_compiler }}'
+    - 'access-esm1.6@=stable %{{ intel_compiler }}'
   packages:
+    - '{{ package }}'
     all:
       require:
       - '%{{ intel_compiler }}'
