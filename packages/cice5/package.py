@@ -5,17 +5,19 @@
 from spack.build_systems import cmake, makefile
 from spack.package import *
 
+
 def int_validator(s):
-    """Test a string variant is a valid integer """
-    if ( s.isdigit() and int(s)>0 ) :
+    """Test a string variant is a valid integer"""
+    if s.isdigit() and int(s) > 0:
         return True
     else:
         print(f"ERROR: {s} not a valid integer")
         return False
 
+
 class Cice5(CMakePackage, MakefilePackage):
-    """The Los Alamos sea ice model (CICE) is the result of an effort to develop 
-    a computationally efficient sea ice component for a fully coupled 
+    """The Los Alamos sea ice model (CICE) is the result of an effort to develop
+    a computationally efficient sea ice component for a fully coupled
     atmosphere-land global climate model."""
 
     homepage = "https://www.access-nri.org.au"
@@ -41,19 +43,19 @@ class Cice5(CMakePackage, MakefilePackage):
         "model",
         default="access-om2",
         values=("access-om2", "access-esm1.6"),
-        description="Which model this build is coupled with"
+        description="Which model this build is coupled with",
     )
 
     conflicts(
         "model=access-esm1.6",
         when="@access-om2",
-        msg="model=access-esm1.6 not included in @access-om2"
+        msg="model=access-esm1.6 not included in @access-om2",
     )
 
     conflicts(
         "model=access-om2",
         when="@access-esm1.6",
-        msg="model=access-om2 not included in @access-esm1.6"
+        msg="model=access-om2 not included in @access-esm1.6",
     )
 
     variant("deterministic", default=False, description="Deterministic build.")
@@ -61,7 +63,7 @@ class Cice5(CMakePackage, MakefilePackage):
     conflicts(
         "+deterministic",
         when="build_system=cmake",
-        msg="+deterministic not available with build_system=cmake"
+        msg="+deterministic not available with build_system=cmake",
     )
 
     with when("build_system=makefile"):
@@ -74,16 +76,50 @@ class Cice5(CMakePackage, MakefilePackage):
             multi=False,
             description="Directly inject LDFLAGS into the Makefile",
         )
-        variant("optimisation_report", default=False, description="Generate optimisation reports.")
+        variant(
+            "optimisation_report",
+            default=False,
+            description="Generate optimisation reports.",
+        )
 
     with when("build_system=cmake"):
-        variant("io_type", default="NetCDF", values=("NetCDF", "PIO"), description="CICE IO Method")
+        variant(
+            "io_type",
+            default="NetCDF",
+            values=("NetCDF", "PIO"),
+            description="CICE IO Method",
+        )
         # User set integer cmake options:
-        variant("nxglob", default="none", values=int_validator, description="Size of model grid in x")
-        variant("nyglob", default="none", values=int_validator, description="Size of model grid in y")
-        variant("blckx", default="none", values=int_validator, description="Size of computational blocks in x")
-        variant("blcky", default="none", values=int_validator, description="Size of computational blocks in y")
-        variant("mxblcks", default="none", values=int_validator, description="Max number of blocks per task")
+        variant(
+            "nxglob",
+            default="none",
+            values=int_validator,
+            description="Size of model grid in x",
+        )
+        variant(
+            "nyglob",
+            default="none",
+            values=int_validator,
+            description="Size of model grid in y",
+        )
+        variant(
+            "blckx",
+            default="none",
+            values=int_validator,
+            description="Size of computational blocks in x",
+        )
+        variant(
+            "blcky",
+            default="none",
+            values=int_validator,
+            description="Size of computational blocks in y",
+        )
+        variant(
+            "mxblcks",
+            default="none",
+            values=int_validator,
+            description="Max number of blocks per task",
+        )
 
     # Depend on virtual package "mpi".
     depends_on("mpi")
@@ -101,28 +137,29 @@ class Cice5(CMakePackage, MakefilePackage):
         depends_on("libaccessom2+deterministic", when="+deterministic")
         depends_on("libaccessom2~deterministic", when="~deterministic")
 
-class CMakeBuilder(cmake.CMakeBuilder):
 
+class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
         if self.spec.variants["model"].value == "access-esm1.6":
-            args = [ self.define("CICE_DRIVER", "access") ]
-        else: #access-om2
-            args = [ self.define("CICE_DRIVER", "auscom") ]
+            args = [self.define("CICE_DRIVER", "access")]
+        else:  # access-om2
+            args = [self.define("CICE_DRIVER", "auscom")]
 
-        args.extend([
-            self.define_from_variant("CICE_IO", "io_type"),
-            self.define_from_variant("CICE_NXGLOB", "nxglob"),
-            self.define_from_variant("CICE_NYGLOB", "nyglob"),
-            self.define_from_variant("CICE_BLCKX", "blckx"),
-            self.define_from_variant("CICE_BLCKY", "blcky"),
-            self.define_from_variant("CICE_MXBLCKS", "mxblcks"),
-        ])
+        args.extend(
+            [
+                self.define_from_variant("CICE_IO", "io_type"),
+                self.define_from_variant("CICE_NXGLOB", "nxglob"),
+                self.define_from_variant("CICE_NYGLOB", "nyglob"),
+                self.define_from_variant("CICE_BLCKX", "blckx"),
+                self.define_from_variant("CICE_BLCKY", "blcky"),
+                self.define_from_variant("CICE_MXBLCKS", "mxblcks"),
+            ]
+        )
 
         return args
 
 
 class MakefileBuilder(makefile.MakefileBuilder):
-
     phases = ["set_deps_targets", "edit", "build", "install"]
 
     __buildscript = "spack-build.sh"
@@ -135,9 +172,11 @@ class MakefileBuilder(makefile.MakefileBuilder):
     # https://github.com/ACCESS-NRI/spack-packages/issues/14#issuecomment-1653651447
     def get_linker_args(self, spec, name):
         return " ".join(
-                    [(spec[name].libs).ld_flags,
-                    "-Wl,-rpath=" + join_path(spec[name].prefix, "lib")]
-                   )
+            [
+                (spec[name].libs).ld_flags,
+                "-Wl,-rpath=" + join_path(spec[name].prefix, "lib"),
+            ]
+        )
 
     def get_variant_value(self, value):
         if value == "none":
@@ -148,11 +187,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
     # https://github.com/ACCESS-NRI/spack-packages/issues/14#issuecomment-1653651447
     def make_linker_args(self, spec, name, namespecs):
         path = join_path(spec[name].prefix, "lib")
-        return " ".join(
-                    ["-L" + path,
-                    namespecs,
-                    "-Wl,-rpath=" + path]
-                   )
+        return " ".join(["-L" + path, namespecs, "-Wl,-rpath=" + path])
 
     def add_target(self, ntask, driver, grid, blocks):
         self.__targets[ntask]["driver"] = driver
@@ -160,11 +195,10 @@ class MakefileBuilder(makefile.MakefileBuilder):
         self.__targets[ntask]["blocks"] = blocks
 
     def set_deps_targets(self, spec, prefix):
-
         if self.spec.variants["model"].value == "access-esm1.6":
             # The integer represents environment variable NTASK
             # esm1.5 used 12 (cice4), cm2 used 16 (cice5), build both for testing
-            self.__targets = {12: {}, 16: {}} 
+            self.__targets = {12: {}, 16: {}}
             self.add_target(12, "access-esm1.6", "360x300", "12x1")
             self.add_target(16, "access-esm1.6", "360x300", "8x2")
 
@@ -196,17 +230,25 @@ class MakefileBuilder(makefile.MakefileBuilder):
 
             # NOTE: The order of the libraries matter during the linking step!
             # NOTE: datetime-fortran is a dependency of libaccessom2.
-            ldeps = ["oasis3-mct", "libaccessom2", "netcdf-c", "netcdf-fortran", "datetime-fortran"]
+            ldeps = [
+                "oasis3-mct",
+                "libaccessom2",
+                "netcdf-c",
+                "netcdf-fortran",
+                "datetime-fortran",
+            ]
             lstr = self.make_linker_args(spec, "parallelio", "-lpiof -lpioc")
 
         istr = join_path((spec["oasis3-mct"].headers).cpp_flags, "psmile.MPI1")
-        self.__deps["includes"] = " ".join([istr] + [(spec[d].headers).cpp_flags for d in ideps])
+        self.__deps["includes"] = " ".join(
+            [istr] + [(spec[d].headers).cpp_flags for d in ideps]
+        )
 
-        self.__deps["ldflags"] = " ".join([lstr] + [self.get_linker_args(spec, d) for d in ldeps])
-
+        self.__deps["ldflags"] = " ".join(
+            [lstr] + [self.get_linker_args(spec, d) for d in ldeps]
+        )
 
     def edit(self, spec, prefix):
-
         srcdir = self.stage.source_path
         buildscript_dest = join_path(srcdir, self.__buildscript_path)
         makeinc_path = join_path(srcdir, "bld", "Macros.spack")
@@ -218,11 +260,15 @@ class MakefileBuilder(makefile.MakefileBuilder):
         libs = self.__deps["ldflags"]
 
         # TODO: https://github.com/ACCESS-NRI/ACCESS-OM/issues/12
-        NCI_OPTIM_FLAGS = "-g3 -O2 -axCORE-AVX2 -debug all -check none -traceback -assume buffered_io"
+        NCI_OPTIM_FLAGS = (
+            "-g3 -O2 -axCORE-AVX2 -debug all -check none -traceback -assume buffered_io"
+        )
         CFLAGS = "-c -O2"
         LDFLAGS = self.get_variant_value(spec.variants["direct_ldflags"].value)
         if "+deterministic" in self.spec:
-            NCI_OPTIM_FLAGS = "-g0 -O0 -axCORE-AVX2 -debug none -check none -assume buffered_io"
+            NCI_OPTIM_FLAGS = (
+                "-g0 -O0 -axCORE-AVX2 -debug none -check none -assume buffered_io"
+            )
             CFLAGS = "-c -g0"
 
         if "+optimisation_report" in self.spec:
@@ -334,24 +380,25 @@ endif
             makeinc.write(fullconfig)
 
     def build(self, spec, prefix):
-
-        build = Executable(
-                    join_path(self.stage.source_path, self.__buildscript_path)
-                )
+        build = Executable(join_path(self.stage.source_path, self.__buildscript_path))
 
         for k in self.__targets:
-            build(self.__targets[k]["driver"],
-                    self.__targets[k]["grid"],
-                    self.__targets[k]["blocks"],
-                    str(k))
+            build(
+                self.__targets[k]["driver"],
+                self.__targets[k]["grid"],
+                self.__targets[k]["blocks"],
+                str(k),
+            )
 
     def install(self, spec, prefix):
-
         mkdirp(prefix.bin)
         for k in self.__targets:
-            name = "_".join([self.__targets[k]["driver"],
-                                self.__targets[k]["grid"],
-                                self.__targets[k]["blocks"],
-                                str(k) + "p"])
-            install(join_path("build_" + name, "cice_" + name + ".exe"),
-                    prefix.bin)
+            name = "_".join(
+                [
+                    self.__targets[k]["driver"],
+                    self.__targets[k]["grid"],
+                    self.__targets[k]["blocks"],
+                    str(k) + "p",
+                ]
+            )
+            install(join_path("build_" + name, "cice_" + name + ".exe"), prefix.bin)
