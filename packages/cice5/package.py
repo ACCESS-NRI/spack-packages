@@ -170,7 +170,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
 
     # The reason for the explicit -rpath is:
     # https://github.com/ACCESS-NRI/spack-packages/issues/14#issuecomment-1653651447
-    def get_linker_args(self, spec, name):
+    def get_linker_args(self, pkg, spec, name):
         return " ".join(
             [
                 (spec[name].libs).ld_flags,
@@ -178,23 +178,23 @@ class MakefileBuilder(makefile.MakefileBuilder):
             ]
         )
 
-    def get_variant_value(self, value):
+    def get_variant_value(self, pkg, value):
         if value == "none":
             return ""
         return value
 
     # The reason for the explicit -rpath is:
     # https://github.com/ACCESS-NRI/spack-packages/issues/14#issuecomment-1653651447
-    def make_linker_args(self, spec, name, namespecs):
+    def make_linker_args(self, pkg, spec, name, namespecs):
         path = join_path(spec[name].prefix, "lib")
         return " ".join(["-L" + path, namespecs, "-Wl,-rpath=" + path])
 
-    def add_target(self, ntask, driver, grid, blocks):
+    def add_target(self, pkg, ntask, driver, grid, blocks):
         self.__targets[ntask]["driver"] = driver
         self.__targets[ntask]["grid"] = grid
         self.__targets[ntask]["blocks"] = blocks
 
-    def set_deps_targets(self, spec, prefix):
+    def set_deps_targets(self, pkg, spec, prefix):
         if self.spec.variants["model"].value == "access-esm1.6":
             # The integer represents environment variable NTASK
             # esm1.5 used 12 (cice4), cm2 used 16 (cice5), build both for testing
@@ -248,7 +248,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
             [lstr] + [self.get_linker_args(spec, d) for d in ldeps]
         )
 
-    def edit(self, spec, prefix):
+    def edit(self, pkg, spec, prefix):
         srcdir = self.stage.source_path
         buildscript_dest = join_path(srcdir, self.__buildscript_path)
         makeinc_path = join_path(srcdir, "bld", "Macros.spack")
